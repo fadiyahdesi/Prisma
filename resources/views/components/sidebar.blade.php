@@ -122,9 +122,11 @@
     $hasPelaksanaanGroup = $canViewContracts || $canAccessPelaksanaan;
     $hasLuaranGroup = $canAccessLuaran;
     $hasReviewerGroup = $canReviewSubstance || $canReviewMonev;
+    $hasProdiSection = $canReviewRoadmap;
     $hasP3mSelectionGroup = $canManageSchemes || $canManagePeriods || $canReviewLppm || $canAssignReviewers || $canViewRanking;
     $hasP3mMonevLuaranGroup = $canManageSemhas || $canManageHkiAdmin || $canManageRewardAdmin;
     $hasP3mSystemGroup = $canViewIntegrations || $canSearchPddikti || $canManageMigration;
+    $hasP3mManagement = $hasP3mSelectionGroup || $hasP3mMonevLuaranGroup || $hasP3mSystemGroup || $canViewAuditLogs;
     $hasKeuanganGroup = $canManageDisbursement;
     $hasAnalyticsGroup = $canViewExecutiveAnalytics || $canViewFacultyAnalytics || $canViewAccreditationReports;
     $hasDosenDatabaseGroup = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true) && ($canViewSinta || $canSearchPddikti);
