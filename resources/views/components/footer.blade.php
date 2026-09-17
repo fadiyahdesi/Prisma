@@ -4,7 +4,7 @@
             <!-- Brand Column -->
             <div class="lg:col-span-2 space-y-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#681727] via-[#8c1d34] to-[#c99738] flex items-center justify-center text-white font-bold text-sm shadow-md">
                         P
                     </div>
                     <div>

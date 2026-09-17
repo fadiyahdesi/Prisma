@@ -33,10 +33,19 @@
             font-feature-settings: "zero" 0 !important;
             letter-spacing: 0.025em;
         }
-        .text-gradient-blue {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 50%, #0d9488 100%);
+        .text-gradient, .text-gradient-blue, .text-gradient-maroon {
+            background: linear-gradient(135deg, #681727 0%, #a82541 50%, #c99738 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        .custom-sidebar-scroll {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+        .custom-sidebar-scroll::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
         [x-cloak] { display: none !important; }
     </style>
