@@ -48,28 +48,44 @@ class ReviewerAssignmentController extends Controller
     }
 
     /**
-     * Assign 2 Reviewers to a proposal with Conflict of Interest check (US-08.1).
+     * Assign Reviewers to a proposal with Conflict of Interest check (US-08.1).
+     * Dynamic: 1 or 2 reviewers (Pengabdian requires minimum 2 reviewers).
      */
     public function assign(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
         abort_unless($user->hasRole(['Admin P3M', 'Superadmin']), 403, 'Akses ditolak.');
 
-        $validated = $request->validate([
+        $isPengabdian = strtolower($usulan->skema?->kategori ?? '') === 'pengabdian';
+
+        $rules = [
             'reviewer_1_id' => 'required|exists:users,id',
-            'reviewer_2_id' => 'required|exists:users,id|different:reviewer_1_id',
-        ]);
+            'reviewer_2_id' => $isPengabdian ? 'required|exists:users,id|different:reviewer_1_id' : 'nullable|exists:users,id|different:reviewer_1_id',
+        ];
+
+        $messages = [
+            'reviewer_2_id.required' => 'Skema Pengabdian kepada Masyarakat mewajibkan minimal 2 reviewer penilai.',
+            'reviewer_2_id.different' => 'Reviewer 1 dan Reviewer 2 tidak boleh orang yang sama.',
+        ];
+
+        $validated = $request->validate($rules, $messages);
 
         try {
+            $r2 = !empty($validated['reviewer_2_id']) ? (int) $validated['reviewer_2_id'] : null;
+
             ReviewEngineService::assignReviewers(
                 $usulan,
                 (int) $validated['reviewer_1_id'],
-                (int) $validated['reviewer_2_id'],
+                $r2,
                 $user->id
             );
 
+            $msg = $r2 
+                ? "Penugasan Reviewer 1 & 2 untuk usulan {$usulan->kode_usulan} berhasil disimpan!" 
+                : "Penugasan Reviewer 1 (Penilai Tunggal) untuk usulan {$usulan->kode_usulan} berhasil disimpan!";
+
             return redirect()->route('admin.reviewer-assignment.index')
-                             ->with('success', "Penugasan Reviewer 1 & 2 untuk usulan {$usulan->kode_usulan} berhasil disimpan!");
+                             ->with('success', $msg);
         } catch (InvalidArgumentException $e) {
             return redirect()->back()
                              ->withInput()

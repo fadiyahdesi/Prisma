@@ -9,11 +9,14 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <!-- Header Navigation -->
         <header class="bg-slate-950 border-b border-slate-800 py-4 sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white shrink-0">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
+                    <a href="{{ route('dashboard') }}" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center shrink-0 transition" title="Kembali ke Dashboard" aria-label="Kembali ke Dashboard">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    </a>
                     <div>
                         <h1 class="font-extrabold text-lg text-white leading-tight">Audit Trail Logging (US-02.4)</h1>
                         <p class="text-xs text-purple-400">Perekaman Aktivitas Keamanan System • Restricted Access</p>
@@ -24,15 +27,12 @@
                     <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
                         Otorisasi: {{ Auth::user()->primaryRoleName() }}
                     </span>
-                    <a href="{{ route('dashboard') }}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold transition-colors">
-                        Kembali ke Dasbor
-                    </a>
                 </div>
             </div>
         </header>
 
         <!-- Main Content Container -->
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <!-- Search & Filter Bar -->
         <div class="bg-slate-800/90 rounded-3xl p-6 border border-slate-700/80 shadow-xl backdrop-blur-md">
             <form action="{{ route('audit-logs') }}" method="GET" class="flex flex-col md:flex-row items-center gap-4">

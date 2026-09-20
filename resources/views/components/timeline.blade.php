@@ -31,11 +31,11 @@
 
             <!-- Step 2 -->
             <div class="relative pl-8 md:pl-10 group">
-                <div class="absolute -left-[17px] top-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-blue-500/30">
+                <div class="absolute -left-[17px] top-0 w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-amber-500/30">
                     2
                 </div>
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 hover:bg-white hover:shadow-xl transition-all">
-                    <span class="text-xs font-bold text-blue-700 uppercase">Tahap 2 • 01 Okt - 10 Okt 2026</span>
+                    <span class="text-xs font-bold text-amber-700 uppercase">Tahap 2 • 01 Okt - 10 Okt 2026</span>
                     <h3 class="text-lg font-bold text-slate-900 mt-1">Verifikasi Kelayakan Lembaga (LPPM Approval)</h3>
                     <p class="text-sm text-slate-600 mt-2">
                         Operator P3M dan Kepala LPPM memverifikasi keabsahan administrasi, kelayakan mitra, serta kuota maksimal dosen. Status: <em>Disetujui</em>, <em>Dikembalikan ke Draf</em>, atau <em>Ditolak</em>.

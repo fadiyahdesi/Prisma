@@ -134,13 +134,23 @@ class Epic10MonitoringAndCompletionTest extends TestCase
         $viewResponse->assertSee('Melakukan pengujian sensor suhu');
         $viewResponse->assertSee('35.0%');
 
-        // 3. Download Formal Logbook PDF
-        $pdfResponse = $this->actingAs($dosen)
+        // 3. Download Formal Logbook PDF (Blocked when progress < 50%)
+        $pdfBlockedResponse = $this->actingAs($dosen)
             ->withSession(['is_otp_verified' => true])
             ->get(route('pengusul.logbook.download-pdf', $usulan));
 
-        $pdfResponse->assertStatus(200);
-        $this->assertStringContainsString('application/pdf', $pdfResponse->headers->get('Content-Type'));
+        $pdfBlockedResponse->assertRedirect(route('pengusul.logbook.show', $usulan));
+        $pdfBlockedResponse->assertSessionHas('error');
+
+        // Update progress to 55% (>= 50%) to allow download
+        $logbook->update(['persentase_capaian' => 55.0]);
+
+        $pdfAllowedResponse = $this->actingAs($dosen)
+            ->withSession(['is_otp_verified' => true])
+            ->get(route('pengusul.logbook.download-pdf', $usulan));
+
+        $pdfAllowedResponse->assertStatus(200);
+        $this->assertStringContainsString('application/pdf', $pdfAllowedResponse->headers->get('Content-Type'));
 
         // 4. Delete Logbook Entry
         $deleteResponse = $this->actingAs($dosen)

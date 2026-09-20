@@ -24,18 +24,12 @@ class Epic11DemoDataSeeder extends Seeder
             return;
         }
 
-        // Dummy PDF file for proofs
-        Storage::disk('public')->makeDirectory('publikasi_naskah');
-        Storage::disk('public')->makeDirectory('hki_sertifikat');
-        Storage::disk('public')->makeDirectory('surat_pernyataan_reward');
-        Storage::disk('public')->makeDirectory('bukti_transfer_reward');
-
-        $samplePdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF";
-
-        Storage::disk('public')->put('publikasi_naskah/sample_paper.pdf', $samplePdf);
-        Storage::disk('public')->put('hki_sertifikat/sample_sertifikat.pdf', $samplePdf);
-        Storage::disk('public')->put('surat_pernyataan_reward/sample_kesepakatan.pdf', $samplePdf);
-        Storage::disk('public')->put('bukti_transfer_reward/sample_transfer.pdf', $samplePdf);
+        // Official PDF files for proofs
+        $pdfService = app(\App\Services\DemoPdfGeneratorService::class);
+        $pdfService->generatePaper([], 'publikasi_naskah/sample_paper.pdf');
+        $pdfService->generateHkiCertificate([], 'hki_sertifikat/sample_sertifikat.pdf');
+        $pdfService->generateRewardKesepakatan([], 'surat_pernyataan_reward/sample_kesepakatan.pdf');
+        $pdfService->generateBuktiTransfer([], 'bukti_transfer_reward/sample_transfer.pdf');
 
         // 1. Matriks Tarif SK Rektor UHN 2026
         $rates = [

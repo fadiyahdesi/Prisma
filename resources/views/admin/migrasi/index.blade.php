@@ -1,25 +1,30 @@
 @extends('layouts.app')
 
+@section('title', 'Migrasi Data Legasi - PRISMA UHN')
+
 @section('content')
-<div class="min-h-screen bg-slate-50/50 pb-16">
-    {{-- Header --}}
-    <div class="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
-                        <span>P3M Management</span>
-                        <span>/</span>
-                        <span class="text-blue-600">Migrasi Data Legasi</span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black shadow-xs">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+<div x-data="{ sidebarOpen: false }" class="min-h-screen bg-slate-100 text-slate-800 flex">
+    <x-sidebar />
+
+    <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
+        {{-- Header --}}
+        <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-xs">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 shrink-0" title="Buka Menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <a href="{{ route('dashboard') }}" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 transition" title="Kembali ke Dashboard">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    </a>
+                    <div>
+                        <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-0.5">
+                            <span>P3M Management</span>
+                            <span>/</span>
+                            <span class="text-blue-600">Migrasi Data Legasi</span>
                         </div>
-                        <div>
-                            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">Migrasi Data Legasi SIMPENDI PHB</h1>
-                            <p class="text-xs text-slate-500 font-medium">Transformasi arsip historis Politeknik Harapan Bersama & STMIK YMI ke skema PostgreSQL 3NF KHARISMA UHN (US-13.1)</p>
-                        </div>
+                        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">Migrasi Data Legasi SIMPENDI PHB</h1>
+                        <p class="text-xs text-slate-500 font-medium">Transformasi arsip historis Politeknik Harapan Bersama & STMIK YMI ke skema PostgreSQL 3NF KHARISMA UHN (US-13.1)</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -41,10 +46,9 @@
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
+        </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {{-- Flash Alerts --}}
         @if(session('success'))
             <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-4 flex items-center gap-3">
@@ -220,7 +224,8 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 </div>
 @endsection
 

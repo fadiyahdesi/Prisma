@@ -112,6 +112,7 @@ class RoleBasedSidebarVisibilityTest extends TestCase
         $response->assertDontSee(route('admin.lppm-approval.index'));
         $response->assertDontSee(route('audit-logs'));
         $response->assertDontSee(route('integrasi.index'));
+        $response->assertDontSee(route('uat.index'));
     }
 
     /** @test */
@@ -186,6 +187,7 @@ class RoleBasedSidebarVisibilityTest extends TestCase
         $response->assertDontSee(route('member-consent.index'));
         $response->assertDontSee(route('sinta.profile'));
         $response->assertDontSee(route('admin.prodi-roadmap.index'));
+        $response->assertDontSee(route('uat.index'));
     }
 
     /** @test */

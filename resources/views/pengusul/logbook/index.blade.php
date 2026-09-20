@@ -8,7 +8,7 @@
 
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -26,7 +26,7 @@
             </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             @if(session('success'))
                 <div class="p-4.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-3 shadow-sm">
                     <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -113,18 +113,25 @@
                             </p>
                         </div>
 
+                    @php
+                        $latestProgress = (float) ($logbooks->max('persentase_capaian') ?? 0);
+                    @endphp
                         <div class="shrink-0 flex items-center gap-2">
-                            <a href="{{ route('pengusul.logbook.download-pdf', $usulan) }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <span>Ekspor Rekap Logbook (PDF)</span>
-                            </a>
+                            @if($latestProgress >= 50.0)
+                                <a href="{{ route('pengusul.logbook.download-pdf', $usulan) }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    <span>Ekspor Rekap Logbook (PDF)</span>
+                                </a>
+                            @else
+                                <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 font-bold text-xs" title="Unduh PDF aktif setelah progres minimal 50%">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                    <span>Unduh PDF (Minimal 50%)</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
                     <!-- Progress Summary Bar -->
-                    @php
-                        $latestProgress = $logbooks->last()?->persentase_capaian ?? 0;
-                    @endphp
                     <div class="p-6 border-b border-slate-100 bg-slate-50/50">
                         <div class="flex items-center justify-between text-xs mb-2">
                             <span class="font-extrabold text-slate-700 uppercase tracking-wider">Estimasi Progres Capaian Kegiatan Lapangan:</span>

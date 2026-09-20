@@ -168,9 +168,9 @@ class RbacSeeder extends Seeder
                 'role' => 'Admin P3M'
             ],
             [
-                'name' => 'Kepala Unit P3M UHN',
+                'name' => 'Sharfina Febbi Handayani, S.Kom., M.Kom.',
                 'email' => 'kepalap3m@harkatnegeri.ac.id',
-                'nidn_nim' => 'KPL-P3M-01',
+                'nidn_nim' => '0617029201',
                 'role' => 'Kepala P3M'
             ],
             [

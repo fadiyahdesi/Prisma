@@ -125,6 +125,12 @@ class LogbookController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
+        $latestProgress = (float) ($usulan->logbook()->max('persentase_capaian') ?? 0);
+        if ($latestProgress < 50.0 && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M'])) {
+            return redirect()->route('pengusul.logbook.show', $usulan)
+                ->with('error', 'Rekap logbook baru dapat diunduh setelah estimasi capaian kegiatan lapangan mencapai minimal 50% (Capaian saat ini: ' . number_format($latestProgress, 1) . '%).');
+        }
+
         $pdf = MonitoringAndCompletionService::generateLogbookPdf($usulan);
 
         return $pdf->download('Logbook_Kegiatan_' . ($usulan->kode_usulan ?: $usulan->id) . '.pdf');

@@ -80,11 +80,12 @@ class ReviewEngineService
     }
 
     /**
-     * Assign 2 Reviewers to a Proposal with Conflict of Interest enforcement (US-08.1).
+     * Assign Reviewers to a Proposal with Conflict of Interest enforcement (US-08.1).
+     * Supports 1 or 2 Reviewers dynamically.
      */
-    public static function assignReviewers(PpmUsulan $usulan, int $reviewer1Id, int $reviewer2Id, int $adminId): array
+    public static function assignReviewers(PpmUsulan $usulan, int $reviewer1Id, ?int $reviewer2Id, int $adminId): array
     {
-        if ($reviewer1Id === $reviewer2Id) {
+        if ($reviewer2Id && $reviewer1Id === $reviewer2Id) {
             throw new InvalidArgumentException('Reviewer 1 dan Reviewer 2 tidak boleh orang yang sama.');
         }
 
@@ -94,7 +95,7 @@ class ReviewEngineService
             throw new InvalidArgumentException('Reviewer 1 melanggar aturan Conflict of Interest (berasal dari fakultas/prodi yang sama dengan pengusul).');
         }
 
-        if (in_array($reviewer2Id, $coiUserIds, true)) {
+        if ($reviewer2Id && in_array($reviewer2Id, $coiUserIds, true)) {
             throw new InvalidArgumentException('Reviewer 2 melanggar aturan Conflict of Interest (berasal dari fakultas/prodi yang sama dengan pengusul).');
         }
 
@@ -102,7 +103,9 @@ class ReviewEngineService
             // Delete previous assignments if any in draft
             $usulan->penugasanReviewer()->delete();
 
-            $p1 = PpmPenugasanReviewer::create([
+            $assignments = [];
+
+            $assignments[] = PpmPenugasanReviewer::create([
                 'id_usulan' => $usulan->id,
                 'id_reviewer' => $reviewer1Id,
                 'peran_reviewer' => 'reviewer_1',
@@ -111,14 +114,16 @@ class ReviewEngineService
                 'assigned_at' => now(),
             ]);
 
-            $p2 = PpmPenugasanReviewer::create([
-                'id_usulan' => $usulan->id,
-                'id_reviewer' => $reviewer2Id,
-                'peran_reviewer' => 'reviewer_2',
-                'status_penugasan' => 'assigned',
-                'assigned_by' => $adminId,
-                'assigned_at' => now(),
-            ]);
+            if ($reviewer2Id) {
+                $assignments[] = PpmPenugasanReviewer::create([
+                    'id_usulan' => $usulan->id,
+                    'id_reviewer' => $reviewer2Id,
+                    'peran_reviewer' => 'reviewer_2',
+                    'status_penugasan' => 'assigned',
+                    'assigned_by' => $adminId,
+                    'assigned_at' => now(),
+                ]);
+            }
 
             $usulan->update([
                 'status' => 'In_review',
@@ -136,7 +141,7 @@ class ReviewEngineService
                 'assigned_by' => $adminId,
             ], $adminId);
 
-            return [$p1, $p2];
+            return $assignments;
         });
     }
 
@@ -281,6 +286,7 @@ class ReviewEngineService
             $usulan->save();
 
             // 4. Handle Disparity & Final Score Resolution
+            $hasR2 = $usulan->penugasanReviewer()->where('peran_reviewer', 'reviewer_2')->exists();
             $r1Completed = $usulan->penugasanReviewer()->where('peran_reviewer', 'reviewer_1')->where('status_penugasan', 'completed')->exists();
             $r2Completed = $usulan->penugasanReviewer()->where('peran_reviewer', 'reviewer_2')->where('status_penugasan', 'completed')->exists();
             $r3Completed = $usulan->penugasanReviewer()->where('peran_reviewer', 'adjudicator')->where('status_penugasan', 'completed')->exists();
@@ -343,6 +349,21 @@ class ReviewEngineService
                         'skor_akhir' => $finalScore,
                     ], $penugasan->id_reviewer);
                 }
+            } elseif ($r1Completed && !$hasR2) {
+                // Single reviewer assigned and completed
+                $finalScore = round((float) $usulan->skor_reviewer_1, 2);
+
+                $usulan->update([
+                    'skor_akhir' => $finalScore,
+                    'is_disparity' => false,
+                    'status' => 'Reviewed',
+                ]);
+
+                AuditLogService::log('REVIEW_COMPLETED', null, [
+                    'usulan_id' => $usulan->id,
+                    'skor_r1' => $usulan->skor_reviewer_1,
+                    'skor_akhir' => $finalScore,
+                ], $penugasan->id_reviewer);
             }
 
             return $penilaian;

@@ -290,6 +290,10 @@ class LandingController extends Controller
             ],
         ];
 
+        $recentPublications = \Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')
+            ? \App\Models\PpmPublikasiJurnal::with('user')->latest()->take(6)->get()
+            : collect();
+
         return view('landing', compact(
             'systemInfo',
             'stats',
@@ -297,8 +301,37 @@ class LandingController extends Controller
             'schemes',
             'faculties',
             'wizardSteps',
-            'integrations'
+            'integrations',
+            'recentPublications'
         ));
+    }
+
+    /**
+     * Katalog Publikasi Dosen Terbuka (Akses Tanpa Login).
+     */
+    public function publikasi(Request $request)
+    {
+        $search = $request->input('search');
+        $kategori = $request->input('kategori_peringkat');
+
+        $query = \App\Models\PpmPublikasiJurnal::with('user');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul_artikel', 'ilike', "%{$search}%")
+                    ->orWhere('nama_jurnal', 'ilike', "%{$search}%")
+                    ->orWhere('doi', 'ilike', "%{$search}%")
+                    ->orWhereHas('user', fn($uq) => $uq->where('name', 'ilike', "%{$search}%"));
+            });
+        }
+
+        if ($kategori) {
+            $query->where('kategori_peringkat', $kategori);
+        }
+
+        $publikasiList = $query->latest()->paginate(12)->withQueryString();
+
+        return view('publikasi.katalog-publik', compact('publikasiList', 'search', 'kategori'));
     }
 }
 

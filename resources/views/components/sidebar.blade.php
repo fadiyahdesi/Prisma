@@ -56,8 +56,11 @@
     // 12. EPIC 08: Pemeringkatan Usulan & Kuota (Kepala P3M)
     $canViewRanking = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
 
-    // 13. EPIC 02: Audit Trail Logs (Hanya Kepala P3M dan Superadmin)
-    $canViewAuditLogs = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
+    // 13. Audit Trail Logs (Superadmin Only)
+    $canViewAuditLogs = in_array($currentRole, ['Superadmin'], true);
+
+    // 13b. Manajemen Pengguna (Admin P3M, Kepala P3M, Superadmin)
+    $canManageUsers = in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true);
 
     // 14. EPIC 09 & 10: Kontrak SPK & Pelaksanaan Hibah (Dosen / Pengusul)
     $canViewContracts = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
@@ -90,8 +93,8 @@
         });
     })->count() : 0;
 
-    // 18. EPIC 11: Luaran, HKI & Reward Insentif (Dosen / Pengusul)
-    $canAccessLuaran = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
+    // 18. EPIC 11: Luaran, HKI & Reward Insentif (Dosen / Pengusul & Anggota)
+    $canAccessLuaran = in_array($currentRole, ['Dosen / Pengusul', 'Dosen / Mahasiswa Anggota', 'Superadmin'], true);
 
     // 19. EPIC 11: Sentra HKI Verification & Klaim Reward Review (Admin P3M, Kepala P3M, Superadmin)
     $canManageHkiAdmin = in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true);
@@ -114,8 +117,8 @@
     // 24. EPIC 13: Migrasi Data Legasi (Admin P3M, Superadmin - US-13.1)
     $canManageMigration = in_array($currentRole, ['Admin P3M', 'Superadmin'], true);
 
-    // 25. EPIC 13: Digital UAT Portal & Berita Acara (Kaprodi, Dekanat, Kepala P3M, Admin P3M, Superadmin - US-13.3)
-    $canAccessUat = in_array($currentRole, ['Kaprodi', 'Dekanat', 'Kepala P3M', 'Admin P3M', 'Superadmin', 'Rektor'], true);
+    // 25. EPIC 13: Digital UAT Portal & Berita Acara (Tanpa Kaprodi & Kepala P3M)
+    $canAccessUat = in_array($currentRole, ['Dekanat', 'Admin P3M', 'Superadmin', 'Rektor'], true);
 
     // Group Presence Flags
     $hasProposalGroup = $canSubmitProposals || ($canViewConsent && in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true));
@@ -197,34 +200,40 @@
     </div>
 
     {{-- Active User Profile Summary (Compact) --}}
-    <div class="px-4 py-2 border-b border-slate-800/80 flex items-center gap-2.5 shrink-0">
-        <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
-            {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
-        </div>
+    <a href="{{ route('profile.edit') }}" class="px-4 py-2 border-b border-slate-800/80 flex items-center gap-2.5 shrink-0 hover:bg-slate-800/60 transition group" title="Buka Pengaturan Profil">
+        @if($user && $user->avatar && Storage::disk('public')->exists($user->avatar))
+            <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-amber-400">
+        @else
+            <div class="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-400 font-bold text-xs flex items-center justify-center shrink-0">
+                {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+            </div>
+        @endif
         <div class="min-w-0 flex-1">
-            <p class="text-[11px] font-bold text-white truncate leading-tight">{{ $user->name ?? 'User' }}</p>
+            <p class="text-[11px] font-bold text-white truncate leading-tight group-hover:text-amber-300 transition-colors">{{ $user->name ?? 'User' }}</p>
             <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-blue-400 border border-slate-700 truncate max-w-full leading-none mt-0.5">
                 {{ $currentRole }}
             </span>
         </div>
-    </div>
+        <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </a>
 
-    {{-- Quick Role Switcher (Compact - Demo/Testing Mode) --}}
+    {{-- Quick Role Switcher (For Demo & Testing) --}}
     @if(config('app.debug') || ($user && $user->hasRole('Superadmin')))
-        <div class="px-3 pt-2 pb-1 shrink-0">
-            <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Pilih Peran User (RBAC):</label>
-            <form action="{{ route('dashboard.switch-role') }}" method="POST">
+        <div class="px-3 py-2 border-b border-slate-800/80 bg-slate-950/40">
+            <form method="POST" action="{{ route('dashboard.switch-role') }}" class="flex items-center gap-1.5">
                 @csrf
-                <select name="role_name" onchange="this.form.submit()" class="w-full px-2 py-1 rounded-md bg-slate-800 border border-slate-700 font-medium text-[11px] text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
-                    @foreach($availableRoles as $role)
-                        <option value="{{ $role->name }}" {{ $currentRole === $role->name ? 'selected' : '' }}>
-                            {{ $role->name }}
+                <label for="sidebarRoleSelect" class="text-[9px] font-black uppercase text-slate-400 shrink-0">Demo:</label>
+                <select id="sidebarRoleSelect" name="role_name" onchange="this.form.submit()" class="w-full bg-slate-800 text-blue-300 text-[10px] font-bold rounded-lg px-2 py-1 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer">
+                    @foreach($availableRoles as $r)
+                        <option value="{{ $r->name }}" {{ $currentRole === $r->name ? 'selected' : '' }}>
+                            {{ $r->name }}
                         </option>
                     @endforeach
                 </select>
             </form>
         </div>
     @endif
+
 
     {{-- Navigation Links Container with Mutually Exclusive Accordion and Zero Scrollbar --}}
     <div x-data="{ activeGroup: '{{ $defaultActiveGroup }}' }" 
@@ -389,16 +398,25 @@
                     </button>
 
                     <div x-show="activeGroup === 'luaran'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
+                        <a href="{{ route('hki.create') }}" 
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'hki.create' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                            <span class="flex items-center gap-2 truncate">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'hki.create' ? 'bg-white' : 'bg-slate-600' }}"></span>
+                                <span class="truncate">Pengajuan KI / Paten / HKI</span>
+                            </span>
+                            <span class="px-1.5 py-0.2 rounded text-[8px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">+ Baru</span>
+                        </a>
+
+                        <a href="{{ route('hki.index') }}" 
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-white' : 'bg-slate-600' }}"></span>
+                            <span>Sentra HKI &amp; Paten</span>
+                        </a>
+
                         <a href="{{ route('publikasi.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'publikasi') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Bank Publikasi</span>
-                        </a>
-
-                        <a href="{{ route('hki.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') ? 'bg-white' : 'bg-slate-600' }}"></span>
-                            <span>Sentra HKI UHN</span>
                         </a>
 
                         <a href="{{ route('reward.index') }}" 
@@ -689,6 +707,14 @@
                             <span>Migrasi Data Legasi</span>
                         </a>
                         @endif
+
+                        @if($canManageUsers)
+                        <a href="{{ route('admin.users.index') }}" 
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.users') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                            <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.users') ? 'bg-white' : 'bg-slate-600' }}"></span>
+                            <span>Manajemen Pengguna</span>
+                        </a>
+                        @endif
                     </div>
                 </div>
                 @endif
@@ -821,6 +847,13 @@
                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'panduan') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 <span>Buku Panduan Sistem</span>
+            </a>
+
+            {{-- Pengaturan Profil Mandiri (Semua Pengguna) --}}
+            <a href="{{ route('profile.edit') }}" 
+               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'profile') ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span>Pengaturan Profil</span>
             </a>
         </div>
     </div>

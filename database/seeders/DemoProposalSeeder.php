@@ -16,15 +16,25 @@ class DemoProposalSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ensure storage directory exists and sample dummy files are created
-        Storage::disk('public')->makeDirectory('proposals');
-        Storage::disk('public')->makeDirectory('mitra');
+        // Ensure storage directory exists and sample PDF files are created
+        $pdfService = app(\App\Services\DemoPdfGeneratorService::class);
+        $pdfService->generateProposal([
+            'judul_usulan' => 'Usulan Proposal Penelitian Terapan Unggulan UHN',
+            'skema' => 'Penelitian Terapan Unggulan (PTU)',
+            'ketua_nama' => 'Dr. Budi Wicaksono, M.Kom.',
+            'ketua_nidn' => '0418048201',
+            'total_rab' => 50000000,
+        ], 'proposals/sample_proposal_fnd.pdf');
 
-        $samplePdfContent = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF";
-        
-        Storage::disk('public')->put('proposals/sample_proposal_fnd.pdf', $samplePdfContent);
-        Storage::disk('public')->put('proposals/sample_proposal_pdp.pdf', $samplePdfContent);
-        Storage::disk('public')->put('mitra/sample_surat_kesediaan.pdf', $samplePdfContent);
+        $pdfService->generateProposal([
+            'judul_usulan' => 'Penerapan Model Convolutional Neural Network (CNN) untuk Deteksi Dini Penyakit Daun Padi Berbasis Mobile App',
+            'skema' => 'Penelitian Dosen Pemula (PDP)',
+            'ketua_nama' => 'Lintang Patria, S.Kom., M.Cs.',
+            'ketua_nidn' => '0412088901',
+            'total_rab' => 25000000,
+        ], 'proposals/sample_proposal_pdp.pdf');
+
+        $pdfService->generateMitraSurat([], 'mitra/sample_surat_kesediaan.pdf');
 
         // Fetch Periode & Skema
         $periode = PpmPeriodeHibah::where('is_active', true)->first() ?? PpmPeriodeHibah::first();

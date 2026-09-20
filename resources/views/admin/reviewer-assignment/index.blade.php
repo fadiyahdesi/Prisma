@@ -10,8 +10,10 @@
     selectedProposal: null,
     eligibleReviewers: [],
     loadingEligible: false,
+    reviewerCount: 2,
     openAssignModal(proposal) {
         this.selectedProposal = proposal;
+        this.reviewerCount = 2;
         this.loadingEligible = true;
         this.assignModalOpen = true;
         this.eligibleReviewers = [];
@@ -47,7 +49,7 @@
 
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -65,7 +67,7 @@
             </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             @if(session('success'))
                 <div class="p-4.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-3 shadow-sm">
                     <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -323,8 +325,8 @@
              class="bg-white rounded-3xl max-w-xl w-full p-6 space-y-5 shadow-2xl border border-slate-200">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div>
-                    <h3 class="font-black text-lg text-slate-900">Tugaskan Reviewer 1 & 2</h3>
-                    <p class="text-xs text-slate-500 mt-0.5" x-text="selectedProposal?.kode_usulan"></p>
+                    <h3 class="font-black text-lg text-slate-900">Tugaskan Reviewer Penilai</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" x-text="`${selectedProposal?.kode_usulan} - ${selectedProposal?.skema?.nama_skema ?? ''}`"></p>
                 </div>
                 <button @click="assignModalOpen = false" class="text-slate-400 hover:text-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -352,6 +354,42 @@
             <template x-if="!loadingEligible">
                 <form :action="`/admin/penugasan-reviewer/${selectedProposal?.id}/assign`" method="POST" class="space-y-4">
                     @csrf
+
+                    <!-- Dynamic Reviewer Count Selection -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                            Jumlah Penilai Usulan <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label :class="{ 'opacity-50 cursor-not-allowed': selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian' }"
+                                   class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition"
+                                   :style="reviewerCount == 1 ? 'border-color: #2563eb; background-color: #eff6ff;' : ''">
+                                <input type="radio" name="reviewer_mode" value="1" x-model="reviewerCount"
+                                       :disabled="selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian'"
+                                       class="text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="font-bold text-xs text-slate-800">1 Reviewer</div>
+                                    <div class="text-[10px] text-slate-500">Penilai Tunggal</div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition"
+                                   :style="reviewerCount == 2 ? 'border-color: #2563eb; background-color: #eff6ff;' : ''">
+                                <input type="radio" name="reviewer_mode" value="2" x-model="reviewerCount"
+                                       class="text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="font-bold text-xs text-slate-800">2 Reviewer</div>
+                                    <div class="text-[10px] text-slate-500">Standar Double-Blind</div>
+                                </div>
+                            </label>
+                        </div>
+                        <template x-if="selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian'">
+                            <p class="text-[11px] text-blue-700 font-bold mt-1.5 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Skema Pengabdian kepada Masyarakat mewajibkan minimal 2 Reviewer.</span>
+                            </p>
+                        </template>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
                             Pilih Reviewer 1 <span class="text-red-500">*</span>
@@ -364,11 +402,11 @@
                         </select>
                     </div>
 
-                    <div>
+                    <div x-show="reviewerCount == 2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">
                             Pilih Reviewer 2 <span class="text-red-500">*</span>
                         </label>
-                        <select name="reviewer_2_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <select name="reviewer_2_id" :required="reviewerCount == 2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 2 (Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
                                 <option :value="r.id" x-text="`${r.name} (${r.fakultas ?? 'Fakultas Lain'}) - SINTA: ${r.sinta_score ?? '-'}`"></option>

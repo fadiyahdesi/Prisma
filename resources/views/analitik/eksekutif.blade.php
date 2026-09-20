@@ -9,7 +9,7 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         {{-- Top Header --}}
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-xs print:hidden">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -39,7 +39,7 @@
             </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             {{-- Filter Periode & Cache Status Bar --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
                 <form action="{{ route('analitik.eksekutif') }}" method="GET" class="flex items-center gap-3">
