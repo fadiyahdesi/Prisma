@@ -290,9 +290,13 @@ class LandingController extends Controller
             ],
         ];
 
-        $recentPublications = \Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')
-            ? \App\Models\PpmPublikasiJurnal::with('user')->latest()->take(6)->get()
-            : collect();
+        try {
+            $recentPublications = \Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')
+                ? \App\Models\PpmPublikasiJurnal::with('user')->latest()->take(6)->get()
+                : collect();
+        } catch (\Throwable $e) {
+            $recentPublications = collect();
+        }
 
         return view('landing', compact(
             'systemInfo',
