@@ -36,7 +36,7 @@ class SecurityHeadersMiddleware
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
         // 7. Content Security Policy
-        $response->headers->set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://fonts.bunny.net https://cdn.jsdelivr.net; img-src 'self' data: blob: https:;");
+        $response->headers->set('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:;");
 
         return $response;
     }

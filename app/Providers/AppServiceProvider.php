@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production') || env('APP_ENV') === 'production' || str_contains(request()->getHost() ?? '', 'railway.app')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Event::listen(MemberInvitedEvent::class, SendMemberInvitationNotification::class);
     }
 }
