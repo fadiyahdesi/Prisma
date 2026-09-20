@@ -16,7 +16,7 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <!-- Top Dashboard Header -->
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -55,7 +55,7 @@
         </header>
 
         <!-- Main Body Container -->
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <!-- Alert Messages -->
         @if(session('error'))
             <div class="p-4.5 rounded-2xl bg-red-50 border border-red-300 text-red-900 text-sm font-bold flex items-center justify-between shadow-sm">
@@ -84,44 +84,6 @@
             </div>
         @endif
 
-        <!-- RBAC 8 Role Switcher Toolbar (MODE DEMO PENGUJIAN) -->
-        @if(config('app.debug') || $user->hasRole('Superadmin'))
-            <div class="bg-amber-50/90 rounded-3xl p-6 border border-amber-300 shadow-md">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-amber-200">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-black text-amber-900 bg-amber-200 px-3 py-1 rounded-md uppercase tracking-wider">
-                                Mode Pengujian & Demo Sistem
-                            </span>
-                            <span class="text-xs font-bold text-slate-600">US-02.3 Testing Toolbar</span>
-                        </div>
-                        <h2 class="text-lg font-extrabold text-slate-900 mt-1">Simulator Switcher Peran Hak Akses (8 Peran RBAC)</h2>
-                        <p class="text-xs font-semibold text-slate-600 mt-0.5">
-                            *Klik salah satu tombol di bawah untuk melihat antarmuka & tugas spesifik masing-masing peran secara instant:
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <span class="text-xs font-bold text-slate-600">Peran Aktif:</span>
-                        <span class="px-3.5 py-1 rounded-full text-xs font-black bg-blue-700 text-white shadow-sm">
-                            {{ $activeRole }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Switcher Buttons Grid for 8 Roles -->
-                <form action="{{ route('dashboard.switch-role') }}" method="POST" class="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-2">
-                    @csrf
-                    @foreach($availableRoles as $role)
-                        <button type="submit" 
-                                name="role_name" 
-                                value="{{ $role->name }}"
-                                class="px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-center border truncate {{ $activeRole === $role->name ? 'bg-blue-700 border-blue-800 text-white shadow-md' : 'bg-white border-slate-300 text-slate-800 hover:bg-blue-100 hover:text-blue-900' }}">
-                            {{ $role->name }}
-                        </button>
-                    @endforeach
-                </form>
-            </div>
-        @endif
 
         <!-- EPIC 04: Live Countdown Timer & Server Time Scheduler Banner (US-04.2) -->
         <div class="bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl space-y-6 relative overflow-hidden">
@@ -373,6 +335,71 @@
                             @endforeach
                         </div>
                     </div>
+
+                    <!-- Pengajuan KI / Paten / HKI (Paten, Hak Cipta, Desain Industri) -->
+                    <div class="space-y-4 pt-6 border-t border-slate-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Sentra Kekayaan Intelektual UHN</span>
+                                <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Pengajuan KI / Paten / HKI:</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('hki.create') }}" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-xs transition flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <span>Form Pengajuan KI / Paten</span>
+                                </a>
+                                <a href="{{ route('hki.index') }}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                    Daftar HKI &rarr;
+                                </a>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Paten -->
+                            <div class="p-4.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-200 text-indigo-900">PATEN</span>
+                                        <span class="text-[10px] font-bold text-indigo-700">Invensi Teknologi</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Paten &amp; Paten Sederhana</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Invensi teknologi, metode, alat, formulasi baru atau pengembangan produk dengan kebaruan teknis.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Permohonan Paten
+                                </a>
+                            </div>
+
+                            <!-- Hak Cipta / HKI -->
+                            <div class="p-4.5 rounded-2xl bg-blue-50/70 border border-blue-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-200 text-blue-900">HKI</span>
+                                        <span class="text-[10px] font-bold text-blue-700">Karya Cipta</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Hak Cipta (HKI)</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Karya tulis ilmiah, monograf, buku ajar ber-ISBN, modul perkuliahan, dan source code aplikasi/software.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Hak Cipta (HKI)
+                                </a>
+                            </div>
+
+                            <!-- Desain Industri & Merk -->
+                            <div class="p-4.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-200 text-emerald-900">KI LAINNYA</span>
+                                        <span class="text-[10px] font-bold text-emerald-700">Desain &amp; Merk</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Desain Industri &amp; Merk</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Kreasi estetika bentuk 2D/3D kemasan produk, prototipe perangkat keras, atau merk dagang riset.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Desain / Merk
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             @elseif($activeRole === 'Dosen / Mahasiswa Anggota')
@@ -391,6 +418,71 @@
                     @empty
                     <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-600">Tidak ada undangan keanggotaan yang menunggu persetujuan.</div>
                     @endforelse
+
+                    <!-- Pengajuan KI / Paten / HKI untuk Anggota Dosen & Mahasiswa -->
+                    <div class="space-y-4 pt-6 border-t border-slate-200">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Sentra Kekayaan Intelektual UHN</span>
+                                <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Pengajuan KI / Paten / HKI (Dosen &amp; Mahasiswa):</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('hki.create') }}" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold shadow-xs transition flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <span>Form Pengajuan KI / Paten</span>
+                                </a>
+                                <a href="{{ route('hki.index') }}" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                                    Daftar HKI &rarr;
+                                </a>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Paten -->
+                            <div class="p-4.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-200 text-indigo-900">PATEN</span>
+                                        <span class="text-[10px] font-bold text-indigo-700">Invensi Teknologi</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Paten &amp; Paten Sederhana</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Invensi teknologi, metode, alat, formulasi baru atau pengembangan produk dengan kebaruan teknis.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Permohonan Paten
+                                </a>
+                            </div>
+
+                            <!-- Hak Cipta / HKI -->
+                            <div class="p-4.5 rounded-2xl bg-blue-50/70 border border-blue-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-200 text-blue-900">HKI</span>
+                                        <span class="text-[10px] font-bold text-blue-700">Karya Cipta</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Hak Cipta (HKI)</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Karya tulis ilmiah, monograf, buku ajar ber-ISBN, modul perkuliahan, dan source code aplikasi/software.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Hak Cipta (HKI)
+                                </a>
+                            </div>
+
+                            <!-- Desain Industri & Merk -->
+                            <div class="p-4.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-200 text-emerald-900">KI LAINNYA</span>
+                                        <span class="text-[10px] font-bold text-emerald-700">Desain &amp; Merk</span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900 mt-2">Desain Industri &amp; Merk</h5>
+                                    <p class="text-[11px] text-slate-600 mt-1">Kreasi estetika bentuk 2D/3D kemasan produk, prototipe perangkat keras, atau merk dagang riset.</p>
+                                </div>
+                                <a href="{{ route('hki.create') }}" class="w-full py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs text-center transition-all shadow-xs block">
+                                    + Ajukan Desain / Merk
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             @elseif($activeRole === 'Reviewer')

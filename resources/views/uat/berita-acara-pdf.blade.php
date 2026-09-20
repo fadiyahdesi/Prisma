@@ -194,9 +194,9 @@
                     Verifikasi: SHA-256 Valid
                 </div>
                 <br>
-                <strong>Dr. Eng. Ir. Faisal Affandi, S.T., M.T.</strong><br>
-                NIP. 197608242002121001<br>
-                (Kepala LPPM Universitas Harkat Negeri)
+                <strong>Sharfina Febbi Handayani, S.Kom., M.Kom.</strong><br>
+                NIDN. 0617029201<br>
+                (Kepala LPPM / P3M Universitas Harkat Negeri)
             </td>
         </tr>
     </table>

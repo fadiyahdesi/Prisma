@@ -98,6 +98,12 @@ class ProposalWizardController extends Controller
             ]);
         }
 
+        // Strict Deadline Check: Prevent proposal submission if period has ended
+        if ($period && $period->waktu_tutup && now()->gt($period->waktu_tutup)) {
+            return redirect()->route('usulan.index')
+                ->with('error', 'Batas tenggat waktu Call for Proposals periode ' . $period->nama_periode . ' telah berakhir pada ' . $period->waktu_tutup->format('d/m/Y H:i') . '. Pengajuan usulan baru telah ditutup.');
+        }
+
         // 3. Ensure User Eligibility Data so user is never blocked or redirected away
         if (!$user->jabatan_fungsional) {
             $user->update(['jabatan_fungsional' => 'Lektor']);
@@ -350,6 +356,11 @@ class ProposalWizardController extends Controller
     {
         $this->authorizeOwner($usulan);
 
+        // Strict Deadline Check: Prevent file upload if deadline has passed
+        if ($usulan->periode && $usulan->periode->waktu_tutup && now()->gt($usulan->periode->waktu_tutup)) {
+            return redirect()->back()->with('error', 'Batas tenggat waktu pengunggahan usulan periode ' . $usulan->periode->nama_periode . ' telah berakhir pada ' . $usulan->periode->waktu_tutup->format('d/m/Y H:i') . '.');
+        }
+
         $request->validate([
             'ringkasan_substansi' => 'required|string',
             'file_proposal' => 'nullable|file|mimes:pdf|max:5120',
@@ -498,6 +509,11 @@ class ProposalWizardController extends Controller
                 ->with('error', 'Usulan ini sudah dikirim atau telah diputuskan dan tidak dapat dikirim ulang.');
         }
 
+        // Strict Deadline Check: Prevent final submission if deadline has passed
+        if ($usulan->periode && $usulan->periode->waktu_tutup && now()->gt($usulan->periode->waktu_tutup)) {
+            return redirect()->back()->with('error', 'Batas tenggat waktu pengajuan usulan periode ' . $usulan->periode->nama_periode . ' telah berakhir pada ' . $usulan->periode->waktu_tutup->format('d/m/Y H:i') . '. Pengiriman proposal tidak dapat dilakukan.');
+        }
+
         // Check Step 1
         if (empty($usulan->judul_usulan) || empty($usulan->rumpun_ilmu_level_1)) {
             return redirect()->route('usulan.step', ['usulan' => $usulan->id, 'step' => 1])
@@ -545,7 +561,7 @@ class ProposalWizardController extends Controller
     public function downloadProposal(PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isVerifier = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isVerifier = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin', 'Kaprodi', 'Reviewer', 'Dekanat']);
 
         abort_unless($usulan->id_pengusul === $user->id || $isVerifier, 403, 'Anda tidak memiliki akses ke dokumen proposal ini.');
         abort_unless($usulan->file_proposal_path, 404, 'Dokumen proposal belum tersedia.');

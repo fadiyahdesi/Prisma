@@ -1,10 +1,10 @@
 <section id="login" class="py-20 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white relative overflow-hidden">
     <!-- Ambient Blur Graphics -->
-    <div class="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 right-0 w-96 h-96 bg-[#681727]/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-500/30">
+        <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#681727] via-[#a82541] to-[#c99738] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-[#681727]/30">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
             </svg>

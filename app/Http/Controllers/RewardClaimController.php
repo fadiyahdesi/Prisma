@@ -101,6 +101,30 @@ class RewardClaimController extends Controller
             'distribusi.*.nomor_rekening.required' => 'Nomor rekening wajib diisi untuk setiap penulis.',
         ]);
 
+        if ($validated['jenis_klaim'] === 'Publikasi') {
+            $pub = PpmPublikasiJurnal::where('id', $validated['id_publikasi'])
+                ->where('user_id', Auth::id())
+                ->first();
+            if (!$pub) {
+                return redirect()->back()->withInput()
+                    ->withErrors(['id_publikasi' => 'Anda hanya berhak mengklaim reward untuk publikasi milik akun Anda sendiri sebagai Peneliti 1 / Penulis Utama.']);
+            }
+            if ($pub->peran_penulis && !in_array($pub->peran_penulis, ['Penulis Pertama', 'First Author', 'Penulis Utama', 'First & Corresponding Author'])) {
+                return redirect()->back()->withInput()
+                    ->withErrors(['id_publikasi' => 'Pengajuan reward insentif hanya berhak diajukan oleh Peneliti 1 / Penulis Utama (First Author).']);
+            }
+        }
+
+        if ($validated['jenis_klaim'] === 'HKI') {
+            $hkiItem = PpmHki::where('id', $validated['id_hki'])
+                ->where('user_id', Auth::id())
+                ->first();
+            if (!$hkiItem) {
+                return redirect()->back()->withInput()
+                    ->withErrors(['id_hki' => 'Anda hanya berhak mengklaim reward untuk HKI yang diajukan oleh akun Anda sendiri.']);
+            }
+        }
+
         $filePath = $request->file('file_surat_pernyataan')->store('surat_pernyataan_reward', 'public');
         $validated['file_surat_pernyataan'] = $filePath;
 
@@ -175,6 +199,12 @@ class RewardClaimController extends Controller
     {
         $user = Auth::user();
         abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola P3M.');
+
+        if ($klaim->jenis_klaim === 'Publikasi' && $klaim->publikasi) {
+            if ($klaim->publikasi->peran_penulis && !in_array($klaim->publikasi->peran_penulis, ['Penulis Pertama', 'First Author', 'Penulis Utama', 'First & Corresponding Author'])) {
+                return redirect()->back()->with('error', 'Persetujuan ditolak: Pengaju klaim bukan merupakan Penulis Pertama / Peneliti 1.');
+            }
+        }
 
         $catatan = $request->input('catatan_p3m', 'Klaim disetujui sesuai matriks SK Rektor.');
         $service->approveClaim($klaim, $user, $catatan);

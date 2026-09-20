@@ -19,6 +19,9 @@
         <!-- Interactive Schemes Explorer Filter -->
         @include('components.schemes')
 
+        <!-- Bank Publikasi & Riset Dosen Terbuka (Tanpa Login) -->
+        @include('components.public-publications')
+
         <!-- Wizard 6-Langkah Form Preview -->
         @include('components.wizard-preview')
 

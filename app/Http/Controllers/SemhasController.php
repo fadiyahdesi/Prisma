@@ -128,6 +128,44 @@ class SemhasController extends Controller
     }
 
     /**
+     * Kepala P3M: Persetujuan / ACC Cepat Seminar Hasil (ACC / Revisi Satu-Klik).
+     */
+    public function kepalaApproval(Request $request, PpmUsulan $usulan)
+    {
+        $user = Auth::user();
+        abort_unless($user->hasRole(['Kepala P3M', 'Admin P3M', 'Superadmin']), 403, 'Akses khusus Kepala P3M.');
+
+        $status = $request->input('status', 'acc');
+
+        $semhas = PpmSeminarHasil::firstOrCreate(
+            ['id_usulan' => $usulan->id],
+            [
+                'jadwal_seminar' => now(),
+                'ruangan_or_link' => 'Ruang Sidang P3M / Persetujuan Langsung',
+            ]
+        );
+
+        if ($status === 'acc') {
+            $semhas->update([
+                'skor_seminar' => $semhas->skor_seminar ?: 85.0,
+                'status_kelulusan' => 'lulus',
+                'catatan_penguji' => $request->input('catatan', 'Seminar Hasil telah disetujui (ACC) oleh Kepala P3M UHN.'),
+            ]);
+
+            return redirect()->back()
+                ->with('success', "Seminar Hasil untuk usulan '{$usulan->judul_usulan}' berhasil di-ACC (Disetujui) oleh Kepala P3M!");
+        } else {
+            $semhas->update([
+                'status_kelulusan' => 'tidak_lulus',
+                'catatan_penguji' => $request->input('catatan', 'Perlu perbaikan naskah / revisi semhas sebelum pengesahan final.'),
+            ]);
+
+            return redirect()->back()
+                ->with('warning', "Seminar Hasil usulan '{$usulan->judul_usulan}' ditolak / diminta perbaikan naskah.");
+        }
+    }
+
+    /**
      * Dosen Portal: Daftar Laporan Akhir & Pengesahan (US-10.3).
      */
     public function pengusulLaporanAkhir(?PpmUsulan $usulan = null)

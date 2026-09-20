@@ -11,7 +11,7 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <!-- Top Dashboard Header -->
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -24,7 +24,7 @@
             </div>
         </header>
 
-        <main class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6">
+        <main class="py-8 px-4 sm:px-6 lg:px-8 w-full space-y-6">
 
             @if (session('success'))
                 <div class="p-4 mb-4 text-sm text-emerald-800 rounded-xl bg-emerald-50 border border-emerald-200" role="alert">

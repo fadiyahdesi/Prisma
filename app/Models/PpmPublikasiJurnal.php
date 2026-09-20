@@ -26,6 +26,7 @@ class PpmPublikasiJurnal extends Model
         'url_artikel',
         'file_naskah',
         'jumlah_penulis',
+        'peran_penulis',
         'metadata_source',
         'is_claimed_reward',
     ];

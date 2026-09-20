@@ -9,7 +9,7 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         {{-- Top Header --}}
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-xs print:hidden">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -33,7 +33,7 @@
             </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             {{-- Tenant Controls & Filter Bar --}}
             <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-4">
                 <form action="{{ route('analitik.fakultas') }}" method="GET" class="flex flex-wrap items-center gap-3">
@@ -185,6 +185,122 @@
                     <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500 text-white shadow-xs">
                         Perlu Evaluasi
                     </span>
+                </div>
+            </div>
+
+            {{-- Matriks Perbandingan Target Renstra vs Realisasi Capaian Fakultas (Rincian Target vs Realisasi) --}}
+            @php
+                $targetPubTotal = max(1, (int) collect($facultyData['prodi_metrics'])->sum('target_publikasi'));
+                $realPubTotal = (int) ($facultyData['summary']['total_publikasi'] ?? 0);
+                $pctPub = round(($realPubTotal / $targetPubTotal) * 100, 1);
+
+                $targetHkiTotal = max(1, (int) collect($facultyData['prodi_metrics'])->sum('target_hki'));
+                $realHkiTotal = (int) ($facultyData['summary']['total_hki'] ?? 0);
+                $pctHki = round(($realHkiTotal / $targetHkiTotal) * 100, 1);
+
+                $targetUsulanTotal = max(1, (int) ($facultyData['summary']['total_usulan'] ?? 0));
+                $realLolosTotal = (int) ($facultyData['summary']['total_lolos'] ?? 0);
+                $pctLolos = round(($realLolosTotal / $targetUsulanTotal) * 100, 1);
+
+                $paguFakTotal = max(1, (float) ($facultyData['summary']['total_pagu'] ?? 0));
+                $serapanFakTotal = (float) ($facultyData['summary']['total_serapan'] ?? 0);
+                $pctSerapan = round(($serapanFakTotal / $paguFakTotal) * 100, 1);
+            @endphp
+
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                            <span>Matriks Perbandingan Target Renstra vs Realisasi Capaian Fakultas</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 font-medium">Evaluasi pemenuhan target indikator kinerja utama (IKU) riset dan pengabdian tingkat fakultas</p>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-black bg-indigo-50 text-indigo-800 border border-indigo-200 self-start sm:self-auto">
+                        Evaluasi Capaian Renstra
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {{-- 1. Publikasi DTPS --}}
+                    <div class="p-4.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Publikasi Scopus & SINTA</span>
+                            <div class="mt-1 flex items-baseline justify-between">
+                                <span class="text-xl font-black text-slate-900">{{ $realPubTotal }} <span class="text-xs text-slate-400 font-normal">Artikel</span></span>
+                                <span class="text-xs font-bold text-slate-500">Target: {{ $targetPubTotal }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="font-bold text-slate-600">Capaian:</span>
+                                <strong class="{{ $pctPub >= 100 ? 'text-emerald-600' : 'text-blue-600' }}">{{ $pctPub }}%</strong>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="h-2 rounded-full {{ $pctPub >= 100 ? 'bg-emerald-500' : 'bg-blue-600' }}" style="width: {{ min(100, $pctPub) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 2. HKI & Paten --}}
+                    <div class="p-4.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Perolehan HKI & Paten</span>
+                            <div class="mt-1 flex items-baseline justify-between">
+                                <span class="text-xl font-black text-slate-900">{{ $realHkiTotal }} <span class="text-xs text-slate-400 font-normal">Sertifikat</span></span>
+                                <span class="text-xs font-bold text-slate-500">Target: {{ $targetHkiTotal }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="font-bold text-slate-600">Capaian:</span>
+                                <strong class="{{ $pctHki >= 100 ? 'text-emerald-600' : 'text-amber-600' }}">{{ $pctHki }}%</strong>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="h-2 rounded-full {{ $pctHki >= 100 ? 'bg-emerald-500' : 'bg-amber-500' }}" style="width: {{ min(100, $pctHki) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 3. Kelolosan Usulan --}}
+                    <div class="p-4.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Usulan Lolos Seleksi</span>
+                            <div class="mt-1 flex items-baseline justify-between">
+                                <span class="text-xl font-black text-slate-900">{{ $realLolosTotal }} <span class="text-xs text-slate-400 font-normal">Judul</span></span>
+                                <span class="text-xs font-bold text-slate-500">Masuk: {{ $targetUsulanTotal }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="font-bold text-slate-600">Rasio Lolos:</span>
+                                <strong class="text-purple-600">{{ $pctLolos }}%</strong>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="h-2 rounded-full bg-purple-600" style="width: {{ min(100, $pctLolos) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 4. Serapan Dana --}}
+                    <div class="p-4.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Serapan Anggaran Hibah</span>
+                            <div class="mt-1 flex items-baseline justify-between">
+                                <span class="text-sm font-black text-slate-900">Rp {{ number_format($serapanFakTotal, 0, ',', '.') }}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">Pagu: Rp {{ number_format($paguFakTotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="font-bold text-slate-600">Efisiensi Serapan:</span>
+                                <strong class="{{ $pctSerapan >= 70 ? 'text-emerald-600' : 'text-blue-600' }}">{{ $pctSerapan }}%</strong>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div class="h-2 rounded-full {{ $pctSerapan >= 70 ? 'bg-emerald-500' : 'bg-blue-600' }}" style="width: {{ min(100, $pctSerapan) }}%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

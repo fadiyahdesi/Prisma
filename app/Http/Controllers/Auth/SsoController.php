@@ -122,7 +122,7 @@ class SsoController extends Controller
                 'nidn_nim' => '0604087103',
             ],
             'Admin P3M' => ['name' => 'Admin P3M UHN', 'email' => 'adminp3m@harkatnegeri.ac.id', 'nidn_nim' => 'ADM-P3M-01'],
-            'Kepala P3M' => ['name' => 'Kepala Unit P3M UHN', 'email' => 'kepalap3m@harkatnegeri.ac.id', 'nidn_nim' => 'KPL-P3M-01'],
+            'Kepala P3M' => ['name' => 'Sharfina Febbi Handayani, S.Kom., M.Kom.', 'email' => 'kepalap3m@harkatnegeri.ac.id', 'nidn_nim' => '0617029201'],
             'Keuangan' => ['name' => 'Bendahara P3M UHN', 'email' => 'keuangan@harkatnegeri.ac.id', 'nidn_nim' => 'KEU-P3M-01'],
             'Superadmin' => ['name' => 'Super Administrator UHN', 'email' => 'superadmin@harkatnegeri.ac.id', 'nidn_nim' => 'ROOT-UHN-01'],
             ];

@@ -12,8 +12,9 @@ use App\Http\Controllers\EligibilityController;
 use App\Http\Middleware\EnsureOtpVerified;
 use App\Http\Middleware\CheckRole;
 
-// Landing Page
+// Landing Page & Public Catalog (Tanpa Login)
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::get('/katalog-publikasi', [LandingController::class, 'publikasi'])->name('publikasi.katalog-publik');
 Route::get('/integrasi/pddikti/search', [PddiktiController::class, 'search'])->name('pddikti.search');
 
 // EPIC 09: Public QR Code SPK Verification Route (US-09.2)
@@ -24,6 +25,7 @@ Route::get('/laporan-akhir/verify/{token}', [\App\Http\Controllers\SemhasControl
 
 // Auth & SSO Routes (US-02.1)
 Route::get('/login', [SsoController::class, 'showLogin'])->name('login');
+Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('login.post');
 Route::get('/auth/sso/redirect', [SsoController::class, 'redirect'])->name('sso.redirect');
 Route::get('/auth/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 Route::post('/logout', [SsoController::class, 'logout'])->name('logout');
@@ -40,6 +42,21 @@ Route::middleware(['auth'])->group(function () {
         // RBAC Multi-Role Dashboard (US-02.3)
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::post('/dashboard/switch-role', [DashboardController::class, 'switchRole'])->name('dashboard.switch-role');
+
+        // Pengaturan Profil Mandiri (All Roles)
+        Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+
+        // Manajemen Akun Pengguna (Admin P3M, Kepala P3M, & Superadmin)
+        Route::resource('/admin/users', \App\Http\Controllers\Admin\UserController::class)->names([
+            'index' => 'admin.users.index',
+            'create' => 'admin.users.create',
+            'store' => 'admin.users.store',
+            'edit' => 'admin.users.edit',
+            'update' => 'admin.users.update',
+            'destroy' => 'admin.users.destroy',
+        ]);
 
         // EPIC 03: SINTA Sync & Real Search Routes (US-03.1, US-03.3)
         Route::get('/sinta/profile', [SintaSyncController::class, 'showProfile'])->name('sinta.profile');
@@ -147,6 +164,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/semhas', [\App\Http\Controllers\SemhasController::class, 'adminIndex'])->name('admin.semhas.index');
         Route::post('/admin/semhas/{usulan}/schedule', [\App\Http\Controllers\SemhasController::class, 'adminSchedule'])->name('admin.semhas.schedule');
         Route::post('/admin/semhas/{semhas}/grade', [\App\Http\Controllers\SemhasController::class, 'adminGrade'])->name('admin.semhas.grade');
+        Route::post('/admin/semhas/{usulan}/kepala-approval', [\App\Http\Controllers\SemhasController::class, 'kepalaApproval'])->name('admin.semhas.kepala-approval');
         Route::get('/pengusul/laporan-akhir', [\App\Http\Controllers\SemhasController::class, 'pengusulLaporanAkhir'])->name('pengusul.laporan-akhir.index');
         Route::get('/pengusul/laporan-akhir/{usulan}', [\App\Http\Controllers\SemhasController::class, 'pengusulLaporanAkhir'])->name('pengusul.laporan-akhir.show');
         Route::post('/pengusul/laporan-akhir/{usulan}', [\App\Http\Controllers\SemhasController::class, 'pengusulStoreLaporanAkhir'])->name('pengusul.laporan-akhir.store');
@@ -168,7 +186,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/hki/create', [\App\Http\Controllers\SentraHkiController::class, 'create'])->name('hki.create');
         Route::post('/hki', [\App\Http\Controllers\SentraHkiController::class, 'store'])->name('hki.store');
         Route::get('/hki/{hki}', [\App\Http\Controllers\SentraHkiController::class, 'show'])->name('hki.show');
+        Route::get('/hki/{hki}/download/{type}', [\App\Http\Controllers\SentraHkiController::class, 'downloadFile'])->name('hki.download-file');
         Route::get('/admin/hki', [\App\Http\Controllers\SentraHkiController::class, 'adminIndex'])->name('admin.hki.index');
+        Route::get('/admin/hki/template-csv', [\App\Http\Controllers\SentraHkiController::class, 'downloadTemplate'])->name('admin.hki.template-csv');
+        Route::get('/admin/hki/export-sinta', [\App\Http\Controllers\SentraHkiController::class, 'exportSintaJson'])->name('admin.hki.export-sinta');
+        Route::post('/admin/hki/import', [\App\Http\Controllers\SentraHkiController::class, 'import'])->name('admin.hki.import');
+        Route::post('/admin/hki/quick-sync-real', [\App\Http\Controllers\SentraHkiController::class, 'quickSyncDemo'])->name('admin.hki.quick-sync-real');
         Route::post('/admin/hki/{hki}/verify', [\App\Http\Controllers\SentraHkiController::class, 'verify'])->name('admin.hki.verify');
 
         // EPIC 11: Klaim Reward Insentif & Mesin Distribusi Multi-Penulis (US-11.3, US-11.4)

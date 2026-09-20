@@ -72,6 +72,14 @@ class KeuanganRewardController extends Controller
         $user = Auth::user();
         abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Keuangan.');
 
+        // Validasi Penulis Pertama untuk pencairan reward publikasi
+        $klaim = $distribusi->klaimReward;
+        if ($klaim && $klaim->jenis_klaim === 'Publikasi' && $klaim->publikasi) {
+            if ($klaim->publikasi->peran_penulis && !in_array($klaim->publikasi->peran_penulis, ['Penulis Pertama', 'First Author', 'Penulis Utama', 'First & Corresponding Author'])) {
+                return redirect()->back()->with('error', 'Pencairan dibatalkan: Klaim reward ini tidak diajukan oleh Penulis Pertama / Peneliti 1.');
+            }
+        }
+
         $validated = $request->validate([
             'tanggal_transfer' => 'required|date',
             'nomor_referensi' => 'required|string|max:100',

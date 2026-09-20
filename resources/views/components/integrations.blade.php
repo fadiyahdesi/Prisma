@@ -55,12 +55,12 @@
             @endforeach
         </div>
 
-        <div class="mt-8 flex justify-center">
+        <!-- <div class="mt-8 flex justify-center">
             <a href="{{ route('pddikti.search') }}" class="inline-flex items-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-5 py-3 text-sm font-bold text-cyan-800 transition-colors hover:bg-cyan-100">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m2.35-5.65a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
                 Cari Data Dosen & Penelitian PDDIKTI
             </a>
-        </div>
+        </div> -->
     </div>
 </section>
 

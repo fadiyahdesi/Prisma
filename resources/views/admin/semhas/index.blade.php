@@ -18,7 +18,7 @@
 
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -36,7 +36,7 @@
             </div>
         </header>
 
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             @if(session('success'))
                 <div class="p-4.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-3 shadow-sm">
                     <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -253,6 +253,33 @@
                                         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         <span>Lembar Pengesahan (PDF)</span>
                                     </a>
+                                @endif
+
+                                @if(auth()->user()->hasRole(['Kepala P3M', 'Superadmin']))
+                                    @if(!$semhas || $semhas->status_kelulusan !== 'lulus')
+                                        <form method="POST" action="{{ route('admin.semhas.kepala-approval', $u) }}" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="status" value="acc">
+                                            <button type="submit" onclick="return confirm('ACC dan Luluskan Seminar Hasil usulan ini?')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5" title="Persetujuan Langsung Kepala LPPM">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                <span>ACC Semhas</span>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-black flex items-center gap-1">
+                                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                Telah di-ACC
+                                            </span>
+                                            <form method="POST" action="{{ route('admin.semhas.kepala-approval', $u) }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="revisi">
+                                                <button type="submit" onclick="return confirm('Batalkan status ACC dan minta revisi naskah?')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition">
+                                                    Minta Revisi
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>

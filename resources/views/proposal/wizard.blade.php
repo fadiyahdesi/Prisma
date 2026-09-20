@@ -9,11 +9,14 @@
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
         <!-- Top Header Navigation -->
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 shrink-0">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
+                    <a href="{{ route('usulan.index') }}" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 transition" title="Kembali ke Daftar Usulan" aria-label="Kembali ke Daftar Usulan">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    </a>
                     <div>
                         <h1 class="font-extrabold text-xl text-slate-900 leading-tight">Wizard 6 Langkah Usulan BIMA</h1>
                         <p class="text-xs font-semibold text-slate-500">
@@ -21,17 +24,11 @@
                         </p>
                     </div>
                 </div>
-
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('usulan.index') }}" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold border border-slate-300">
-                        Daftar Usulan
-                    </a>
-                </div>
             </div>
         </header>
 
         <!-- Main Body -->
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
             <!-- Flash Alerts -->
             @if(session('success'))
                 <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 text-sm font-extrabold flex items-center gap-3 shadow-sm">
@@ -497,31 +494,60 @@
                     </div>
 
                     <!-- Add Luaran Form -->
-                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                        <h4 class="text-xs font-black uppercase text-slate-800">+ Tambah Target Luaran</h4>
-                        <form action="{{ route('usulan.save-step5', $usulan) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3" x-data="{ kategoriVal: '' }">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-black uppercase text-slate-800">+ Tambah Target Luaran</h4>
+                            <span class="text-[10px] font-semibold text-slate-500">Pilih kategori luaran KI / Paten / Publikasi</span>
+                        </div>
+                        <form action="{{ route('usulan.save-step5', $usulan) }}" method="POST" class="space-y-3">
                             @csrf
                             <input type="hidden" name="add_luaran" value="1">
-                            <div>
-                                <select name="jenis_luaran" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
-                                    <option value="wajib">Luaran Wajib</option>
-                                    <option value="tambahan">Luaran Tambahan</option>
-                                </select>
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                <div>
+                                    <select name="jenis_luaran" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
+                                        <option value="wajib">Luaran Wajib</option>
+                                        <option value="tambahan">Luaran Tambahan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" x-model="kategoriVal" name="kategori_luaran" list="luaranList" placeholder="Kategori (KI/Paten/HKI, Scopus)" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
+                                    <datalist id="luaranList">
+                                        <option value="Paten &amp; Paten Sederhana (KI)">
+                                        <option value="Hak Cipta (HKI)">
+                                        <option value="Desain Industri (KI)">
+                                        <option value="Jurnal Internasional Terindeks Scopus">
+                                        <option value="Jurnal Nasional Terakreditasi SINTA">
+                                        <option value="Prototipe Teruji / Produk Inovasi">
+                                    </datalist>
+                                </div>
+                                <div>
+                                    <select name="target_status" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
+                                        <option value="Submitted">Submitted</option>
+                                        <option value="Accepted">Accepted</option>
+                                        <option value="Published">Published</option>
+                                        <option value="Granted">Granted (Paten/HKI)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <button type="submit" class="w-full px-5 py-2.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-xs shadow-sm transition">
+                                        + Tambah Luaran
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <input type="text" name="kategori_luaran" placeholder="Kategori (Jurnal Scopus/SINTA, Paten)" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
-                            </div>
-                            <div>
-                                <select name="target_status" required class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-300 font-bold text-xs text-slate-900">
-                                    <option value="Submitted">Submitted</option>
-                                    <option value="Accepted">Accepted</option>
-                                    <option value="Published">Published</option>
-                                    <option value="Granted">Granted (Paten/HKI)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <button type="submit" class="w-full px-5 py-2.5 rounded-xl bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-xs shadow-sm">
-                                    + Tambah Luaran
+                            <!-- Quick Select Pills for KI / Paten / HKI -->
+                            <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/60">
+                                <span class="text-[10px] font-black uppercase text-slate-400">Pilihan Cepat KI &amp; Paten:</span>
+                                <button type="button" @click="kategoriVal = 'Paten & Paten Sederhana (KI)'" class="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-[10px] font-extrabold transition">
+                                    💡 Paten (KI)
+                                </button>
+                                <button type="button" @click="kategoriVal = 'Hak Cipta (HKI)'" class="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-[10px] font-extrabold transition">
+                                    📜 Hak Cipta (HKI)
+                                </button>
+                                <button type="button" @click="kategoriVal = 'Desain Industri (KI)'" class="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[10px] font-extrabold transition">
+                                    🎨 Desain Industri (KI)
+                                </button>
+                                <button type="button" @click="kategoriVal = 'Jurnal Internasional Terindeks Scopus'" class="px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 text-[10px] font-extrabold transition">
+                                    📚 Scopus
                                 </button>
                             </div>
                         </form>

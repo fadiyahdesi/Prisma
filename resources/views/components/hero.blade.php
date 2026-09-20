@@ -1,7 +1,7 @@
 <section class="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-radial-glow">
     <!-- Decorative Ambient Blobs -->
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-400/20 via-cyan-400/20 to-indigo-500/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-    <div class="absolute top-10 right-10 w-96 h-96 bg-blue-300/10 rounded-full blur-2xl -z-10 pointer-events-none"></div>
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-[#681727]/15 via-[#a82541]/15 to-amber-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+    <div class="absolute top-10 right-10 w-96 h-96 bg-[#681727]/10 rounded-full blur-2xl -z-10 pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-4xl mx-auto">

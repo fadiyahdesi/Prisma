@@ -377,5 +377,106 @@ class Epic11PublicationsAndRewardTest extends TestCase
         $this->assertEquals('Disbursed', $klaim1->status_klaim);
         $this->assertTrue($klaim1->isFullyDisbursed());
     }
+
+    /**
+     * Test admin can download HKI CSV template.
+     */
+    public function test_admin_can_download_hki_csv_template(): void
+    {
+        $response = $this->actingAs($this->adminP3m)
+            ->withSession(['otp_verified' => true])
+            ->get(route('admin.hki.template-csv'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-disposition', 'attachment; filename="template_rekap_hki_uhn.csv"');
+    }
+
+    /**
+     * Test admin can export verified HKI to SINTA JSON format.
+     */
+    public function test_admin_can_export_hki_sinta_json(): void
+    {
+        $response = $this->actingAs($this->adminP3m)
+            ->withSession(['otp_verified' => true])
+            ->get(route('admin.hki.export-sinta'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/json');
+        $data = $response->json();
+        $this->assertIsArray($data);
+    }
+
+    /**
+     * Test admin can import PDKI Auto Fetch JSON file.
+     */
+    public function test_admin_can_import_pdki_json_file(): void
+    {
+        $jsonPayload = json_encode([
+            [
+                'nomor_permohonan' => 'EC002026TEST01',
+                'judul' => 'Aplikasi Pengujian Otomatis Sistem Cerdas Kampus',
+                'jenis' => 'Hak Cipta',
+                'nomor_pencatatan' => '000999888',
+                'tgl_permohonan' => '2026-02-01',
+                'tgl_terbit' => '2026-02-28',
+                'pencipta' => 'Dosen Peneliti',
+                'pemegang' => 'Universitas Harkat Negeri',
+            ],
+        ]);
+
+        $file = UploadedFile::fake()->createWithContent('pdki_export.json', $jsonPayload);
+
+        $response = $this->actingAs($this->adminP3m)
+            ->withSession(['otp_verified' => true])
+            ->post(route('admin.hki.import'), [
+                'hki_file' => $file,
+            ]);
+
+        $response->assertRedirect(route('admin.hki.index'));
+        $this->assertDatabaseHas('ppm_hki', [
+            'nomor_permohonan' => 'EC002026TEST01',
+            'status_hki' => 'Terverifikasi HKI',
+        ]);
+    }
+
+    /**
+     * Test admin can import HKI CSV file.
+     */
+    public function test_admin_can_import_hki_csv_file(): void
+    {
+        $csvContent = "nomor_permohonan,judul_hki,jenis_hki,nama_dosen,nidn,pemegang_hak,tanggal_permohonan,nomor_sertifikat,tanggal_terbit\n" .
+                      "P002026TEST02,Alat Sensor Cerdas Berbasis AI,Paten,Dosen Peneliti,0613028601,Universitas Harkat Negeri,2026-01-10,IDP000999,2026-02-20\n";
+
+        $file = UploadedFile::fake()->createWithContent('hki_rekap.csv', $csvContent);
+
+        $response = $this->actingAs($this->adminP3m)
+            ->withSession(['otp_verified' => true])
+            ->post(route('admin.hki.import'), [
+                'hki_file' => $file,
+            ]);
+
+        $response->assertRedirect(route('admin.hki.index'));
+        $this->assertDatabaseHas('ppm_hki', [
+            'nomor_permohonan' => 'P002026TEST02',
+            'jenis_hki' => 'Paten',
+            'status_hki' => 'Terverifikasi HKI',
+        ]);
+    }
+
+    /**
+     * Test admin can quick sync real UHN lecturers HKI.
+     */
+    public function test_admin_can_quick_sync_real_uhn_hki(): void
+    {
+        $response = $this->actingAs($this->adminP3m)
+            ->withSession(['otp_verified' => true])
+            ->post(route('admin.hki.quick-sync-real'));
+
+        $response->assertRedirect(route('admin.hki.index'));
+        $this->assertDatabaseHas('ppm_hki', [
+            'nomor_permohonan' => 'EC00202688001',
+            'status_hki' => 'Terverifikasi HKI',
+        ]);
+    }
 }
 
