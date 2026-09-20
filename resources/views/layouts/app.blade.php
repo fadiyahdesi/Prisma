@@ -16,9 +16,35 @@
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/prism.png">
 
     <!-- Styles & Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if(file_exists(public_path('build/manifest.json')))
+        @php
+            $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+            $cssFile = $manifest['resources/css/app.css']['file'] ?? null;
+            $jsFile = $manifest['resources/js/app.js']['file'] ?? null;
+        @endphp
+        @if($cssFile)
+            <link rel="stylesheet" href="/build/{{ $cssFile }}">
+        @endif
+        @if($jsFile)
+            <script type="module" src="/build/{{ $jsFile }}"></script>
+        @endif
+    @else
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
 
     <style>
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .w-6 { width: 1.5rem !important; }
+        .h-6 { height: 1.5rem !important; }
+        .w-5 { width: 1.25rem !important; }
+        .h-5 { height: 1.25rem !important; }
+        .w-4 { width: 1rem !important; }
+        .h-4 { height: 1rem !important; }
+        .w-10 { width: 2.5rem !important; }
+        .h-10 { height: 2.5rem !important; }
         *, *::before, *::after {
             font-variant-numeric: normal !important;
             font-feature-settings: "zero" 0 !important;
