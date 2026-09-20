@@ -1,5 +1,8 @@
 # nixpacks.toml for Laravel 12 with PostgreSQL and Vite on Railway
 
+[variables]
+RAILPACK_PHP_EXTENSIONS = "gd,pgsql,pdo_pgsql,zip,intl,mbstring,bcmath"
+
 [phases.setup]
 nixPkgs = [
     "php83",

@@ -7,6 +7,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-gd": "*",
+        "ext-zip": "*",
+        "ext-pdo_pgsql": "*",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
@@ -82,6 +85,13 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.3.0",
+            "ext-gd": "8.3.0",
+            "ext-zip": "1.22.0",
+            "ext-pdo_pgsql": "8.3.0",
+            "ext-pgsql": "8.3.0"
         }
     },
     "minimum-stability": "stable",
