@@ -1,0 +1,29 @@
+# nixpacks.toml for Laravel 12 with PostgreSQL and Vite on Railway
+
+[phases.setup]
+nixPkgs = [
+    "php83",
+    "php83Packages.composer",
+    "php83Extensions.pdo_pgsql",
+    "php83Extensions.pgsql",
+    "php83Extensions.gd",
+    "php83Extensions.zip",
+    "php83Extensions.intl",
+    "php83Extensions.mbstring",
+    "php83Extensions.bcmath",
+    "nodejs_20"
+]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs",
+    "npm install"
+]
+
+[phases.build]
+cmds = [
+    "npm run build"
+]
+
+[start]
+cmd = "php artisan optimize:clear && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
