@@ -23,6 +23,26 @@ Route::get('/spk/verify/{token}', [\App\Http\Controllers\ContractController::cla
 // EPIC 10: Public QR Code Laporan Akhir Verification Route (US-10.3)
 Route::get('/laporan-akhir/verify/{token}', [\App\Http\Controllers\SemhasController::class, 'publicVerify'])->name('laporan-akhir.verify');
 
+// Rute Sekali-Klik Penyiapan Database Demo Cloud & Pengisian Seluruh Dosen
+Route::get('/system/setup-demo-database', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--force' => true, '--seed' => true]);
+    try {
+        \Illuminate\Support\Facades\Artisan::call('prisma:generate-demo-pdfs', ['--overwrite' => true]);
+    } catch (\Throwable $e) {
+        // ignore if not critical
+    }
+
+    $lecturers = \App\Models\User::whereNotNull('nidn_nim')->select('name', 'nidn_nim', 'email')->get();
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Database PRISMA cloud berhasil dimigrasikan dan seluruh data dosen riil UHN telah diisi!',
+        'total_dosen' => $lecturers->count(),
+        'petunjuk_login' => 'Gunakan Nama Lengkap atau NIDN sebagai Username, dan NIDN sebagai Password.',
+        'daftar_dosen' => $lecturers
+    ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+});
+
 // Auth & SSO Routes (US-02.1)
 Route::get('/login', [SsoController::class, 'showLogin'])->name('login');
 Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('login.post');
