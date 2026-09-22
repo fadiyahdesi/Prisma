@@ -17,8 +17,21 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RbacSeeder::class,
+            RealLecturerCsvSeeder::class,
             BimaSkemaAndPeriodeSeeder::class,
             DemoProposalSeeder::class,
+            MemberConsentDemoSeeder::class,
+            RankedProposalsSeeder::class,
+            Epic10DemoDataSeeder::class,
+            Epic11DemoDataSeeder::class,
+            Epic12DemoDataSeeder::class,
+            DemoRealLecturerWorkflowSeeder::class,
         ]);
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('prisma:generate-demo-pdfs', ['--overwrite' => true]);
+        } catch (\Throwable $e) {
+            // Ignore in testing environments
+        }
     }
 }
