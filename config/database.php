@@ -84,20 +84,38 @@ return [
             ]) : [],
         ],
 
-        'pgsql' => [
-            'driver' => 'pgsql',
-            'url' => env('DATABASE_URL') ?: env('DB_URL'),
-            'host' => env('DB_HOST') ?: '127.0.0.1',
-            'port' => (env('DB_PORT') && is_numeric(env('DB_PORT'))) ? env('DB_PORT') : '5432',
-            'database' => env('DB_DATABASE') ?: 'laravel',
-            'username' => env('DB_USERNAME') ?: 'root',
-            'password' => env('DB_PASSWORD') ?: '',
-            'charset' => env('DB_CHARSET', 'utf8'),
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
-        ],
+        'pgsql' => (function () {
+            $url = env('DATABASE_URL') ?: env('DB_URL');
+
+            if (str_starts_with(env('DB_DATABASE') ?? '', 'postgres://') || str_starts_with(env('DB_DATABASE') ?? '', 'postgresql://')) {
+                $url = env('DB_DATABASE');
+            } elseif (str_starts_with(env('DB_HOST') ?? '', 'postgres://') || str_starts_with(env('DB_HOST') ?? '', 'postgresql://')) {
+                $url = env('DB_HOST');
+            }
+
+            $parsed = $url ? parse_url($url) : [];
+
+            $host = $parsed['host'] ?? (env('DB_HOST') ?: '127.0.0.1');
+            $port = isset($parsed['port']) && is_numeric($parsed['port']) ? $parsed['port'] : (is_numeric(env('DB_PORT')) ? env('DB_PORT') : '5432');
+            $database = isset($parsed['path']) ? ltrim($parsed['path'], '/') : (env('DB_DATABASE') ?: 'laravel');
+            $username = $parsed['user'] ?? (env('DB_USERNAME') ?: 'root');
+            $password = $parsed['pass'] ?? (env('DB_PASSWORD') ?: '');
+
+            return [
+                'driver' => 'pgsql',
+                'url' => $url,
+                'host' => $host,
+                'port' => $port,
+                'database' => $database,
+                'username' => $username,
+                'password' => $password,
+                'charset' => env('DB_CHARSET', 'utf8'),
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'search_path' => 'public',
+                'sslmode' => env('DB_SSLMODE', 'prefer'),
+            ];
+        })(),
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
