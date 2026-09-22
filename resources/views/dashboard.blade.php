@@ -5,7 +5,7 @@
 @section('content')
 @php
     $canSyncSinta = in_array($activeRole, ['Dosen / Pengusul', 'Reviewer', 'Superadmin'], true);
-    $canViewAuditLogs = in_array($activeRole, ['Kepala P3M', 'Superadmin'], true);
+    $canViewAuditLogs = in_array($activeRole, ['Superadmin'], true);
     $canManageEpic04 = in_array($activeRole, ['Admin P3M', 'Superadmin'], true);
 @endphp
 <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-slate-100 text-slate-800 flex">

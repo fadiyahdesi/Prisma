@@ -719,7 +719,7 @@
                 </div>
                 @endif
 
-                {{-- Audit Trail Logs (Hanya Kepala P3M & Superadmin) --}}
+                {{-- Audit Trail Logs (Hanya Superadmin) --}}
                 @if($canViewAuditLogs)
                     <a href="{{ route('audit-logs') }}" 
                        class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'audit-logs' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">

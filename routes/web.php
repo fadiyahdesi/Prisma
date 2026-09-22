@@ -180,7 +180,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/integrasi/djki/verify', [\App\Http\Controllers\IntegrationsController::class, 'verifyDjki'])->name('integrasi.djki.verify');
         Route::post('/integrasi/storage/upload', [\App\Http\Controllers\IntegrationsController::class, 'uploadTestFile'])->name('integrasi.storage.upload');
 
-        // Audit Trail Logging (US-02.4 - Restricted to Kepala P3M & Superadmin)
+        // Audit Trail Logging (Restricted to Superadmin only)
         Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs');
 
         // EPIC 04: Master Skema BIMA & Rubrik Penilaian Reviewer (US-04.1, US-04.3)

@@ -9,15 +9,15 @@ use Illuminate\Support\Facades\Auth;
 class AuditLogController extends Controller
 {
     /**
-     * Display paginated Audit Trail Logs. Restricted to Kepala P3M & Superadmin.
+     * Display paginated Audit Trail Logs. Restricted to Superadmin only.
      */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // Otorisasi US-02.4: Hanya Kepala P3M dan Superadmin
-        if (!$user->hasRole(['Kepala P3M', 'Superadmin'])) {
-            return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Halaman Audit Trail Logging hanya dapat diakses oleh Kepala P3M dan Superadmin.');
+        // Otorisasi: Khusus Superadmin
+        if (!$user->hasRole('Superadmin')) {
+            return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Halaman Audit Trail Logging hanya dapat diakses oleh Superadmin.');
         }
 
         $query = AuditLog::with('user')->orderBy('id', 'desc');
