@@ -43,6 +43,92 @@ Route::get('/system/setup-demo-database', function () {
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 });
 
+// Rute Pembuatan Berkas PDF Demo & Perbaikan Symlink Storage
+Route::get('/system/generate-demo-pdfs', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('prisma:generate-demo-pdfs', ['--overwrite' => true]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Seluruh berkas PDF resmi demo PRISMA telah berhasil dibuat di public storage!',
+            'output' => \Illuminate\Support\Facades\Artisan::output()
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// Dynamic Public Storage & On-Demand Demo PDF Fallback
+Route::get('/storage/{path}', function (string $path) {
+    $fullPath = storage_path('app/public/' . $path);
+
+    // 1. If physical file exists in storage/app/public, serve it directly
+    if (file_exists($fullPath) && !is_dir($fullPath)) {
+        $mime = mime_content_type($fullPath) ?: 'application/octet-stream';
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . basename($fullPath) . '"',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    // 2. If it is a PDF, auto-generate on demand so it never 404s
+    if (str_ends_with(strtolower($path), '.pdf')) {
+        try {
+            $generator = app(\App\Services\DemoPdfGeneratorService::class);
+            $lower = strtolower($path);
+
+            if (str_contains($lower, 'publikasi_naskah') || str_contains($lower, 'paper')) {
+                $generator->generatePaper([], $path);
+            } elseif (str_contains($lower, 'hki_sertifikat') || str_contains($lower, 'sertifikat')) {
+                $generator->generateHkiCertificate([], $path);
+            } elseif (str_contains($lower, 'manual_book')) {
+                $generator->generateHkiManualBook([], $path);
+            } elseif (str_contains($lower, 'surat_pernyataan')) {
+                $generator->generateHkiPernyataan([], $path);
+            } elseif (str_contains($lower, 'surat_pengalihan')) {
+                $generator->generateHkiPengalihan([], $path);
+            } elseif (str_contains($lower, 'proposals') || str_contains($lower, 'proposal')) {
+                $generator->generateProposal([], $path);
+            } elseif (str_contains($lower, 'mitra')) {
+                $generator->generateMitraSurat([], $path);
+            } elseif (str_contains($lower, 'laporan_kemajuan') || str_contains($lower, 'kemajuan')) {
+                $generator->generateLaporanKemajuan([], $path);
+            } elseif (str_contains($lower, 'laporan_akhir') || str_contains($lower, 'laporan-akhir')) {
+                $generator->generateLaporanAkhir([], $path);
+            } elseif (str_contains($lower, 'sptb_70') || str_contains($lower, 'sptb-70')) {
+                $generator->generateSptb(['persen' => 70], $path);
+            } elseif (str_contains($lower, 'sptb')) {
+                $generator->generateSptb(['persen' => 100], $path);
+            } elseif (str_contains($lower, 'tabungan')) {
+                $generator->generateBukuTabungan([], $path);
+            } elseif (str_contains($lower, 'kontrak') || str_contains($lower, 'spk')) {
+                $generator->generateSpkKontrak([], $path);
+            } elseif (str_contains($lower, 'bukti_transfer') || str_contains($lower, 'transfer')) {
+                $generator->generateBuktiTransfer([], $path);
+            } elseif (str_contains($lower, 'reward') || str_contains($lower, 'kesepakatan')) {
+                $generator->generateRewardKesepakatan([], $path);
+            } else {
+                $generator->generateProposal(['title' => 'Dokumen Resmi PRISMA UHN'], $path);
+            }
+
+            if (file_exists($fullPath)) {
+                return response()->file($fullPath, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . basename($fullPath) . '"',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Gagal auto-generate PDF untuk {$path}: " . $e->getMessage());
+        }
+    }
+
+    abort(404, 'Berkas tidak ditemukan.');
+})->where('path', '.*')->name('storage.fallback');
+
 // Auth & SSO Routes (US-02.1)
 Route::get('/login', [SsoController::class, 'showLogin'])->name('login');
 Route::post('/login', [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('login.post');

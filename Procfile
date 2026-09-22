@@ -1,1 +1,1 @@
-web: php artisan optimize:clear && php artisan storage:link --force && (php artisan migrate --force --seed || true) && php artisan serve --host=0.0.0.0 --port=$PORT
+web: php artisan optimize:clear && php artisan storage:link --force && (php artisan migrate --force --seed || true) && (php artisan prisma:generate-demo-pdfs --overwrite || true) && php artisan serve --host=0.0.0.0 --port=$PORT
