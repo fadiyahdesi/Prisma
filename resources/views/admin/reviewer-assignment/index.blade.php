@@ -67,91 +67,121 @@
             </div>
         </header>
 
-        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-5 space-y-4">
             @if(session('success'))
-                <div class="p-4.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-3 shadow-sm">
-                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2.5 shadow-xs">
+                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="p-4.5 rounded-2xl bg-red-50 border border-red-300 text-red-900 text-sm font-bold flex items-center gap-3 shadow-sm">
-                    <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="p-3.5 rounded-xl bg-red-50 border border-red-300 text-red-900 text-xs font-bold flex items-center gap-2.5 shadow-xs">
+                    <svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
-                <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Dalam Penelaahan</span>
-                    <span class="text-2xl font-black text-slate-900 mt-1 block">{{ $stats['total_in_review'] }} Usulan</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Status: In_review (Reviewer 1 & 2)</p>
+            <!-- Ringkasan Statistik Kompak (KPI Grid) -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                <div class="p-3 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Dalam Penelaahan</span>
+                        <div class="text-lg font-black text-slate-900 leading-tight mt-0.5">
+                            {{ $stats['total_in_review'] }} <span class="text-[11px] font-semibold text-slate-400">Usulan</span>
+                        </div>
+                    </div>
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xs shrink-0">⏳</span>
                 </div>
-                <div class="p-5 rounded-3xl bg-amber-50 border border-amber-200 shadow-sm">
-                    <span class="text-xs font-bold text-amber-900 uppercase tracking-wider block">Disparitas Ekstrem (Adjudikasi)</span>
-                    <span class="text-2xl font-black text-amber-700 mt-1 block">{{ $stats['total_adjudication'] }} Usulan</span>
-                    <p class="text-[11px] text-amber-600 mt-1">Perlu Reviewer 3 (Penengah)</p>
+
+                <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">Disparitas (Adjudikasi)</span>
+                        <div class="text-lg font-black text-amber-700 leading-tight mt-0.5">
+                            {{ $stats['total_adjudication'] }} <span class="text-[11px] font-semibold text-amber-600/80">Usulan</span>
+                        </div>
+                    </div>
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs shrink-0">⚠️</span>
                 </div>
-                <div class="p-5 rounded-3xl bg-emerald-50 border border-emerald-200 shadow-sm">
-                    <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Selesai Dinilai</span>
-                    <span class="text-2xl font-black text-emerald-700 mt-1 block">{{ $stats['total_reviewed'] }} Usulan</span>
-                    <p class="text-[11px] text-emerald-600 mt-1">Skor akhir telah terkalkulasi</p>
+
+                <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold text-emerald-900 uppercase tracking-wider block">Selesai Dinilai</span>
+                        <div class="text-lg font-black text-emerald-700 leading-tight mt-0.5">
+                            {{ $stats['total_reviewed'] }} <span class="text-[11px] font-semibold text-emerald-600/80">Usulan</span>
+                        </div>
+                    </div>
+                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs shrink-0">✅</span>
                 </div>
-                <div class="p-5 rounded-3xl bg-blue-50 border border-blue-200 shadow-sm">
-                    <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">🔬 Penelitian</span>
-                    <span class="text-2xl font-black text-blue-700 mt-1 block">{{ $stats['total_penelitian'] }} Usulan</span>
-                    <p class="text-[11px] text-blue-600 mt-1">Divisi Penelitian</p>
-                </div>
-                <div class="p-5 rounded-3xl bg-purple-50 border border-purple-200 shadow-sm">
-                    <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">🤝 Pengabdian</span>
-                    <span class="text-2xl font-black text-purple-700 mt-1 block">{{ $stats['total_pengabdian'] }} Usulan</span>
-                    <p class="text-[11px] text-purple-600 mt-1">Divisi Pengabdian Masyarakat</p>
-                </div>
+
+                <!-- Divisi Penelitian (Klik untuk filter) -->
+                <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'penelitian' ? [] : ['divisi' => 'penelitian'])) }}"
+                   class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-blue-50/60 hover:bg-blue-100/70 border-blue-200 text-slate-800' }}">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-900' }}">🔬 Penelitian</span>
+                        <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'penelitian' ? 'text-white' : 'text-blue-700' }}">
+                            {{ $stats['total_penelitian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-600' }}">Usulan</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'penelitian' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700' }}">
+                        {{ $kategoriFilter === 'penelitian' ? 'Aktif' : 'Pilih' }}
+                    </span>
+                </a>
+
+                <!-- Divisi Pengabdian (Klik untuk filter) -->
+                <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'pengabdian' ? [] : ['divisi' => 'pengabdian'])) }}"
+                   class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between col-span-2 md:col-span-1 {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-purple-50/60 hover:bg-purple-100/70 border-purple-200 text-slate-800' }}">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-900' }}">🤝 Pengabdian</span>
+                        <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'pengabdian' ? 'text-white' : 'text-purple-700' }}">
+                            {{ $stats['total_pengabdian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-600' }}">Usulan</span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'pengabdian' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700' }}">
+                        {{ $kategoriFilter === 'pengabdian' ? 'Aktif' : 'Pilih' }}
+                    </span>
+                </a>
             </div>
 
-            <!-- Filter Status & Divisi Bar -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                {{-- Filter Divisi --}}
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-bold text-slate-500">Filter Divisi:</span>
+            <!-- Toolbar Filter Divisi & Status Kompak -->
+            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Divisi:</span>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), [])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ !$kategoriFilter ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                        📋 Semua Divisi
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ !$kategoriFilter ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                        Semua Divisi
                     </a>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'penelitian'])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                         🔬 Penelitian
                     </a>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'pengabdian'])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                         🤝 Pengabdian
                     </a>
                 </div>
-                {{-- Filter Status --}}
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs font-bold text-slate-500">Filter Status:</span>
+
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Status:</span>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), [])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ !request('status_filter') ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                        Semua Status
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ !request('status_filter') ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                        Semua
                     </a>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'In_review'])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'In_review' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('status_filter') === 'In_review' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                         In_review
                     </a>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'Adjudication'])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'Adjudication' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('status_filter') === 'Adjudication' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                         Adjudication
                     </a>
                     <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'Reviewed'])) }}"
-                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'Reviewed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ request('status_filter') === 'Reviewed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
                         Reviewed
                     </a>
-                </div>
-                <div class="text-xs text-slate-500 font-medium">
-                    Menampilkan <strong>{{ $proposals->total() }}</strong> usulan
-                    @if($kategoriFilter) · <span class="font-bold text-{{ $kategoriFilter === 'penelitian' ? 'blue' : 'purple' }}-700">Divisi {{ ucfirst($kategoriFilter) }}</span>@endif
+                    <span class="text-xs text-slate-400 font-semibold ml-2 border-l border-slate-200 pl-2">
+                        Total: <strong>{{ $proposals->total() }}</strong> usulan
+                    </span>
                 </div>
             </div>
 
