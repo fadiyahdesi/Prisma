@@ -35,16 +35,24 @@ class ReviewerAssignmentController extends Controller
             $query->where('status', $request->string('status_filter'));
         }
 
+        // Filter by Divisi: Penelitian or Pengabdian
+        $kategoriFilter = $request->input('divisi');
+        if (in_array($kategoriFilter, ['penelitian', 'pengabdian'])) {
+            $query->whereHas('skema', fn($q) => $q->whereRaw('LOWER(kategori) = ?', [$kategoriFilter]));
+        }
+
         $proposals = $query->paginate(12)->withQueryString();
 
         // Stats
         $stats = [
-            'total_in_review' => PpmUsulan::where('status', 'In_review')->count(),
+            'total_in_review'    => PpmUsulan::where('status', 'In_review')->count(),
             'total_adjudication' => PpmUsulan::where('status', 'Adjudication')->count(),
-            'total_reviewed' => PpmUsulan::where('status', 'Reviewed')->count(),
+            'total_reviewed'     => PpmUsulan::where('status', 'Reviewed')->count(),
+            'total_penelitian'   => PpmUsulan::whereHas('skema', fn($q) => $q->whereRaw('LOWER(kategori) = ?', ['penelitian']))->whereIn('status', ['In_review', 'Approved', 'Submitted', 'Adjudication', 'Reviewed'])->count(),
+            'total_pengabdian'   => PpmUsulan::whereHas('skema', fn($q) => $q->whereRaw('LOWER(kategori) = ?', ['pengabdian']))->whereIn('status', ['In_review', 'Approved', 'Submitted', 'Adjudication', 'Reviewed'])->count(),
         ];
 
-        return view('admin.reviewer-assignment.index', compact('proposals', 'stats'));
+        return view('admin.reviewer-assignment.index', compact('proposals', 'stats', 'kategoriFilter'));
     }
 
     /**

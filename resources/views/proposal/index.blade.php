@@ -85,7 +85,14 @@
                             <tbody class="divide-y divide-slate-100 font-semibold text-slate-800">
                                 @foreach($proposals as $p)
                                     <tr class="hover:bg-slate-50">
-                                        <td class="p-4 font-mono font-bold text-blue-900">{{ $p->kode_usulan }}</td>
+                                        <td class="p-4 font-mono font-bold text-blue-900">
+                                            {{ $p->kode_usulan }}
+                                            @if(str_starts_with($p->kode_usulan, 'PHB-') || str_starts_with($p->kode_usulan, 'YMI-') || ($p->skema && $p->skema->kode_skema === 'HISTORIS-PHB'))
+                                                <span class="block mt-1 w-max px-2 py-0.5 rounded text-[9px] font-black bg-purple-100 text-purple-800 border border-purple-200">
+                                                    🏛️ SIMPENDI PHB
+                                                </span>
+                                            @endif
+                                        </td>
                                         <td class="p-4 font-bold text-slate-900 max-w-xs truncate" title="{{ $p->judul_usulan }}">
                                             {{ Str::limit($p->judul_usulan ?? 'Draf Tanpa Judul', 40) }}
                                         </td>

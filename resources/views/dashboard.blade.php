@@ -303,6 +303,21 @@
                         </a>
                     </div>
 
+                    {{-- Info Undang Anggota Tim --}}
+                    <div class="p-5 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col md:flex-row md:items-start gap-4">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-lg">👥</div>
+                        <div class="space-y-1">
+                            <h5 class="text-xs font-extrabold text-teal-900 uppercase tracking-wider">Cara Menambahkan Anggota Tim (Dosen / Mahasiswa)</h5>
+                            <p class="text-xs text-teal-800 font-semibold">Sebagai Ketua Pengusul, Anda dapat mengundang <strong>Dosen Anggota</strong> dan <strong>Mahasiswa</strong> ke dalam tim riset/pengabdian:</p>
+                            <ol class="text-xs text-teal-700 font-semibold space-y-0.5 list-decimal list-inside">
+                                <li>Buka <strong>Wizard Proposal</strong> → pilih usulan yang ada</li>
+                                <li>Masuk ke <strong>Langkah 2: Tim Peneliti &amp; Mitra</strong></li>
+                                <li>Masukkan <strong>NIDN</strong> (untuk dosen) atau <strong>NIM</strong> (untuk mahasiswa) anggota</li>
+                                <li>Anggota akan menerima undangan dan perlu menyetujui keanggotaan</li>
+                            </ol>
+                        </div>
+                    </div>
+
                     <!-- Active BIMA Schemes Selection for Proposal Creation -->
                     @php
                         $activeBimaSchemes = \App\Models\PpmSkemaBima::where('is_active', true)->get();
@@ -404,20 +419,86 @@
 
             @elseif($activeRole === 'Dosen / Mahasiswa Anggota')
                 <div class="space-y-6">
-                    @forelse($pendingMemberInvitations as $invitation)
-                    <div class="p-6 rounded-3xl bg-amber-50 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+                    {{-- Banner Peran Anggota --}}
+                    <div class="p-5 rounded-3xl bg-gradient-to-r from-teal-700 to-cyan-800 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Persetujuan Keanggotaan Tim (Member Consent)</span>
-                            <h4 class="text-lg font-extrabold text-amber-950 mt-1">Undangan Keanggotaan Menunggu Persetujuan</h4>
-                            <p class="text-xs text-slate-700 mt-1">Ketua Pengusul: {{ $invitation->usulan->pengusul->name }} ({{ $invitation->usulan->skema->nama_skema }}).</p>
+                            <span class="text-xs font-bold text-teal-200 uppercase tracking-wider">Peran: Dosen / Mahasiswa Anggota Tim Penelitian</span>
+                            <h4 class="text-lg font-extrabold mt-0.5">Portal Anggota Tim Riset & Pengabdian</h4>
+                            <p class="text-xs text-teal-100 mt-1">Anda diundang oleh Ketua Dosen Pengusul untuk bergabung dalam tim penelitian/pengabdian. Setujui undangan & ajukan KI milik Anda.</p>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('member-consent.index') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs hover:bg-emerald-800 shadow-md">Buka Persetujuan</a>
+                        <a href="{{ route('member-consent.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-teal-900 hover:bg-teal-50 font-extrabold text-sm shadow-md transition-all whitespace-nowrap text-center">
+                            Kelola Keanggotaan &rarr;
+                        </a>
+                    </div>
+
+                    {{-- Undangan Keanggotaan --}}
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">📬 Undangan Keanggotaan Tim:</h4>
+                        @forelse($pendingMemberInvitations as $invitation)
+                        <div class="p-6 rounded-3xl bg-amber-50 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Persetujuan Keanggotaan Tim (Member Consent)</span>
+                                <h4 class="text-lg font-extrabold text-amber-950 mt-1">Undangan Keanggotaan Menunggu Persetujuan</h4>
+                                <p class="text-xs text-slate-700 mt-1">Ketua Pengusul: {{ $invitation->usulan->pengusul->name }} ({{ $invitation->usulan->skema->nama_skema }}).</p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <a href="{{ route('member-consent.index') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs hover:bg-emerald-800 shadow-md">Buka Persetujuan</a>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-500">
+                            ✅ Tidak ada undangan keanggotaan yang menunggu persetujuan.
+                        </div>
+                        @endforelse
+                    </div>
+
+                    {{-- Proposal yang Diikuti --}}
+                    @php
+                        $myMemberships = \App\Models\PpmUsulanAnggota::with(['usulan.skema', 'usulan.pengusul'])
+                            ->where('user_id', auth()->id())
+                            ->where('status_persetujuan', 'approved')
+                            ->latest()
+                            ->take(5)
+                            ->get();
+                    @endphp
+                    @if($myMemberships->count() > 0)
+                    <div class="space-y-3 pt-4 border-t border-slate-200">
+                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">📋 Proposal yang Anda Ikuti:</h4>
+                        <div class="space-y-3">
+                            @foreach($myMemberships as $membership)
+                            <div class="p-5 rounded-2xl bg-white border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+                                <div class="space-y-1">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200">{{ $membership->usulan->kode_usulan ?? 'DRAFT' }}</span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black {{ strtolower($membership->usulan->skema->kategori ?? '') === 'pengabdian' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
+                                            {{ ucfirst($membership->usulan->skema->kategori ?? 'Penelitian') }}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-800 border border-teal-200">
+                                            Anggota Tim
+                                        </span>
+                                    </div>
+                                    <h5 class="text-sm font-extrabold text-slate-900">{{ $membership->usulan->judul ?? 'Judul belum diisi' }}</h5>
+                                    <p class="text-xs text-slate-500">Ketua: {{ $membership->usulan->pengusul->name ?? '-' }} &bull; {{ $membership->usulan->skema->nama_skema ?? '-' }}</p>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap
+                                    {{ $membership->usulan->status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                                       ($membership->usulan->status === 'In_review' ? 'bg-blue-100 text-blue-800' :
+                                       'bg-slate-100 text-slate-700') }}">
+                                    {{ $membership->usulan->status ?? 'Draft' }}
+                                </span>
+                            </div>
+                            @endforeach
                         </div>
                     </div>
-                    @empty
-                    <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-600">Tidak ada undangan keanggotaan yang menunggu persetujuan.</div>
-                    @endforelse
+                    @endif
+
+                    {{-- Info cara diundang --}}
+                    <div class="p-5 rounded-2xl bg-blue-50 border border-blue-200 space-y-2">
+                        <h5 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider">ℹ️ Cara Bergabung sebagai Anggota Tim</h5>
+                        <p class="text-xs text-blue-800 font-semibold">Anda akan secara otomatis diundang oleh <strong>Ketua Dosen Pengusul</strong> saat mengisi Langkah 2 (Tim Peneliti) pada Form Wizard Proposal mereka. Masukkan NIDN/NIM Anda sebagai anggota dosen/mahasiswa.</p>
+                        <p class="text-xs text-blue-700">Setelah diundang, undangan akan muncul di atas halaman ini dan perlu Anda setujui.</p>
+                    </div>
 
                     <!-- Pengajuan KI / Paten / HKI untuk Anggota Dosen & Mahasiswa -->
                     <div class="space-y-4 pt-6 border-t border-slate-200">

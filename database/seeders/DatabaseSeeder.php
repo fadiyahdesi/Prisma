@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             Epic11DemoDataSeeder::class,
             Epic12DemoDataSeeder::class,
             DemoRealLecturerWorkflowSeeder::class,
+            LegacySimpendiSeeder::class,
         ]);
 
         try {

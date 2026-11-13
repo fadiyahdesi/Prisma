@@ -185,6 +185,30 @@
                         <p class="text-xs font-semibold text-slate-500">Unggah berkas karya cipta, surat pernyataan, dan surat pengalihan hak sesuai format standar Sentra HKI UHN</p>
                     </div>
 
+                    {{-- ✅ TAUTAN EKSTERNAL (RECOMMENDED) --}}
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                        <label class="block text-xs font-bold text-amber-800 mb-1">
+                            🔗 Tautan Eksternal DJKI / Repository
+                            <span class="text-amber-600 font-normal ml-1">(Disarankan — lebih efisien)</span>
+                        </label>
+                        <input type="url" name="tautan_eksternal"
+                               value="{{ old('tautan_eksternal') }}"
+                               placeholder="https://pdki-indonesia.dgip.go.id/... atau https://drive.google.com/..."
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-amber-300 bg-white text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-400 placeholder:text-slate-400">
+                        @error('tautan_eksternal')
+                            <p class="text-xs text-red-500 font-semibold">{{ $message }}</p>
+                        @enderror
+                        <p class="text-[11px] text-amber-700 font-semibold">
+                            💡 <strong>Direkomendasikan:</strong> Masukkan tautan ke PDKI Online (pdki-indonesia.dgip.go.id), Google Drive, atau repositori institusi daripada mengunggah PDF — lebih hemat penyimpanan dan mudah diakses reviewer.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-xs text-slate-400 font-bold uppercase">
+                        <div class="flex-1 border-t border-slate-200"></div>
+                        <span>atau unggah berkas fisik</span>
+                        <div class="flex-1 border-t border-slate-200"></div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">

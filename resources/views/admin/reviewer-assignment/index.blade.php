@@ -83,7 +83,7 @@
             @endif
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
                 <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm">
                     <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Dalam Penelaahan</span>
                     <span class="text-2xl font-black text-slate-900 mt-1 block">{{ $stats['total_in_review'] }} Usulan</span>
@@ -99,31 +99,59 @@
                     <span class="text-2xl font-black text-emerald-700 mt-1 block">{{ $stats['total_reviewed'] }} Usulan</span>
                     <p class="text-[11px] text-emerald-600 mt-1">Skor akhir telah terkalkulasi</p>
                 </div>
+                <div class="p-5 rounded-3xl bg-blue-50 border border-blue-200 shadow-sm">
+                    <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">🔬 Penelitian</span>
+                    <span class="text-2xl font-black text-blue-700 mt-1 block">{{ $stats['total_penelitian'] }} Usulan</span>
+                    <p class="text-[11px] text-blue-600 mt-1">Divisi Penelitian</p>
+                </div>
+                <div class="p-5 rounded-3xl bg-purple-50 border border-purple-200 shadow-sm">
+                    <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">🤝 Pengabdian</span>
+                    <span class="text-2xl font-black text-purple-700 mt-1 block">{{ $stats['total_pengabdian'] }} Usulan</span>
+                    <p class="text-[11px] text-purple-600 mt-1">Divisi Pengabdian Masyarakat</p>
+                </div>
             </div>
 
-            <!-- Filter Status Bar -->
-            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
+            <!-- Filter Status & Divisi Bar -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                {{-- Filter Divisi --}}
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500">Filter Divisi:</span>
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), [])) }}"
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ !$kategoriFilter ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        📋 Semua Divisi
+                    </a>
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'penelitian'])) }}"
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        🔬 Penelitian
+                    </a>
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'pengabdian'])) }}"
+                       class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        🤝 Pengabdian
+                    </a>
+                </div>
+                {{-- Filter Status --}}
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="text-xs font-bold text-slate-500">Filter Status:</span>
-                    <a href="{{ route('admin.reviewer-assignment.index') }}" 
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), [])) }}"
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ !request('status_filter') ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                         Semua Status
                     </a>
-                    <a href="{{ route('admin.reviewer-assignment.index', ['status_filter' => 'In_review']) }}" 
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'In_review'])) }}"
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'In_review' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                         In_review
                     </a>
-                    <a href="{{ route('admin.reviewer-assignment.index', ['status_filter' => 'Adjudication']) }}" 
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'Adjudication'])) }}"
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'Adjudication' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                         Adjudication
                     </a>
-                    <a href="{{ route('admin.reviewer-assignment.index', ['status_filter' => 'Reviewed']) }}" 
+                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('status_filter', 'page'), ['status_filter' => 'Reviewed'])) }}"
                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition {{ request('status_filter') === 'Reviewed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
                         Reviewed
                     </a>
                 </div>
                 <div class="text-xs text-slate-500 font-medium">
                     Menampilkan <strong>{{ $proposals->total() }}</strong> usulan
+                    @if($kategoriFilter) · <span class="font-bold text-{{ $kategoriFilter === 'penelitian' ? 'blue' : 'purple' }}-700">Divisi {{ ucfirst($kategoriFilter) }}</span>@endif
                 </div>
             </div>
 

@@ -407,11 +407,11 @@
                             <div class="sm:col-span-2">
                                 <label class="text-[10px] font-bold text-slate-500 block mb-1">Pos Belanja SBM</label>
                                 <select name="pos_belanja" required class="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 text-xs font-semibold text-slate-900">
-                                    <option value="Honorarium (Max 30%)">Honorarium (Max 30%)</option>
-                                    <option value="Bahan Habis Pakai">Bahan Habis Pakai</option>
-                                    <option value="Pengumpulan Data">Pengumpulan Data</option>
-                                    <option value="Sewa Peralatan">Sewa Peralatan</option>
-                                    <option value="Analisis Data & Luaran">Analisis Data & Luaran</option>
+                                    <option value="Honorarium">Honorarium (Maks. 30%)</option>
+                                    <option value="Bahan / Alat Habis Pakai">Bahan / Alat Habis Pakai</option>
+                                    <option value="Pengumpulan Data / Lapangan">Pengumpulan Data / Lapangan</option>
+                                    <option value="Sewa Peralatan / Laboratorium">Sewa Peralatan / Laboratorium</option>
+                                    <option value="Pelaporan & Publikasi">Pelaporan &amp; Publikasi</option>
                                 </select>
                             </div>
                             <div class="sm:col-span-2">

@@ -27,6 +27,7 @@ class PpmHki extends Model
         'file_manual_book',
         'file_surat_pernyataan',
         'file_surat_pengalihan',
+        'tautan_eksternal',
         'status_hki',
         'verified_by_user_id',
         'verified_at',
