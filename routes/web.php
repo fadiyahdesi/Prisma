@@ -43,6 +43,28 @@ Route::get('/system/setup-demo-database', function () {
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 });
 
+// Rute Cepat Migrasi & Seeding Tambahan (Termasuk SIMPENDI Legacy) Tanpa Reset Data
+Route::get('/system/migrate-and-seed', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'LegacySimpendiSeeder', '--force' => true]);
+        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Throwable $e) {
+        $seedOutput = $e->getMessage();
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Migrasi dan Seeder SIMPENDI berhasil dijalankan!',
+        'migrate_output' => trim($migrateOutput),
+        'seed_output' => trim($seedOutput),
+    ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+});
+
 // Rute Pembuatan Berkas PDF Demo & Perbaikan Symlink Storage
 Route::get('/system/generate-demo-pdfs', function () {
     try {
