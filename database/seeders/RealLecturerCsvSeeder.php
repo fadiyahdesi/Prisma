@@ -7,129 +7,274 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\RefProgramStudi;
 use App\Models\RefFakultas;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class RealLecturerCsvSeeder extends Seeder
 {
+    private function cleanBaseName(string $name): string
+    {
+        $s = trim($name);
+        $s = preg_replace('/^(Prof\.?\s*|Dr\.?\s*|Ir\.?\s*|apt\.?\s*|Bdn\.?\s*|Ns\.?\s*)+/i', '', $s);
+        $parts = explode(',', $s);
+        $base = trim($parts[0]);
+        $base = preg_replace('/\b(S\.Pd|S\.T|S\.Kom|S\.ST\.Par|M\.Par|M\.T|M\.M|M\.Kom|SE|M\.Si|S\.E)\b.*$/i', '', $base);
+        return preg_replace('/[^a-zA-Z0-9]+/', '', strtolower($base));
+    }
+
     public function run(): void
     {
-        $csvPath = database_path('data/dosen_real.csv');
-        if (!file_exists($csvPath)) {
-            $this->command->error("File CSV tidak ditemukan di: {$csvPath}");
+        $csv146Path = database_path('data/dosen_tetap_uhn.csv');
+        if (!file_exists($csv146Path)) {
+            $this->command->error("File CSV 146 dosen tetap tidak ditemukan di: {$csv146Path}");
             return;
         }
 
+        // 1. Load optional SINTA enrichment map from dosen_real.csv
+        $sintaByNidn = [];
+        $sintaByCleanName = [];
+        $sintaCsvPath = database_path('data/dosen_real.csv');
+        if (file_exists($sintaCsvPath) && ($sh = fopen($sintaCsvPath, 'r')) !== false) {
+            fgetcsv($sh); // header
+            while (($srow = fgetcsv($sh)) !== false) {
+                if (empty($srow) || count($srow) < 4) {
+                    continue;
+                }
+                $sintaId = trim($srow[1] ?? '');
+                $sNidn = trim($srow[2] ?? '');
+                $sNama = trim($srow[3] ?? '');
+                $sOverall = (float) ($srow[12] ?? $srow[10] ?? 0);
+                $s3Yr = (float) ($srow[13] ?? $srow[11] ?? 0);
+                $entry = [
+                    'nidn' => $sNidn ?: null,
+                    'sinta_id' => $sintaId ?: null,
+                    'sinta_score_overall' => $sOverall,
+                    'sinta_score_3yr' => $s3Yr,
+                ];
+                if ($sNidn !== '') {
+                    $sintaByNidn[$sNidn] = $entry;
+                    $sintaByNidn[ltrim($sNidn, '0')] = $entry;
+                }
+                if ($sNama !== '') {
+                    $sintaByCleanName[$this->cleanBaseName($sNama)] = $entry;
+                }
+            }
+            fclose($sh);
+        }
+
+        // 2. Ensure Roles exist
         $dosenRole = Role::firstOrCreate(
             ['name' => 'Dosen / Pengusul'],
             ['guard_name' => 'web', 'description' => 'Dosen Peneliti & Pengabdi Universitas Harkat Negeri']
         );
+        $kaprodiRole = Role::firstOrCreate(
+            ['name' => 'Kaprodi'],
+            ['guard_name' => 'web', 'description' => 'Ketua Program Studi Universitas Harkat Negeri']
+        );
+        $kplRole = Role::firstOrCreate(
+            ['name' => 'Kepala P3M'],
+            ['guard_name' => 'web', 'description' => 'Kepala P3M Universitas Harkat Negeri']
+        );
+
+        // 3. Ensure all 23 Prodis exist
+        $vokasi = RefFakultas::where('nama_fakultas', 'like', '%Vokasi%')->first() ?? RefFakultas::first();
+        if ($vokasi) {
+            RefProgramStudi::updateOrCreate(
+                ['kode_prodi' => 'SKT-D3'],
+                ['id_fakultas' => $vokasi->id_fakultas, 'nama_prodi' => 'D-3 Kebidanan', 'jenjang' => 'D3']
+            );
+            RefProgramStudi::updateOrCreate(
+                ['kode_prodi' => 'PBD-PRF'],
+                ['id_fakultas' => $vokasi->id_fakultas, 'nama_prodi' => 'Pendidikan Profesi Bidan', 'jenjang' => 'D4']
+            );
+        }
 
         $allProdis = RefProgramStudi::with('fakultas')->get();
 
-        $handle = fopen($csvPath, 'r');
+        $prodiMap = [
+            'D4 Teknik Informatika' => 'TI-D4',
+            'D4 Akuntansi Sektor Publik' => 'ASP-D4',
+            'D4 Kebidanan' => 'KBD-D4',
+            'Profesi Kebidanan' => 'PBD-PRF',
+            'D3 Kebidanan' => 'SKT-D3',
+            'D3 Farmasi' => 'FRM-D3',
+            'D3 Keperawatan' => 'KPR-D3',
+            'D3 Teknik Komputer' => 'TK-D3',
+            'D3 Teknik Elektronika' => 'TE-D3',
+            'D3 Teknik Mesin' => 'TM-D3',
+            'D3 Akuntansi' => 'AKT-D3',
+            'D3 Perhotelan' => 'PHT-D3',
+            'D3 Desain Komunikasi Visual' => 'DKV-D3',
+            'S1 Akuntansi' => 'AKT-S1',
+            'S1 Manajemen' => 'MNJ-S1',
+            'S1 Ilmu Hukum' => 'HKM-S1',
+            'S1 Ilmu Komunikasi' => 'ILKOM-S1',
+            'S1 Data Sains' => 'SD-S1',
+            'S1 Teknik Mesin' => 'TM-S1',
+            'S1 Sistem Informasi' => 'SI-S1',
+            'S1 Teknik Informatika' => 'TI-S1',
+            'S1 Psikologi' => 'PSI-S1',
+            'S1 Pendidikan Guru Sekolah Dasar' => 'PGSD-S1',
+        ];
+
+        $handle = fopen($csv146Path, 'r');
         if ($handle === false) {
             return;
         }
 
-        // Header row
-        $header = fgetcsv($handle);
+        $keptUserIds = [];
+        $usedEmails = ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'];
         $importedCount = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
-            if (empty($row) || count($row) < 5) {
+            $no = trim($row[1] ?? '');
+            if (!is_numeric($no)) {
                 continue;
             }
 
-            // CSV Columns:
-            // 0: NO, 1: SINTAID, 2: NIDN, 3: NAMA, 4: AFILIASI, 5: PRODI, 6: PENDIDIKAN,
-            // 7: JABATAN FUNGSIONAL, 8: GELAR DEPAN, 9: GELAR BELAKANG,
-            // 10: SINTA OVERALL v2, 11: SINTA 3Yr v2, 12: SINTA OVERALL v3, 13: SINTA 3Yr v3,
-            // 14: STATUS AKTIF, 15: STATUS VERIFIKASI
+            $nama = trim($row[5] ?? '');
+            $nipy = trim($row[6] ?? '');
+            $nidnRaw = trim($row[7] ?? '');
+            $jabatan = trim($row[8] ?? '');
+            $jafungRaw = trim($row[9] ?? '') ?: 'Tenaga Pengajar';
+            $prodiRaw = trim($row[10] ?? '');
 
-            $sintaId = trim($row[1] ?? '');
-            $nidn = trim($row[2] ?? '');
-            $nama = trim($row[3] ?? '');
-            $prodiRaw = trim($row[5] ?? '');
-            $jafung = trim($row[7] ?? '') ?: 'Tenaga Pengajar';
-            $gelarDepan = trim($row[8] ?? '');
-            $gelarBelakang = trim($row[9] ?? '');
-            $sintaOverall = (float) ($row[12] ?? $row[10] ?? 0);
-            $sinta3Yr = (float) ($row[13] ?? $row[11] ?? 0);
-
-            if (empty($nama)) {
+            if ($nama === '') {
                 continue;
             }
 
-            // Resolve Prodi & Fakultas
-            $prodiModel = null;
-            if (!empty($prodiRaw)) {
-                $normalizedProdi = str_replace(['D4 ', 'D3 ', 'S1 '], ['D-4 ', 'D-3 ', 'S-1 '], $prodiRaw);
-                $prodiModel = $allProdis->first(function ($p) use ($normalizedProdi, $prodiRaw) {
-                    return strcasecmp($p->nama_prodi, $normalizedProdi) === 0
-                        || strcasecmp($p->nama_prodi, $prodiRaw) === 0
-                        || Str::contains(strtolower($p->nama_prodi), strtolower($prodiRaw))
-                        || Str::contains(strtolower($normalizedProdi), strtolower($p->nama_prodi));
-                });
+            $cleanName = $this->cleanBaseName($nama);
+
+            // Extract primary NIDN/NUPTK (before '/')
+            $nidnParts = array_map('trim', explode('/', $nidnRaw));
+            $primaryNidn = $nidnParts[0] ?? '';
+            $altNidn = $nidnParts[1] ?? '';
+
+            // Pad 15-digit NUPTK with leading zero if needed
+            if (strlen($primaryNidn) === 15 && ctype_digit($primaryNidn)) {
+                $primaryNidn = '0' . $primaryNidn;
             }
+
+            // SINTA enrichment
+            $sinta = ($primaryNidn !== '' ? ($sintaByNidn[$primaryNidn] ?? $sintaByNidn[ltrim($primaryNidn, '0')] ?? null) : null)
+                ?? $sintaByCleanName[$cleanName]
+                ?? ['nidn' => null, 'sinta_id' => null, 'sinta_score_overall' => 0, 'sinta_score_3yr' => 0];
+
+            // Use primary NIDN, or NUPTK from SINTA if NIDN is blank in HR sheet, or NIPY
+            $identifier = $primaryNidn !== '' ? $primaryNidn : ($sinta['nidn'] ?: $nipy);
+
+            // Clean Jabatan Akademik (e.g. "Lektor (300)" -> "Lektor")
+            $jafung = trim(preg_replace('/\s*\(\d+\)\s*/', '', $jafungRaw)) ?: 'Tenaga Pengajar';
+
+            // Resolve Prodi
+            $kodeProdi = $prodiMap[$prodiRaw] ?? null;
+            $prodiModel = $kodeProdi
+                ? $allProdis->firstWhere('kode_prodi', $kodeProdi)
+                : $allProdis->first(fn ($p) => Str::contains(strtolower($p->nama_prodi), strtolower($prodiRaw)));
 
             $fakultasId = $prodiModel ? $prodiModel->id_fakultas : null;
             $prodiId = $prodiModel ? $prodiModel->id_prodi : null;
 
-            // Generate clean email from name / NIDN
-            $slugName = Str::slug(Str::words($nama, 2, ''));
-            $email = !empty($nidn) ? "dosen.{$nidn}@harkatnegeri.ac.id" : "{$slugName}@harkatnegeri.ac.id";
-            if ($nidn === '0617029201') {
-                $email = 'kepalap3m@harkatnegeri.ac.id';
-                $nama = 'Sharfina Febbi Handayani, S.Kom., M.Kom.';
-            }
-
-            // Find existing user by NIDN or Email
+            // Find existing unclaimed user in DB
             $user = null;
-            if (!empty($nidn)) {
-                $user = User::where('nidn_nim', $nidn)->first();
+            if ($primaryNidn !== '') {
+                $user = User::whereNotIn('id', $keptUserIds)
+                    ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+                    ->where(function ($q) use ($primaryNidn, $altNidn) {
+                        $q->where('nidn_nim', $primaryNidn)
+                          ->orWhere('nidn_nim', ltrim($primaryNidn, '0'));
+                        if ($altNidn !== '') {
+                            $q->orWhere('nidn_nim', $altNidn);
+                        }
+                    })
+                    ->first();
             }
             if (!$user) {
-                $user = User::where('email', $email)->first();
+                $candidates = User::whereNotIn('id', $keptUserIds)
+                    ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+                    ->get();
+                foreach ($candidates as $cand) {
+                    $cClean = $this->cleanBaseName($cand->name);
+                    if ($cClean === $cleanName || levenshtein($cClean, $cleanName) <= 2) {
+                        $user = $cand;
+                        break;
+                    }
+                }
             }
+
+            // Build unique email
+            $emailKey = $identifier !== '' ? str_replace(['.', ' ', '/'], '', $identifier) : $cleanName;
+            $email = "dosen.{$emailKey}@harkatnegeri.ac.id";
+            if ($primaryNidn === '0617029201') {
+                $email = 'kepalap3m@harkatnegeri.ac.id';
+            }
+            if (in_array($email, $usedEmails, true)) {
+                $email = "dosen.{$cleanName}.{$no}@harkatnegeri.ac.id";
+            }
+            $usedEmails[] = $email;
+
+            // Avoid temporary unique email conflict if another unclaimed user currently holds $email
+            User::where('email', $email)
+                ->when($user, fn ($q) => $q->where('id', '!=', $user->id))
+                ->update(['email' => "temp.{$no}." . uniqid() . "@harkatnegeri.ac.id"]);
 
             $userData = [
                 'name' => $nama,
-                'nidn_nim' => $nidn ?: null,
-                'sinta_id' => $sintaId ?: null,
+                'email' => $email,
+                'nidn_nim' => $identifier ?: null,
+                'sinta_id' => $sinta['sinta_id'] ?? ($user->sinta_id ?? null),
                 'id_fakultas' => $fakultasId,
                 'id_prodi' => $prodiId,
                 'jabatan_fungsional' => $jafung,
-                'sinta_score_overall' => $sintaOverall,
-                'sinta_score_3yr' => $sinta3Yr,
+                'sinta_score_overall' => $sinta['sinta_score_overall'] ?: ($user->sinta_score_overall ?? 0),
+                'sinta_score_3yr' => $sinta['sinta_score_3yr'] ?: ($user->sinta_score_3yr ?? 0),
+                'is_otp_verified' => true,
                 'email_verified_at' => now(),
-                'password' => Hash::make(!empty($nidn) ? $nidn : 'password123'),
+                'password' => Hash::make($identifier ?: 'password123'),
             ];
 
             if ($user) {
                 $user->update($userData);
             } else {
-                $userData['email'] = $email;
                 $user = User::create($userData);
             }
 
-            // Assign Dosen role if not already assigned
-            if (!$user->roles()->where('role_id', $dosenRole->id)->exists()) {
-                $user->roles()->attach($dosenRole->id);
-            }
+            $keptUserIds[] = $user->id;
 
-            // Special role: Kepala P3M for Sharfina Febbi Handayani
-            if ($nidn === '0617029201') {
-                $kplRole = Role::where('name', 'Kepala P3M')->first();
-                if ($kplRole && !$user->roles()->where('role_id', $kplRole->id)->exists()) {
-                    $user->roles()->attach($kplRole->id);
-                }
+            // Assign roles
+            $roleIds = [$dosenRole->id];
+            if (Str::contains(strtolower($jabatan), 'ketua program studi')) {
+                $roleIds[] = $kaprodiRole->id;
             }
+            if ($primaryNidn === '0617029201') {
+                $roleIds[] = $kplRole->id;
+            }
+            $user->roles()->syncWithoutDetaching($roleIds);
 
             $importedCount++;
         }
 
         fclose($handle);
-        $this->command->info("Berhasil mengimpor {$importedCount} data dosen riil dari CSV.");
+
+        // 4. Delete any lecturer users not in the 146 official list (keep superadmin@ and adminp3m@)
+        $extraIds = User::whereNotIn('id', $keptUserIds)
+            ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+            ->pluck('id')
+            ->all();
+
+        if (!empty($extraIds)) {
+            DB::transaction(function () use ($extraIds) {
+                $usulanIds = DB::table('ppm_usulan')->whereIn('id_pengusul', $extraIds)->pluck('id')->all();
+                DB::table('ppm_usulan_anggota')->whereIn('user_id', $extraIds)->delete();
+                if (!empty($usulanIds)) {
+                    DB::table('ppm_usulan')->whereIn('id', $usulanIds)->delete();
+                }
+                DB::table('users')->whereIn('id', $extraIds)->delete();
+            });
+            $this->command->info('Menghapus ' . count($extraIds) . ' user dosen yang tidak ada di daftar 146 Dosen Tetap UHN.');
+        }
+
+        $this->command->info("Berhasil menyelaraskan {$importedCount} data Dosen Tetap UHN sesuai SK SDM.");
     }
 }

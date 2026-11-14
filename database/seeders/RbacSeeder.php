@@ -35,37 +35,38 @@ class RbacSeeder extends Seeder
             ['nama_fakultas' => 'Sekolah Vokasi', 'dekan_nama' => 'Drs. Bambang Sudiro, M.Kom.', 'dekan_nip' => '197108041998031003']
         );
 
-        // 2. Seed Study Programs (22 Official Program Studi - UHN Architecture Blueprint)
+        // 2. Seed Study Programs (23 Official Program Studi - UHN)
         $prodis = [
             // Fakultas Sains & Teknologi (4 Prodi)
-            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'SD-S1', 'nama_prodi' => 'S-1 Sains Data', 'jenjang' => 'S1', 'kaprodi_nama' => 'Dr. Fauzan Rahmat, M.Kom.', 'kaprodi_nip' => '198402122008011003'],
-            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'TM-S1', 'nama_prodi' => 'S-1 Teknik Mesin', 'jenjang' => 'S1', 'kaprodi_nama' => 'Ir. Eko Prasetyo, M.T.', 'kaprodi_nip' => '197906152005011002'],
-            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'TI-S1', 'nama_prodi' => 'S-1 Teknik Informatika', 'jenjang' => 'S1', 'kaprodi_nama' => 'M. Rizki Fadilah, M.Kom.', 'kaprodi_nip' => '198804102012011005'],
-            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'SI-S1', 'nama_prodi' => 'S-1 Sistem Informasi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Nurul Hidayati, M.Kom.', 'kaprodi_nip' => '198709182014022003'],
+            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'SD-S1', 'nama_prodi' => 'S-1 Sains Data', 'jenjang' => 'S1', 'kaprodi_nama' => 'Hepatika Zidny Ilmadina, S.Pd., M.Kom.', 'kaprodi_nip' => '0618119101'],
+            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'TM-S1', 'nama_prodi' => 'S-1 Teknik Mesin', 'jenjang' => 'S1', 'kaprodi_nama' => 'Firman Lukman Sanjaya, S.T., M.T.', 'kaprodi_nip' => '0630069202'],
+            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'TI-S1', 'nama_prodi' => 'S-1 Teknik Informatika', 'jenjang' => 'S1', 'kaprodi_nama' => 'Aang Alim Murtopo, M.Kom.', 'kaprodi_nip' => '0613017701'],
+            ['id_fakultas' => $fst->id_fakultas, 'kode_prodi' => 'SI-S1', 'nama_prodi' => 'S-1 Sistem Informasi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Bangkit Indarmawan Nugroho, M.Kom.', 'kaprodi_nip' => '0026077701'],
 
             // Fakultas Sosial & Humaniora (4 Prodi)
-            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'AKT-S1', 'nama_prodi' => 'S-1 Akuntansi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Siti Aminah, S.E., M.Akt.', 'kaprodi_nip' => '198305202009022001'],
-            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'HKM-S1', 'nama_prodi' => 'S-1 Hukum', 'jenjang' => 'S1', 'kaprodi_nama' => 'Budi Santoso, S.H., M.H.', 'kaprodi_nip' => '198111052006041002'],
-            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'ILKOM-S1', 'nama_prodi' => 'S-1 Ilmu Komunikasi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Dina Mariana, S.Sos., M.I.Kom.', 'kaprodi_nip' => '198603142010122002'],
-            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'MNJ-S1', 'nama_prodi' => 'S-1 Manajemen', 'jenjang' => 'S1', 'kaprodi_nama' => 'Ahmad Junaidi, S.E., M.M.', 'kaprodi_nip' => '198007252007011001'],
+            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'AKT-S1', 'nama_prodi' => 'S-1 Akuntansi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Aryanto, S.E., M.Ak.', 'kaprodi_nip' => '0625059002'],
+            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'HKM-S1', 'nama_prodi' => 'S-1 Hukum', 'jenjang' => 'S1', 'kaprodi_nama' => 'David Bani Adam, S.H., M.H.', 'kaprodi_nip' => '0614028402'],
+            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'ILKOM-S1', 'nama_prodi' => 'S-1 Ilmu Komunikasi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Himawan Ardhi Ristanto, S.I.Kom., M.I.Kom', 'kaprodi_nip' => '08.025.573'],
+            ['id_fakultas' => $fsh->id_fakultas, 'kode_prodi' => 'MNJ-S1', 'nama_prodi' => 'S-1 Manajemen', 'jenjang' => 'S1', 'kaprodi_nama' => 'Bahri Kamal, S.E., M.M.', 'kaprodi_nip' => '0617078102'],
 
             // Fakultas Psikologi & Pendidikan (2 Prodi)
-            ['id_fakultas' => $fpp->id_fakultas, 'kode_prodi' => 'PSI-S1', 'nama_prodi' => 'S-1 Psikologi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Rina Wijayanti, S.Psi., M.Psi.', 'kaprodi_nip' => '198501172011012004'],
-            ['id_fakultas' => $fpp->id_fakultas, 'kode_prodi' => 'PGSD-S1', 'nama_prodi' => 'S-1 Pendidikan Guru Sekolah Dasar (PGSD)', 'jenjang' => 'S1', 'kaprodi_nama' => 'Agus Priyono, S.Pd., M.Pd.', 'kaprodi_nip' => '198208122008041001'],
+            ['id_fakultas' => $fpp->id_fakultas, 'kode_prodi' => 'PSI-S1', 'nama_prodi' => 'S-1 Psikologi', 'jenjang' => 'S1', 'kaprodi_nama' => 'Ahmad Fadil, S.Psi., M.Psi.', 'kaprodi_nip' => '08.025.583'],
+            ['id_fakultas' => $fpp->id_fakultas, 'kode_prodi' => 'PGSD-S1', 'nama_prodi' => 'S-1 Pendidikan Guru Sekolah Dasar (PGSD)', 'jenjang' => 'S1', 'kaprodi_nama' => 'Ratri Wikaningtyas, M.Pd.', 'kaprodi_nip' => '0626029101'],
 
-            // Sekolah Vokasi (12 Prodi)
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'ASP-D4', 'nama_prodi' => 'D-4 Akuntansi Sektor Publik', 'jenjang' => 'D4', 'kaprodi_nama' => 'Dewi Lestari, S.E., M.Si., Ak.', 'kaprodi_nip' => '198409022010012003'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'KBD-D4', 'nama_prodi' => 'D-4 Kebidanan', 'jenjang' => 'D4', 'kaprodi_nama' => 'Bdn. Endang Susilowati, S.ST., M.Keb.', 'kaprodi_nip' => '198104192006042002'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TI-D4', 'nama_prodi' => 'D-4 Teknik Informatika', 'jenjang' => 'D4', 'kaprodi_nama' => 'Ginanjar Wiro Sasmito, M.Kom.', 'kaprodi_nip' => '198506222014041001'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'AKT-D3', 'nama_prodi' => 'D-3 Akuntansi', 'jenjang' => 'D3', 'kaprodi_nama' => 'Sri Wahyuni, S.E., M.Si.', 'kaprodi_nip' => '198302142009012002'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'DKV-D3', 'nama_prodi' => 'D-3 Desain Komunikasi Visual', 'jenjang' => 'D3', 'kaprodi_nama' => 'Raden Mas Arif, S.Sn., M.Ds.', 'kaprodi_nip' => '198710052015041003'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'FRM-D3', 'nama_prodi' => 'D-3 Farmasi', 'jenjang' => 'D3', 'kaprodi_nama' => 'apt. Sari Dewi, S.Farm., M.Clin.Pharm.', 'kaprodi_nip' => '198607182012012002'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'KPR-D3', 'nama_prodi' => 'D-3 Keperawatan', 'jenjang' => 'D3', 'kaprodi_nama' => 'Ns. Tri Wulandari, M.Kep.', 'kaprodi_nip' => '198403212009022003'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'PHT-D3', 'nama_prodi' => 'D-3 Perhotelan', 'jenjang' => 'D3', 'kaprodi_nama' => 'Danang Prasetya, S.Par., M.M.', 'kaprodi_nip' => '198512102011011004'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TE-D3', 'nama_prodi' => 'D-3 Teknik Elektronika', 'jenjang' => 'D3', 'kaprodi_nama' => 'Hadi Sukamto, S.T., M.T.', 'kaprodi_nip' => '197805192005011003'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TK-D3', 'nama_prodi' => 'D-3 Teknik Komputer', 'jenjang' => 'D3', 'kaprodi_nama' => 'Arief Rahman, M.Kom.', 'kaprodi_nip' => '198601142013021002'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TM-D3', 'nama_prodi' => 'D-3 Teknik Mesin', 'jenjang' => 'D3', 'kaprodi_nama' => 'Joko Purwanto, S.T., M.Eng.', 'kaprodi_nip' => '198004122007011002'],
-            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'SKT-D3', 'nama_prodi' => 'D-3 Sanitasi / Kebidanan Terapan', 'jenjang' => 'D3', 'kaprodi_nama' => 'dr. Maya Puspitasari, M.Kes.', 'kaprodi_nip' => '198209272008012001'],
+            // Sekolah Vokasi (13 Prodi)
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'ASP-D4', 'nama_prodi' => 'D-4 Akuntansi Sektor Publik', 'jenjang' => 'D4', 'kaprodi_nama' => 'Mohammad Alfian, S.E., M.Si., Ak.', 'kaprodi_nip' => '0610108904'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'KBD-D4', 'nama_prodi' => 'D-4 Kebidanan', 'jenjang' => 'D4', 'kaprodi_nama' => 'Bdn. Seventina Nurul H, S. SiT, M.Kes', 'kaprodi_nip' => '1117088601'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'PBD-PRF', 'nama_prodi' => 'Pendidikan Profesi Bidan', 'jenjang' => 'D4', 'kaprodi_nama' => 'Bdn. Nora Rahmanindar, S. SiT, M.Keb', 'kaprodi_nip' => '0613118506'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TI-D4', 'nama_prodi' => 'D-4 Teknik Informatika', 'jenjang' => 'D4', 'kaprodi_nama' => 'Dyah Apriliani, S.T., M.Kom.', 'kaprodi_nip' => '0614049002'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'AKT-D3', 'nama_prodi' => 'D-3 Akuntansi', 'jenjang' => 'D3', 'kaprodi_nama' => 'Krisdiyawati, S.E., M.Ak., Ak.', 'kaprodi_nip' => '0616117404'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'DKV-D3', 'nama_prodi' => 'D-3 Desain Komunikasi Visual', 'jenjang' => 'D3', 'kaprodi_nama' => 'Robby Hardian, S.IP., M.Ds.', 'kaprodi_nip' => '0606098402'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'FRM-D3', 'nama_prodi' => 'D-3 Farmasi', 'jenjang' => 'D3', 'kaprodi_nama' => 'apt. Rizki Febriyanti, M. Farm', 'kaprodi_nip' => '0627028302'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'KPR-D3', 'nama_prodi' => 'D-3 Keperawatan', 'jenjang' => 'D3', 'kaprodi_nama' => 'Ns. Ardhi Henda Karmandika, M.Kep.', 'kaprodi_nip' => '0615029303'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'PHT-D3', 'nama_prodi' => 'D-3 Perhotelan', 'jenjang' => 'D3', 'kaprodi_nama' => 'Lourensius Hendra Putra, S.T., M.M.', 'kaprodi_nip' => '0612048207'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TE-D3', 'nama_prodi' => 'D-3 Teknik Elektronika', 'jenjang' => 'D3', 'kaprodi_nama' => 'Rony Darpono, M.T.', 'kaprodi_nip' => '0606128001'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TK-D3', 'nama_prodi' => 'D-3 Teknik Komputer', 'jenjang' => 'D3', 'kaprodi_nama' => 'Arif Rakhman, S.E., S.Pd, M.Kom', 'kaprodi_nip' => '0623118301'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'TM-D3', 'nama_prodi' => 'D-3 Teknik Mesin', 'jenjang' => 'D3', 'kaprodi_nama' => 'Mukhamad Khumaidi Usman, S.T., M.Eng.', 'kaprodi_nip' => '0608058601'],
+            ['id_fakultas' => $sv->id_fakultas, 'kode_prodi' => 'SKT-D3', 'nama_prodi' => 'D-3 Kebidanan', 'jenjang' => 'D3', 'kaprodi_nama' => 'Adevia Maulidya C, S. ST, M.Kes', 'kaprodi_nip' => '0606118802'],
         ];
 
         foreach ($prodis as $p) {
