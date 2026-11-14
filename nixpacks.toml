@@ -29,4 +29,4 @@ cmds = [
 ]
 
 [start]
-cmd = "php artisan optimize:clear && php artisan storage:link --force && (php artisan migrate --force || true) && (php artisan db:seed --class=LegacySimpendiSeeder --force || true) && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+cmd = "php artisan optimize:clear && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"

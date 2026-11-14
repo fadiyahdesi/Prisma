@@ -15,18 +15,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Hanya data real (dosen dari CSV) + akun sistem (Superadmin, Admin P3M, Kepala P3M).
+        // Seeder dummy (DemoProposal, MemberConsentDemo, RankedProposals, Epic10/11/12,
+        // LegacySimpendi) dinonaktifkan karena berisi user & data fiktif.
         $this->call([
             RbacSeeder::class,
             RealLecturerCsvSeeder::class,
             BimaSkemaAndPeriodeSeeder::class,
-            DemoProposalSeeder::class,
-            MemberConsentDemoSeeder::class,
-            RankedProposalsSeeder::class,
-            Epic10DemoDataSeeder::class,
-            Epic11DemoDataSeeder::class,
-            Epic12DemoDataSeeder::class,
             DemoRealLecturerWorkflowSeeder::class,
-            LegacySimpendiSeeder::class,
         ]);
 
         try {

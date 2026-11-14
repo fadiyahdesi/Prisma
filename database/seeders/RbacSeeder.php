@@ -104,6 +104,13 @@ class RbacSeeder extends Seeder
         // 4. Seed Demo Users for Testing
         $firstProdi = RefProgramStudi::first();
 
+        // Hanya akun sistem yang di-seed. Akun demo fiktif lainnya dinonaktifkan.
+        $systemAccountEmails = [
+            'adminp3m@harkatnegeri.ac.id',
+            'kepalap3m@harkatnegeri.ac.id',
+            'superadmin@harkatnegeri.ac.id',
+        ];
+
         $demoUsers = [
             [
                 'name' => 'Dr. Ir. Hendra Prasetya, M.T.',
@@ -218,6 +225,8 @@ class RbacSeeder extends Seeder
                 'role' => 'Dosen / Mahasiswa Anggota'
             ],
         ];
+
+        $demoUsers = array_filter($demoUsers, fn ($u) => in_array($u['email'], $systemAccountEmails, true));
 
         foreach ($demoUsers as $u) {
             $targetFakultasId = $u['id_fakultas'] ?? $fst->id_fakultas;
