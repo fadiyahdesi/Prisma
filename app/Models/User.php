@@ -17,10 +17,12 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'nipy',
         'email',
         'avatar',
         'password',
         'nidn_nim',
+        'jabatan',
         'jabatan_fungsional',
         'sinta_id',
         'sinta_score_3yr',

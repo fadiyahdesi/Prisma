@@ -57,25 +57,34 @@
                                     Nama Lengkap &amp; Gelar <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" name="name" value="{{ old('name') }}" required
-                                       placeholder="Contoh: Sharfina Febbi Handayani, S.Kom., M.Kom."
+                                       placeholder="Contoh: Dyah Apriliani, S.T., M.Kom."
                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                    NIDN / NIM Resmi
+                                    NIPY
                                 </label>
-                                <input type="text" name="nidn_nim" value="{{ old('nidn_nim') }}"
-                                       placeholder="Contoh: 0617029201 (10 digit)"
+                                <input type="text" name="nipy" value="{{ old('nipy') }}"
+                                       placeholder="Contoh: 09.015.225"
                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                    Alamat Email Aktif <span class="text-rose-500">*</span>
+                                    NIDN / NUPTK
                                 </label>
-                                <input type="email" name="email" value="{{ old('email') }}" required
-                                       placeholder="nama.dosen@harkatnegeri.ac.id"
+                                <input type="text" name="nidn_nim" value="{{ old('nidn_nim') }}"
+                                       placeholder="Contoh: 0614049002"
+                                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Alamat Email <span class="text-slate-400 font-normal">(Opsional jika belum ada)</span>
+                                </label>
+                                <input type="email" name="email" value="{{ old('email') }}"
+                                       placeholder="Kosongkan jika belum ada data email"
                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                             </div>
 
@@ -84,7 +93,7 @@
                                     Kata Sandi Awal <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="password" name="password" required minlength="6"
-                                       placeholder="Disarankan isi dengan NIDN dosen"
+                                       placeholder="Disarankan isi dengan NIDN atau NIPY"
                                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                                 <p class="text-[10px] text-slate-400 mt-1">Kata sandi akan otomatis di-hash aman.</p>
                             </div>
@@ -104,27 +113,13 @@
                     <div class="space-y-4 pt-4">
                         <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            Afiliasi &amp; Jabatan Akademik
+                            Afiliasi, Jabatan &amp; Jabatan Akademik Dosen
                         </h3>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                    Fakultas
-                                </label>
-                                <select name="id_fakultas" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
-                                    <option value="">Pilih Fakultas</option>
-                                    @foreach($fakultas as $f)
-                                        <option value="{{ $f->id_fakultas }}" {{ old('id_fakultas') == $f->id_fakultas ? 'selected' : '' }}>
-                                            {{ $f->nama_fakultas }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                    Program Studi
+                                    Program Studi (Prodi)
                                 </label>
                                 <select name="id_prodi" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                                     <option value="">Pilih Program Studi</option>
@@ -138,15 +133,36 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                                    Jabatan Fungsional
+                                    Fakultas
+                                </label>
+                                <select name="id_fakultas" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
+                                    <option value="">Otomatis mengikuti Prodi / Pilih Fakultas</option>
+                                    @foreach($fakultas as $f)
+                                        <option value="{{ $f->id_fakultas }}" {{ old('id_fakultas') == $f->id_fakultas ? 'selected' : '' }}>
+                                            {{ $f->nama_fakultas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Jabatan
+                                </label>
+                                <input type="text" name="jabatan" value="{{ old('jabatan', 'Dosen') }}"
+                                       placeholder="Dosen / Ketua Program Studi / Sekretaris Program Studi"
+                                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">
+                                    Jabatan Akademik Dosen
                                 </label>
                                 <select name="jabatan_fungsional" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
-                                    <option value="">Pilih Jabatan</option>
-                                    <option value="Tenaga Pengajar" {{ old('jabatan_fungsional') === 'Tenaga Pengajar' ? 'selected' : '' }}>Tenaga Pengajar</option>
-                                    <option value="Asisten Ahli" {{ old('jabatan_fungsional') === 'Asisten Ahli' ? 'selected' : '' }}>Asisten Ahli</option>
-                                    <option value="Lektor" {{ old('jabatan_fungsional') === 'Lektor' ? 'selected' : '' }}>Lektor</option>
-                                    <option value="Lektor Kepala" {{ old('jabatan_fungsional') === 'Lektor Kepala' ? 'selected' : '' }}>Lektor Kepala</option>
-                                    <option value="Guru Besar" {{ old('jabatan_fungsional') === 'Guru Besar' ? 'selected' : '' }}>Guru Besar</option>
+                                    <option value="">Pilih Jabatan Akademik</option>
+                                    @foreach(['Tenaga Pengajar', 'Asisten Ahli', 'Lektor (200)', 'Lektor (300)', 'Lektor', 'Lektor Kepala (400)', 'Lektor Kepala (550)', 'Lektor Kepala', 'Guru Besar'] as $ja)
+                                        <option value="{{ $ja }}" {{ old('jabatan_fungsional') === $ja ? 'selected' : '' }}>{{ $ja }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 

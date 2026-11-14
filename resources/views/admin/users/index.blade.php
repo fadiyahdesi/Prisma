@@ -50,8 +50,15 @@
             <!-- Filter & Search Toolbar -->
             <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
                 <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / email / NIDN..."
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama / NIPY / NIDN / Jabatan..."
                            class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-[#681727] w-full sm:w-64">
+
+                    <select name="prodi" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
+                        <option value="">Semua Prodi</option>
+                        @foreach($prodis as $p)
+                            <option value="{{ $p->id_prodi }}" {{ (string) request('prodi') === (string) $p->id_prodi ? 'selected' : '' }}>{{ $p->nama_prodi }}</option>
+                        @endforeach
+                    </select>
 
                     <select name="role" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-[#681727]">
                         <option value="">Semua Peran (Roles)</option>
@@ -64,7 +71,7 @@
                         Filter
                     </button>
 
-                    @if(request('search') || request('role'))
+                    @if(request('search') || request('role') || request('prodi'))
                         <a href="{{ route('admin.users.index') }}" class="text-xs font-bold text-slate-500 hover:text-slate-800 px-2">
                             Reset
                         </a>
@@ -82,21 +89,23 @@
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-4">Nama Lengkap &amp; Jabatan</th>
-                                <th class="px-6 py-4">NIDN / NIM</th>
-                                <th class="px-6 py-4">Email Aktif</th>
-                                <th class="px-6 py-4">Fakultas &amp; Prodi</th>
-                                <th class="px-6 py-4">Peran (Roles)</th>
-                                <th class="px-6 py-4 text-right">Aksi</th>
+                                <th class="px-4 py-3.5">Nama</th>
+                                <th class="px-4 py-3.5">NIPY</th>
+                                <th class="px-4 py-3.5">NIDN / NUPTK</th>
+                                <th class="px-4 py-3.5">Jabatan</th>
+                                <th class="px-4 py-3.5">Jabatan Akademik Dosen</th>
+                                <th class="px-4 py-3.5">Prodi</th>
+                                <th class="px-4 py-3.5">Email</th>
+                                <th class="px-4 py-3.5 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($users as $u)
                                 <tr class="hover:bg-slate-50/70 transition">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
+                                    <td class="px-4 py-3.5">
+                                        <div class="flex items-center gap-2.5">
                                             @if($u->avatar && Storage::disk('public')->exists($u->avatar))
-                                                <img src="{{ Storage::url($u->avatar) }}" alt="{{ $u->name }}" class="w-8 h-8 rounded-xl object-cover">
+                                                <img src="{{ Storage::url($u->avatar) }}" alt="{{ $u->name }}" class="w-8 h-8 rounded-xl object-cover shrink-0">
                                             @else
                                                 <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#681727] to-[#8c1d34] text-white flex items-center justify-center font-black text-xs shrink-0">
                                                     {{ strtoupper(substr($u->name, 0, 2)) }}
@@ -104,30 +113,42 @@
                                             @endif
                                             <div>
                                                 <span class="font-extrabold text-slate-900 block leading-tight">{{ $u->name }}</span>
-                                                <span class="text-[10px] text-slate-400 font-semibold">{{ $u->jabatan_fungsional ?? 'Dosen UHN' }}</span>
+                                                <div class="flex flex-wrap gap-1 mt-0.5">
+                                                    @foreach($u->roles as $r)
+                                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                                            {{ $r->name }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 font-mono font-bold text-slate-700">
+                                    <td class="px-4 py-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">
+                                        {{ $u->nipy ?? '-' }}
+                                    </td>
+                                    <td class="px-4 py-3.5 font-mono font-bold text-slate-700">
                                         {{ $u->nidn_nim ?? '-' }}
                                     </td>
-                                    <td class="px-6 py-4 text-slate-600 font-mono text-[11px]">
-                                        {{ $u->email }}
+                                    <td class="px-4 py-3.5 text-slate-700 font-semibold">
+                                        {{ $u->jabatan ?? 'Dosen' }}
                                     </td>
-                                    <td class="px-6 py-4 text-slate-600">
+                                    <td class="px-4 py-3.5">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
+                                            {{ $u->jabatan_fungsional ?? '-' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3.5 text-slate-700">
                                         <span class="font-bold block text-slate-800">{{ $u->prodi?->nama_prodi ?? '-' }}</span>
                                         <span class="text-[10px] text-slate-400">{{ $u->fakultas?->nama_fakultas ?? '-' }}</span>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach($u->roles as $r)
-                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                    {{ $r->name }}
-                                                </span>
-                                            @endforeach
-                                        </div>
+                                    <td class="px-4 py-3.5 text-slate-600 font-mono text-[11px]">
+                                        @if(!empty($u->email))
+                                            {{ $u->email }}
+                                        @else
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-sans font-semibold bg-amber-50 text-amber-700 border border-amber-200">Belum diisi</span>
+                                        @endif
                                     </td>
-                                    <td class="px-6 py-4 text-right">
+                                    <td class="px-4 py-3.5 text-right">
                                         <div class="flex items-center justify-end gap-1.5">
                                             <a href="{{ route('admin.users.edit', $u) }}"
                                                class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
@@ -149,7 +170,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="p-12 text-center text-slate-400 font-bold text-xs">
+                                    <td colspan="8" class="p-12 text-center text-slate-400 font-bold text-xs">
                                         Tidak ada akun pengguna yang cocok dengan kriteria pencarian.
                                     </td>
                                 </tr>

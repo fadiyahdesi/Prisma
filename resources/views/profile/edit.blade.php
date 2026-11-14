@@ -123,19 +123,26 @@
 
                         <div>
                             <h2 class="text-xs sm:text-sm font-black text-slate-900 leading-snug">{{ $user->name }}</h2>
-                            @if(!empty($user->nidn_nim))
-                                <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                    NIDN: {{ $user->nidn_nim }}
-                                </span>
-                            @endif
+                            <div class="flex flex-wrap items-center justify-center gap-1 mt-1">
+                                @if(!empty($user->nipy))
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                        NIPY: {{ $user->nipy }}
+                                    </span>
+                                @endif
+                                @if(!empty($user->nidn_nim))
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                        NIDN/NUPTK: {{ $user->nidn_nim }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-600 space-y-1 text-left">
-                            <div class="flex justify-between"><span class="text-slate-400 font-bold">Fakultas:</span><span class="font-bold text-slate-800 text-right">{{ $user->fakultas?->nama_fakultas ?? 'Universitas Harkat Negeri' }}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400 font-bold">Prodi:</span><span class="font-bold text-slate-800 text-right">{{ $user->prodi?->nama_prodi ?? 'P3M UHN' }}</span></div>
-                            @if(!empty($user->jabatan_fungsional))
-                                <div class="flex justify-between"><span class="text-slate-400 font-bold">Jabatan:</span><span class="font-bold text-slate-800 text-right">{{ $user->jabatan_fungsional }}</span></div>
-                            @endif
+                            <div class="flex justify-between gap-2"><span class="text-slate-400 font-bold">Prodi:</span><span class="font-bold text-slate-800 text-right">{{ $user->prodi?->nama_prodi ?? '-' }}</span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-400 font-bold">Fakultas:</span><span class="font-bold text-slate-800 text-right">{{ $user->fakultas?->nama_fakultas ?? 'Universitas Harkat Negeri' }}</span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-400 font-bold">Jabatan:</span><span class="font-bold text-slate-800 text-right">{{ $user->jabatan ?? 'Dosen' }}</span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-400 font-bold">Jabatan Akademik:</span><span class="font-bold text-emerald-800 text-right">{{ $user->jabatan_fungsional ?? '-' }}</span></div>
+                            <div class="flex justify-between gap-2"><span class="text-slate-400 font-bold">Email:</span><span class="font-bold text-slate-800 text-right">{{ $user->email ?? 'Belum diisi' }}</span></div>
                         </div>
                     </div>
 
@@ -235,15 +242,38 @@
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-black text-slate-800">NIPY</label>
+                                    <input type="text" name="nipy" value="{{ old('nipy', $user->nipy) }}" placeholder="Contoh: 09.015.225"
+                                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#681727] transition">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-black text-slate-800">NIDN / NUPTK</label>
+                                    <input type="text" name="nidn_nim" value="{{ old('nidn_nim', $user->nidn_nim) }}" placeholder="Contoh: 0614049002"
+                                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#681727] transition">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-black text-slate-800">Jabatan</label>
+                                    <input type="text" name="jabatan" value="{{ old('jabatan', $user->jabatan ?? 'Dosen') }}"
+                                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#681727] transition">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-black text-slate-800">Jabatan Akademik Dosen</label>
+                                    <input type="text" name="jabatan_fungsional" value="{{ old('jabatan_fungsional', $user->jabatan_fungsional) }}" placeholder="Contoh: Lektor (300)"
+                                           class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#681727] transition">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                 <!-- Input Email Aktif -->
                                 <div class="space-y-1">
                                     <label class="block text-xs font-black text-slate-800 flex items-center justify-between">
-                                        <span>Alamat Email Aktif <span class="text-rose-500">*</span></span>
+                                        <span>Alamat Email <span class="text-slate-400 font-normal">(Opsional)</span></span>
                                         @if($isPlaceholderEmail)
-                                            <span class="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Wajib Diisi</span>
+                                            <span class="text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">Belum Diisi</span>
                                         @endif
                                     </label>
-                                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
                                            placeholder="nama.anda@gmail.com atau @harkatnegeri.ac.id"
                                            class="w-full px-3.5 py-2 rounded-xl border {{ $isPlaceholderEmail ? 'border-amber-400 bg-amber-50/40 ring-1 ring-amber-300' : 'border-slate-300' }} text-xs font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#681727] focus:border-[#681727] transition">
                                     <p class="text-[10px] text-slate-500">Untuk notifikasi hasil review &amp; pencairan.</p>

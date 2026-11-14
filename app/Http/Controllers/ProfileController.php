@@ -21,8 +21,8 @@ class ProfileController extends Controller
         $user = Auth::user();
         $user->load(['roles', 'fakultas', 'prodi']);
 
-        // Check if user still has dummy placeholder email
-        $isPlaceholderEmail = str_starts_with($user->email, 'dosen.') || empty($user->email);
+        // Check if user still has empty or placeholder email
+        $isPlaceholderEmail = empty($user->email) || str_starts_with((string) $user->email, 'dosen.');
 
         return view('profile.edit', compact('user', 'isPlaceholderEmail'));
     }
@@ -36,12 +36,15 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'nipy' => 'nullable|string|max:50',
+            'nidn_nim' => 'nullable|string|max:100',
+            'jabatan' => 'nullable|string|max:100',
+            'jabatan_fungsional' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'phone_number' => 'nullable|string|max:30',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Email aktif wajib ditambahkan.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email ini sudah terdaftar oleh pengguna lain.',
             'avatar.image' => 'File foto profil harus berupa gambar.',
@@ -58,8 +61,20 @@ class ProfileController extends Controller
             $user->avatar = $avatarPath;
         }
 
-        $user->name = $validated['name'];
-        $user->email = strtolower(trim($validated['email']));
+        $user->name = trim($validated['name']);
+        if ($request->has('nipy')) {
+            $user->nipy = !empty($validated['nipy']) ? trim($validated['nipy']) : null;
+        }
+        if ($request->has('nidn_nim')) {
+            $user->nidn_nim = !empty($validated['nidn_nim']) ? trim($validated['nidn_nim']) : null;
+        }
+        if ($request->has('jabatan')) {
+            $user->jabatan = !empty($validated['jabatan']) ? trim($validated['jabatan']) : $user->jabatan;
+        }
+        if ($request->has('jabatan_fungsional')) {
+            $user->jabatan_fungsional = !empty($validated['jabatan_fungsional']) ? trim($validated['jabatan_fungsional']) : $user->jabatan_fungsional;
+        }
+        $user->email = !empty($validated['email']) ? strtolower(trim($validated['email'])) : null;
         $user->phone_number = $validated['phone_number'] ?? null;
         $user->save();
 

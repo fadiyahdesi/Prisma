@@ -26,18 +26,20 @@ class DemoRealLecturerWorkflowSeeder extends Seeder
         $dosenRole = Role::firstOrCreate(['name' => 'Dosen / Pengusul']);
         $kplRole = Role::firstOrCreate(['name' => 'Kepala P3M']);
 
-        // 1. Kepala P3M: Sharfina Febbi Handayani
+        // 1. Kepala P3M: Sharfina Febbi Handayani (dari daftar 146 Dosen Tetap UHN)
         $sharfina = User::where('nidn_nim', '0617029201')->first()
-            ?? User::where('email', 'kepalap3m@harkatnegeri.ac.id')->first();
+            ?? User::where('nipy', '08.020.451')->first();
 
         if (!$sharfina) {
             $sharfina = User::create([
-                'name' => 'Sharfina Febbi Handayani, S.Kom., M.Kom.',
-                'email' => 'kepalap3m@harkatnegeri.ac.id',
+                'name' => 'Sharfina Febbi Handayani, M.Kom.',
+                'nipy' => '08.020.451',
+                'email' => null,
                 'password' => Hash::make('0617029201'),
                 'nidn_nim' => '0617029201',
+                'jabatan' => 'Dosen',
                 'sinta_id' => '6753189',
-                'jabatan_fungsional' => 'Lektor',
+                'jabatan_fungsional' => 'Lektor (200)',
                 'sinta_score_3yr' => 235.75,
                 'sinta_score_overall' => 500.50,
                 'id_fakultas' => 4,
@@ -47,14 +49,9 @@ class DemoRealLecturerWorkflowSeeder extends Seeder
             ]);
         } else {
             $sharfina->update([
-                'name' => 'Sharfina Febbi Handayani, S.Kom., M.Kom.',
-                'email' => 'kepalap3m@harkatnegeri.ac.id',
-                'password' => Hash::make('0617029201'),
-                'nidn_nim' => '0617029201',
-                'sinta_id' => '6753189',
-                'jabatan_fungsional' => 'Lektor',
-                'sinta_score_3yr' => 235.75,
-                'sinta_score_overall' => 500.50,
+                'sinta_id' => $sharfina->sinta_id ?: '6753189',
+                'sinta_score_3yr' => $sharfina->sinta_score_3yr > 0 ? $sharfina->sinta_score_3yr : 235.75,
+                'sinta_score_overall' => $sharfina->sinta_score_overall > 0 ? $sharfina->sinta_score_overall : 500.50,
                 'is_otp_verified' => true,
             ]);
         }

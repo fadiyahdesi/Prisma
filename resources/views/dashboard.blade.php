@@ -195,12 +195,14 @@
                                     Peran Resmi: {{ $assignedRole }}
                                 </span>
                             </div>
-                            <p class="text-sm font-semibold text-slate-700">
-                                NIDN/NIM: <span class="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 tracking-wide">{{ $user->nidn_nim ?? '0615037801' }}</span> • 
-                                Jabatan Fungsional: <span class="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">{{ $user->jabatan_fungsional ?? 'Lektor Kepala' }}</span>
+                            <p class="text-sm font-semibold text-slate-700 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <span>NIPY: <span class="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">{{ $user->nipy ?? '-' }}</span></span> •
+                                <span>NIDN/NUPTK: <span class="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 tracking-wide">{{ $user->nidn_nim ?? '-' }}</span></span> •
+                                <span>Jabatan: <span class="font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">{{ $user->jabatan ?? 'Dosen' }}</span></span> •
+                                <span>Jabatan Akademik: <span class="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">{{ $user->jabatan_fungsional ?? 'Tenaga Pengajar' }}</span></span>
                             </p>
                             <p class="text-xs font-semibold text-slate-600">
-                                Homebase Akademik: <strong class="text-slate-900">{{ $user->prodi?->nama_prodi ?? 'S-1 Teknik Informatika' }}</strong> ({{ $user->fakultas?->nama_fakultas ?? 'Fakultas Sains & Teknologi' }})
+                                Prodi: <strong class="text-slate-900">{{ $user->prodi?->nama_prodi ?? '-' }}</strong> ({{ $user->fakultas?->nama_fakultas ?? 'Universitas Harkat Negeri' }})
                             </p>
                         </div>
                     </div>
@@ -236,7 +238,11 @@
                     <div class="space-y-3 text-xs">
                         <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                             <span class="text-slate-500 font-semibold block mb-0.5">Surel Resmi Kampus:</span>
-                            <span class="font-bold text-slate-900 text-sm">{{ $user->email }}</span>
+                            @if(!empty($user->email))
+                                <span class="font-bold text-slate-900 text-sm">{{ $user->email }}</span>
+                            @else
+                                <a href="{{ route('profile.edit') }}" class="font-bold text-amber-700 hover:underline text-xs">Belum diisi — Lengkapi di Pengaturan Profil &rarr;</a>
+                            @endif
                         </div>
                         <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                             <span class="text-slate-500 font-semibold block mb-0.5">Status Sinkron SINTA:</span>

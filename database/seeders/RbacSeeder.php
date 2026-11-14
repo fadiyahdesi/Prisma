@@ -105,10 +105,9 @@ class RbacSeeder extends Seeder
         // 4. Seed Demo Users for Testing
         $firstProdi = RefProgramStudi::first();
 
-        // Hanya akun sistem yang di-seed. Akun demo fiktif lainnya dinonaktifkan.
+        // Hanya akun sistem yang di-seed. Akun dosen tetap (termasuk Kepala P3M) di-seed dari RealLecturerCsvSeeder.
         $systemAccountEmails = [
             'adminp3m@harkatnegeri.ac.id',
-            'kepalap3m@harkatnegeri.ac.id',
             'superadmin@harkatnegeri.ac.id',
         ];
 

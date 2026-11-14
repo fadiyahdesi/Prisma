@@ -47,7 +47,6 @@ class RealLecturerCsvSeeder extends Seeder
                 $sOverall = (float) ($srow[12] ?? $srow[10] ?? 0);
                 $s3Yr = (float) ($srow[13] ?? $srow[11] ?? 0);
                 $entry = [
-                    'nidn' => $sNidn ?: null,
                     'sinta_id' => $sintaId ?: null,
                     'sinta_score_overall' => $sOverall,
                     'sinta_score_3yr' => $s3Yr,
@@ -124,7 +123,6 @@ class RealLecturerCsvSeeder extends Seeder
         }
 
         $keptUserIds = [];
-        $usedEmails = ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'];
         $importedCount = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
@@ -135,8 +133,8 @@ class RealLecturerCsvSeeder extends Seeder
 
             $nama = trim($row[5] ?? '');
             $nipy = trim($row[6] ?? '');
-            $nidnRaw = trim($row[7] ?? '');
-            $jabatan = trim($row[8] ?? '');
+            $nidnRaw = trim(preg_replace('/\s+/', ' ', $row[7] ?? ''));
+            $jabatan = trim($row[8] ?? '') ?: 'Dosen';
             $jafungRaw = trim($row[9] ?? '') ?: 'Tenaga Pengajar';
             $prodiRaw = trim($row[10] ?? '');
 
@@ -146,26 +144,15 @@ class RealLecturerCsvSeeder extends Seeder
 
             $cleanName = $this->cleanBaseName($nama);
 
-            // Extract primary NIDN/NUPTK (before '/')
+            // Extract primary NIDN/NUPTK (before '/') for login/matching
             $nidnParts = array_map('trim', explode('/', $nidnRaw));
             $primaryNidn = $nidnParts[0] ?? '';
             $altNidn = $nidnParts[1] ?? '';
 
-            // Pad 15-digit NUPTK with leading zero if needed
-            if (strlen($primaryNidn) === 15 && ctype_digit($primaryNidn)) {
-                $primaryNidn = '0' . $primaryNidn;
-            }
-
             // SINTA enrichment
-            $sinta = ($primaryNidn !== '' ? ($sintaByNidn[$primaryNidn] ?? $sintaByNidn[ltrim($primaryNidn, '0')] ?? null) : null)
+            $sinta = ($primaryNidn !== '' ? ($sintaByNidn[$primaryNidn] ?? $sintaByNidn['0' . $primaryNidn] ?? $sintaByNidn[ltrim($primaryNidn, '0')] ?? null) : null)
                 ?? $sintaByCleanName[$cleanName]
-                ?? ['nidn' => null, 'sinta_id' => null, 'sinta_score_overall' => 0, 'sinta_score_3yr' => 0];
-
-            // Use primary NIDN, or NUPTK from SINTA if NIDN is blank in HR sheet, or NIPY
-            $identifier = $primaryNidn !== '' ? $primaryNidn : ($sinta['nidn'] ?: $nipy);
-
-            // Clean Jabatan Akademik (e.g. "Lektor (300)" -> "Lektor")
-            $jafung = trim(preg_replace('/\s*\(\d+\)\s*/', '', $jafungRaw)) ?: 'Tenaga Pengajar';
+                ?? ['sinta_id' => null, 'sinta_score_overall' => 0, 'sinta_score_3yr' => 0];
 
             // Resolve Prodi
             $kodeProdi = $prodiMap[$prodiRaw] ?? null;
@@ -178,11 +165,12 @@ class RealLecturerCsvSeeder extends Seeder
 
             // Find existing unclaimed user in DB
             $user = null;
-            if ($primaryNidn !== '') {
+            if ($nidnRaw !== '') {
                 $user = User::whereNotIn('id', $keptUserIds)
-                    ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
-                    ->where(function ($q) use ($primaryNidn, $altNidn) {
-                        $q->where('nidn_nim', $primaryNidn)
+                    ->where(function ($q) use ($nidnRaw, $primaryNidn, $altNidn) {
+                        $q->where('nidn_nim', $nidnRaw)
+                          ->orWhere('nidn_nim', $primaryNidn)
+                          ->orWhere('nidn_nim', '0' . $primaryNidn)
                           ->orWhere('nidn_nim', ltrim($primaryNidn, '0'));
                         if ($altNidn !== '') {
                             $q->orWhere('nidn_nim', $altNidn);
@@ -192,7 +180,10 @@ class RealLecturerCsvSeeder extends Seeder
             }
             if (!$user) {
                 $candidates = User::whereNotIn('id', $keptUserIds)
-                    ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+                    ->where(function ($q) {
+                        $q->whereNull('email')
+                          ->orWhereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id']);
+                    })
                     ->get();
                 foreach ($candidates as $cand) {
                     $cClean = $this->cleanBaseName($cand->name);
@@ -203,35 +194,31 @@ class RealLecturerCsvSeeder extends Seeder
                 }
             }
 
-            // Build unique email
-            $emailKey = $identifier !== '' ? str_replace(['.', ' ', '/'], '', $identifier) : $cleanName;
-            $email = "dosen.{$emailKey}@harkatnegeri.ac.id";
-            if ($primaryNidn === '0617029201') {
-                $email = 'kepalap3m@harkatnegeri.ac.id';
-            }
-            if (in_array($email, $usedEmails, true)) {
-                $email = "dosen.{$cleanName}.{$no}@harkatnegeri.ac.id";
-            }
-            $usedEmails[] = $email;
+            // Preserve user's real email only if they manually set a custom non-dummy email; otherwise null (as SDM sheet has no email)
+            $existingEmail = $user?->email;
+            $isGeneratedEmail = empty($existingEmail)
+                || str_starts_with($existingEmail, 'dosen.')
+                || str_starts_with($existingEmail, 'temp.')
+                || $existingEmail === 'kepalap3m@harkatnegeri.ac.id';
+            $emailToSave = $isGeneratedEmail ? null : $existingEmail;
 
-            // Avoid temporary unique email conflict if another unclaimed user currently holds $email
-            User::where('email', $email)
-                ->when($user, fn ($q) => $q->where('id', '!=', $user->id))
-                ->update(['email' => "temp.{$no}." . uniqid() . "@harkatnegeri.ac.id"]);
+            $defaultPasswordPlain = $primaryNidn !== '' ? $primaryNidn : ($nipy !== '' ? $nipy : 'password123');
 
             $userData = [
                 'name' => $nama,
-                'email' => $email,
-                'nidn_nim' => $identifier ?: null,
+                'nipy' => $nipy !== '' ? $nipy : null,
+                'nidn_nim' => $nidnRaw !== '' ? $nidnRaw : null,
+                'jabatan' => $jabatan,
+                'jabatan_fungsional' => $jafungRaw,
+                'email' => $emailToSave,
                 'sinta_id' => $sinta['sinta_id'] ?? ($user->sinta_id ?? null),
                 'id_fakultas' => $fakultasId,
                 'id_prodi' => $prodiId,
-                'jabatan_fungsional' => $jafung,
                 'sinta_score_overall' => $sinta['sinta_score_overall'] ?: ($user->sinta_score_overall ?? 0),
                 'sinta_score_3yr' => $sinta['sinta_score_3yr'] ?: ($user->sinta_score_3yr ?? 0),
                 'is_otp_verified' => true,
                 'email_verified_at' => now(),
-                'password' => Hash::make($identifier ?: 'password123'),
+                'password' => $user ? $user->password : Hash::make($defaultPasswordPlain),
             ];
 
             if ($user) {
@@ -250,7 +237,7 @@ class RealLecturerCsvSeeder extends Seeder
             if ($primaryNidn === '0617029201') {
                 $roleIds[] = $kplRole->id;
             }
-            $user->roles()->syncWithoutDetaching($roleIds);
+            $user->roles()->sync($roleIds);
 
             $importedCount++;
         }
@@ -259,7 +246,10 @@ class RealLecturerCsvSeeder extends Seeder
 
         // 4. Delete any lecturer users not in the 146 official list (keep superadmin@ and adminp3m@)
         $extraIds = User::whereNotIn('id', $keptUserIds)
-            ->whereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+            ->where(function ($q) {
+                $q->whereNull('email')
+                  ->orWhereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id']);
+            })
             ->pluck('id')
             ->all();
 

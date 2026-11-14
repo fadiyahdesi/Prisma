@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     /**
-     * Handle manual login using Full Name / NIDN / Email as username, and NIDN as password.
+     * Handle manual login using Full Name / NIPY / NIDN / NUPTK / Email as username,
+     * and NIDN / NIPY as password.
      */
     public function login(Request $request): RedirectResponse
     {
@@ -20,20 +21,24 @@ class AuthController extends Controller
             'identity' => 'required|string',
             'password' => 'required|string',
         ], [
-            'identity.required' => 'Nama Lengkap atau NIDN wajib diisi.',
-            'password.required' => 'Kata sandi (NIDN) wajib diisi.',
+            'identity.required' => 'Nama Lengkap, NIPY, atau NIDN/NUPTK wajib diisi.',
+            'password.required' => 'Kata sandi (NIDN / NIPY) wajib diisi.',
         ]);
 
         $identity = trim($validated['identity']);
         $password = trim($validated['password']);
         $remember = $request->boolean('remember');
 
-        // 1. Search by exact NIDN
-        $user = User::where('nidn_nim', $identity)->first();
+        // 1. Search by exact NIDN/NUPTK or NIPY
+        $user = User::where('nidn_nim', $identity)
+            ->orWhere('nipy', $identity)
+            ->orWhere('nidn_nim', 'like', "{$identity} /%")
+            ->orWhere('nidn_nim', 'like', "%/ {$identity}")
+            ->first();
 
-        // 2. Search by exact Email
-        if (!$user) {
-            $user = User::where('email', strtolower($identity))->first();
+        // 2. Search by exact Email (if not empty)
+        if (!$user && str_contains($identity, '@')) {
+            $user = User::whereRaw('LOWER(email) = ?', [strtolower($identity)])->first();
         }
 
         // 3. Search by Name (exact match case-insensitive)
@@ -43,9 +48,9 @@ class AuthController extends Controller
 
         // 4. Search by Name (LIKE query on cleaned keywords)
         if (!$user) {
-            $cleanName = preg_replace('/\b(Dr|Prof|Ir|Drs|Dra|M\.Kom|S\.Kom|M\.T|M\.Si|M\.Sc|S\.T|S\.Pd|M\.Pd|M\.Eng|M\.Farm|A\.Md|S\.E|M\.M)\b/i', '', $identity);
+            $cleanName = preg_replace('/\b(Dr|Prof|Ir|Drs|Dra|apt|Bdn|Ns|M\.Kom|S\.Kom|M\.T|M\.Si|M\.Sc|S\.T|S\.Pd|M\.Pd|M\.Eng|M\.Farm|A\.Md|S\.E|M\.M|Ph\.D|IPM)\b/i', '', $identity);
             $cleanName = trim(preg_replace('/[.,\-_]/', ' ', $cleanName));
-            $words = array_values(array_filter(explode(' ', $cleanName), fn($w) => strlen($w) >= 3));
+            $words = array_values(array_filter(explode(' ', $cleanName), fn ($w) => strlen($w) >= 3));
 
             if (!empty($words)) {
                 $query = User::query();
@@ -59,14 +64,27 @@ class AuthController extends Controller
         if (!$user) {
             return redirect()->back()
                 ->withInput($request->only('identity', 'remember'))
-                ->withErrors(['identity' => 'Nama lengkap atau NIDN tidak ditemukan dalam basis data dosen UHN.']);
+                ->withErrors(['identity' => 'Nama lengkap, NIPY, atau NIDN/NUPTK tidak ditemukan dalam basis data dosen UHN.']);
         }
 
         // Verify password
         $passwordValid = Hash::check($password, $user->password);
 
-        // Fallback: If password matches user's NIDN, 'password123', or 'password', update and allow
-        if (!$passwordValid && (!empty($user->nidn_nim) && $password === $user->nidn_nim || $password === 'password123' || $password === 'password')) {
+        // Extract primary NIDN (before '/') if nidn_nim has slash
+        $nidnParts = !empty($user->nidn_nim) ? array_map('trim', explode('/', $user->nidn_nim)) : [];
+        $primaryNidn = $nidnParts[0] ?? null;
+        $altNidn = $nidnParts[1] ?? null;
+        $nipyClean = !empty($user->nipy) ? str_replace('.', '', $user->nipy) : null;
+
+        // Fallback: If password matches user's NIDN, NUPTK, NIPY, 'password123', or 'password', update and allow
+        if (!$passwordValid && (
+            (!empty($user->nidn_nim) && $password === $user->nidn_nim)
+            || ($primaryNidn && $password === $primaryNidn)
+            || ($altNidn && $password === $altNidn)
+            || (!empty($user->nipy) && ($password === $user->nipy || $password === $nipyClean))
+            || $password === 'password123'
+            || $password === 'password'
+        )) {
             $user->password = Hash::make($password);
             $user->save();
             $passwordValid = true;
@@ -75,7 +93,7 @@ class AuthController extends Controller
         if (!$passwordValid) {
             return redirect()->back()
                 ->withInput($request->only('identity', 'remember'))
-                ->withErrors(['password' => 'Kata sandi tidak sesuai. Gunakan NIDN Anda sebagai kata sandi.']);
+                ->withErrors(['password' => 'Kata sandi tidak sesuai. Gunakan NIDN atau NIPY Anda sebagai kata sandi.']);
         }
 
         // Successfully authenticated
@@ -92,4 +110,3 @@ class AuthController extends Controller
             ->with('success', "Selamat datang, {$user->name}! Anda berhasil masuk ke PRISMA UHN.");
     }
 }
-
