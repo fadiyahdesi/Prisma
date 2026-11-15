@@ -29,14 +29,21 @@ class DashboardController extends Controller
             ? $request->query('view_role', $assignedRole)
             : $assignedRole;
 
-        // Auto-sync 438 Penelitian Dosen & hapus data dummy jika masih ada sisa data lama
+        // Auto-sync 438 Penelitian Dosen & 420 Pengabdian Dosen UHN jika belum lengkap
         if (
-            \App\Models\PpmUsulan::whereNotNull('no_urut')->count() < 438 ||
-            \App\Models\PpmUsulan::whereNull('no_urut')->exists() ||
-            \App\Models\PpmPeriodeHibah::count() > 9
+            \App\Models\PpmUsulan::where('kategori_usulan', 'penelitian')->whereNotNull('no_urut')->count() < 438 ||
+            \App\Models\PpmUsulan::whereNull('no_urut')->exists()
         ) {
             try {
                 app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        if (\App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->whereNotNull('no_urut')->count() < 420) {
+            try {
+                app(\Database\Seeders\RealPengabdianCsvSeeder::class)->run();
             } catch (\Throwable $e) {
                 report($e);
             }

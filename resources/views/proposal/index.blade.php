@@ -57,10 +57,22 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    @if(!$isPengabdian)
+                    @if($isPengabdian)
+                        <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
+                              onsubmit="return confirm('Sinkronkan ulang 420 Data Pengabdian Masyarakat Dosen dari CSV resmi?');">
+                            @csrf
+                            <input type="hidden" name="kategori" value="pengabdian">
+                            <button type="submit"
+                                    class="h-9 px-3.5 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span>Sinkronkan 420 Pengabdian CSV</span>
+                            </button>
+                        </form>
+                    @else
                         <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
                               onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi?');">
                             @csrf
+                            <input type="hidden" name="kategori" value="penelitian">
                             <button type="submit"
                                     class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>

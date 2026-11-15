@@ -52,7 +52,8 @@ Route::get('/system/migrate-and-seed', function () {
         (new \Database\Seeders\RbacSeeder())->run();
         (new \Database\Seeders\RealLecturerCsvSeeder())->run();
         (new \Database\Seeders\RealPenelitianCsvSeeder())->run();
-        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi, 146 Dosen Tetap UHN, dan 438 Data Penelitian Dosen UHN.';
+        (new \Database\Seeders\RealPengabdianCsvSeeder())->run();
+        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi, 146 Dosen Tetap UHN, 438 Data Penelitian Dosen UHN, dan 420 Data Pengabdian Dosen UHN.';
     } catch (\Throwable $e) {
         $seedOutput = $e->getMessage();
     }

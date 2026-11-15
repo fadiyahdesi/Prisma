@@ -285,7 +285,10 @@ class RealPenelitianCsvSeeder extends Seeder
             }
 
             // Map kode_usulan -> id_usulan to insert ppm_usulan_anggota
-            $usulanIdByNo = DB::table('ppm_usulan')->pluck('id', 'no_urut')->toArray();
+            $usulanIdByNo = DB::table('ppm_usulan')
+                ->where('kategori_usulan', 'penelitian')
+                ->pluck('id', 'no_urut')
+                ->toArray();
 
             $anggotaBatch = [];
             foreach ($rows as $r) {

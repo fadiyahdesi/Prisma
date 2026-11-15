@@ -14,13 +14,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Hanya data real: 146 Dosen Tetap UHN + 438 Data Penelitian Dosen UHN + Akun Sistem.
+        // Hanya data real: 146 Dosen Tetap UHN + 438 Penelitian + 420 Pengabdian Dosen UHN + Akun Sistem.
         $this->call([
             RbacSeeder::class,
             RealLecturerCsvSeeder::class,
             BimaSkemaAndPeriodeSeeder::class,
             DemoRealLecturerWorkflowSeeder::class,
             RealPenelitianCsvSeeder::class,
+            RealPengabdianCsvSeeder::class,
         ]);
     }
 }

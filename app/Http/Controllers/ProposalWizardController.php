@@ -50,6 +50,15 @@ class ProposalWizardController extends Controller
             }
         }
 
+        // Auto-sync 420 official community service (pengabdian) records if not yet seeded
+        if (PpmUsulan::where('kategori_usulan', 'pengabdian')->whereNotNull('no_urut')->count() < 420) {
+            try {
+                app(\Database\Seeders\RealPengabdianCsvSeeder::class)->run();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         $user = Auth::user();
         $activeRole = session('active_role') ?? $user->primaryRoleName();
 
@@ -162,10 +171,21 @@ class ProposalWizardController extends Controller
     }
 
     /**
-     * Force re-sync 438 official lecturer research records from CSV and wipe dummy data.
+     * Force re-sync 438 Penelitian or 420 Pengabdian records from official CSV and wipe dummy data.
      */
-    public function syncPenelitian()
+    public function syncPenelitian(Request $request)
     {
+        $kategori = $request->input('kategori', 'penelitian');
+        if ($kategori === 'pengabdian') {
+            app(\Database\Seeders\RealPengabdianCsvSeeder::class)->run();
+            $count = PpmUsulan::where('kategori_usulan', 'pengabdian')->count();
+
+            return redirect()->route('pengabdian.index')->with(
+                'success',
+                "Sinkronisasi berhasil! Total {$count} data Pengabdian Masyarakat Dosen UHN telah dimuat sesuai file CSV resmi."
+            );
+        }
+
         app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
         $count = PpmUsulan::where('kategori_usulan', 'penelitian')->count();
 
