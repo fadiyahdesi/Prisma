@@ -197,12 +197,48 @@ class RealPenelitianCsvSeeder extends Seeder
         $now = now();
 
         DB::transaction(function () use ($rows, $byNidn, $byCleanName, $prodiKodeMap, $prodiByKode, $skemaPenelitian, $periodeMap, $now) {
-            // 1. Delete all existing proposals and members so dummy data is completely removed
+            // 1. Hapus seluruh data dummy di semua tabel terkait PPM
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_pencairan_hibah')) {
+                DB::table('ppm_pencairan_hibah')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_kontrak')) {
+                DB::table('ppm_kontrak')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_logbook')) {
+                DB::table('ppm_logbook')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_monev_kemajuan')) {
+                DB::table('ppm_monev_kemajuan')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_seminar_hasil')) {
+                DB::table('ppm_seminar_hasil')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_laporan_akhir')) {
+                DB::table('ppm_laporan_akhir')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_reward_distribusi')) {
+                DB::table('ppm_reward_distribusi')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_klaim_reward')) {
+                DB::table('ppm_klaim_reward')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')) {
+                DB::table('ppm_publikasi_jurnal')->delete();
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_hki')) {
+                DB::table('ppm_hki')->delete();
+            }
+
             DB::table('ppm_usulan_anggota')->delete();
             DB::table('ppm_usulan_rab')->delete();
             DB::table('ppm_usulan_luaran')->delete();
             DB::table('ppm_penugasan_reviewer')->delete();
             DB::table('ppm_usulan')->delete();
+
+            // Hapus periode hibah dummy yang tidak termasuk 9 semester resmi CSV
+            if (!empty($periodeMap)) {
+                DB::table('ppm_periode_hibah')->whereNotIn('id', array_values($periodeMap))->delete();
+            }
 
             $usulanBatch = [];
             foreach ($rows as $r) {

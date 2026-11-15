@@ -29,15 +29,29 @@ class DashboardController extends Controller
             ? $request->query('view_role', $assignedRole)
             : $assignedRole;
 
+        // Auto-sync 438 Penelitian Dosen & hapus data dummy jika masih ada sisa data lama
+        if (
+            \App\Models\PpmUsulan::whereNotNull('no_urut')->count() < 438 ||
+            \App\Models\PpmUsulan::whereNull('no_urut')->exists() ||
+            \App\Models\PpmPeriodeHibah::count() > 9
+        ) {
+            try {
+                app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         $availableRoles = Role::all();
+        $totalNominal = (float) \App\Models\PpmUsulan::sum('total_rab');
         $stats = [
-            'total_proposals' => 48,
-            'approved_lppm' => 32,
-            'under_review' => 12,
-            'total_pagu' => 'Rp 4.800.000.000',
-            'scopus_articles' => 24,
-            'hki_granted' => 18,
-            'total_users' => User::count(),
+            'total_proposals' => \App\Models\PpmUsulan::count(),
+            'approved_lppm' => \App\Models\PpmUsulan::where('status', 'Approved')->count(),
+            'under_review' => \App\Models\PpmUsulan::whereIn('status', ['Submitted', 'In_review'])->count(),
+            'total_pagu' => 'Rp. ' . number_format($totalNominal, 0, '.', ','),
+            'scopus_articles' => \App\Models\PpmPublikasiJurnal::count(),
+            'hki_granted' => \App\Models\PpmHki::count(),
+            'total_users' => User::whereNotNull('no_urut')->count(),
             'audit_logs_count' => AuditLog::count(),
         ];
 

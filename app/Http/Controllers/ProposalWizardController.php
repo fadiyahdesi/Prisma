@@ -32,10 +32,11 @@ class ProposalWizardController extends Controller
      */
     public function index(Request $request)
     {
-        // Auto-sync 438 official research records if not yet seeded or if dummy proposals remain
+        // Auto-sync 438 official research records if not yet seeded or if any dummy data remains
         if (
             PpmUsulan::whereNotNull('no_urut')->count() < 438 ||
-            PpmUsulan::whereIn('kode_usulan', ['USL-2026-GWS-01', 'USL-2026-IDF-02', 'USL-2026-SW-03', 'USL-2026-SFH-04'])->exists()
+            PpmUsulan::whereNull('no_urut')->exists() ||
+            PpmPeriodeHibah::count() > 9
         ) {
             try {
                 app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();

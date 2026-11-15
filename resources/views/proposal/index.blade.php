@@ -1,574 +1,437 @@
 @extends('layouts.app')
 
-@section('title', 'Data Penelitian Dosen UHN')
-
-@section('styles')
-<style>
-    .filter-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 1.15rem 1.35rem;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-    }
-    .tab-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.55rem 1rem;
-        border-radius: 10px;
-        font-size: 0.84rem;
-        font-weight: 700;
-        text-decoration: none;
-        transition: all 0.15s ease;
-        border: 1px solid transparent;
-    }
-    .tab-pill.active {
-        background: #1B365D;
-        color: #ffffff;
-        box-shadow: 0 2px 6px rgba(27, 54, 93, 0.2);
-    }
-    .tab-pill.inactive {
-        background: #f8fafc;
-        color: #475569;
-        border-color: #e2e8f0;
-    }
-    .tab-pill.inactive:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    .tab-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.12rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.73rem;
-        font-weight: 800;
-    }
-    .tab-pill.active .tab-badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-    }
-    .tab-pill.inactive .tab-badge {
-        background: #e2e8f0;
-        color: #334155;
-    }
-    .penelitian-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-    .penelitian-table thead th {
-        background: #f8fafc;
-        color: #334155;
-        font-size: 0.74rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        padding: 0.85rem 0.9rem;
-        border-bottom: 2px solid #e2e8f0;
-        white-space: nowrap;
-    }
-    .penelitian-table tbody td {
-        padding: 0.85rem 0.9rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: top;
-        font-size: 0.84rem;
-        color: #1e293b;
-    }
-    .penelitian-table tbody tr:hover {
-        background-color: #f8fafc;
-    }
-    .semester-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.28rem 0.65rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-        white-space: nowrap;
-    }
-    .no-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 34px;
-        height: 28px;
-        padding: 0 0.45rem;
-        border-radius: 7px;
-        background: #f1f5f9;
-        color: #334155;
-        font-weight: 800;
-        font-size: 0.78rem;
-        border: 1px solid #e2e8f0;
-    }
-    .nidn-code {
-        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-        font-size: 0.79rem;
-        font-weight: 600;
-        color: #0f172a;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 0.22rem 0.5rem;
-        border-radius: 6px;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .prodi-badge {
-        display: inline-block;
-        padding: 0.25rem 0.6rem;
-        border-radius: 7px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-        line-height: 1.3;
-    }
-    .nominal-text {
-        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-        font-weight: 700;
-        font-size: 0.82rem;
-        color: #0f172a;
-        white-space: nowrap;
-    }
-    .action-group {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        white-space: nowrap;
-    }
-    .btn-act {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.3rem;
-        height: 30px;
-        padding: 0 0.65rem;
-        border-radius: 7px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        border: 1px solid transparent;
-    }
-    .btn-act-edit {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-color: #bfdbfe;
-    }
-    .btn-act-edit:hover {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-    .btn-act-view {
-        background: #f8fafc;
-        color: #334155;
-        border-color: #cbd5e1;
-    }
-    .btn-act-view:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    .btn-act-del {
-        background: #fef2f2;
-        color: #dc2626;
-        border-color: #fecaca;
-    }
-    .btn-act-del:hover {
-        background: #fee2e2;
-        color: #b91c1c;
-    }
-    /* Modal Edit */
-    .modal-backdrop-custom {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.55);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem;
-    }
-    .modal-backdrop-custom.show {
-        display: flex;
-    }
-    .modal-card-custom {
-        background: #ffffff;
-        border-radius: 16px;
-        width: 100%;
-        max-width: 680px;
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-    }
-</style>
-@endsection
+@section('title', 'Data Penelitian Dosen UHN - PRISMA UHN')
 
 @section('content')
 @php
     $isAdmin = auth()->user()->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
 @endphp
 
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem;">
-    <div>
-        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
-            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0;">Data Penelitian Dosen UHN</h2>
-            <span style="background: #dcfce7; color: #166534; border: 1px solid #86efac; font-size: 0.76rem; font-weight: 800; padding: 0.22rem 0.65rem; border-radius: 999px;">
-                {{ $totalAllCount }} Data Penelitian Resmi
-            </span>
-        </div>
-        <p style="color: #64748b; margin: 0.25rem 0 0 0; font-size: 0.88rem;">
-            Basis data penelitian dosen Universitas Harkat Negeri sesuai kolom standar: <strong>Semester, No, Judul, Ketua, NIDN / NUPN, Anggota, Prodi, Nominal</strong>.
-        </p>
-    </div>
+<div x-data="{
+    sidebarOpen: false,
+    editModalOpen: false,
+    editData: {
+        update_url: '',
+        no_urut: '',
+        semester: '',
+        judul_usulan: '',
+        nama_ketua: '',
+        nidn_ketua: '',
+        nama_anggota: '',
+        nama_prodi: '',
+        total_rab: 0
+    },
+    openEditModal(payload) {
+        this.editData = payload;
+        this.editModalOpen = true;
+    }
+}" class="min-h-screen bg-slate-100 text-slate-800 flex">
+    <x-sidebar />
 
-    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-        <form action="{{ route('usulan.sync-penelitian') }}" method="POST" style="margin: 0;" onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi dan bersihkan data dummy?');">
-            @csrf
-            <button type="submit" class="btn" style="background: #0f766e; color: #ffffff; border: none; padding: 0.58rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
-                Sinkronkan 438 Penelitian CSV
-            </button>
-        </form>
+    <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
+        <!-- Topbar Header -->
+        <header class="bg-white border-b border-slate-200 py-3.5 sticky top-0 z-30 shadow-xs">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <a href="{{ route('dashboard') }}" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 transition" title="Kembali ke Dashboard" aria-label="Kembali ke Dashboard">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    </a>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight">Database Penelitian Dosen UHN</h1>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                {{ $totalAllCount }} Penelitian Resmi
+                            </span>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-500">
+                            Kolom standar: <strong class="text-slate-700">Semester &bull; No &bull; Judul &bull; Ketua &bull; NIDN / NUPN &bull; Anggota &bull; Prodi &bull; Nominal</strong>
+                        </p>
+                    </div>
+                </div>
 
-        <a href="{{ route('sinta.profile') }}" class="btn btn-primary" style="padding: 0.58rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
-            + Ajukan Proposal Baru
-        </a>
-    </div>
-</div>
+                <div class="flex items-center gap-2">
+                    <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
+                          onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi dan hapus seluruh data dummy?');">
+                        @csrf
+                        <button type="submit"
+                                class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Sinkronkan 438 Penelitian CSV</span>
+                        </button>
+                    </form>
 
-@if(session('success'))
-    <div style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.85rem 1.1rem; border-radius: 12px; margin-bottom: 1.1rem; font-size: 0.86rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span>{{ session('success') }}</span>
-    </div>
-@endif
+                    <a href="{{ route('sinta.profile') }}"
+                       style="background-color: #681727 !important; color: #ffffff !important;"
+                       class="h-9 px-4 rounded-xl text-white font-extrabold text-xs shadow-xs transition inline-flex items-center gap-1.5 hover:opacity-90">
+                        <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span style="color: #ffffff !important;">Ajukan Proposal Baru</span>
+                    </a>
+                </div>
+            </div>
+        </header>
 
-@if(session('error'))
-    <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.1rem; border-radius: 12px; margin-bottom: 1.1rem; font-size: 0.86rem; font-weight: 600;">
-        {{ session('error') }}
-    </div>
-@endif
-
-<!-- Scope Tabs & Summary -->
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'all'])) }}"
-           class="tab-pill {{ ($scope ?? 'all') === 'all' ? 'active' : 'inactive' }}">
-            <span>Semua Penelitian Dosen UHN</span>
-            <span class="tab-badge">{{ $totalAllCount }}</span>
-        </a>
-        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'mine'])) }}"
-           class="tab-pill {{ ($scope ?? 'all') === 'mine' ? 'active' : 'inactive' }}">
-            <span>Penelitian Saya (Ketua / Anggota)</span>
-            <span class="tab-badge">{{ $totalMineCount }}</span>
-        </a>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.45rem 0.85rem; font-size: 0.8rem; color: #334155;">
-            Menampilkan: <strong style="color: #0f172a;">{{ $proposals->count() }}</strong> dari <strong style="color: #0f172a;">{{ $proposals->total() }}</strong> penelitian
-        </div>
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 0.45rem 0.85rem; font-size: 0.8rem; color: #166534;">
-            Total Nominal: <strong>Rp. {{ number_format($totalNominal, 0, '.', ',') }}</strong>
-        </div>
-    </div>
-</div>
-
-<!-- Filter Bar -->
-<div class="filter-card">
-    <form method="GET" action="{{ route('usulan.index') }}" style="display: grid; grid-template-columns: 2fr 1.2fr 1.4fr 0.9fr auto; gap: 0.75rem; align-items: end;">
-        <input type="hidden" name="scope" value="{{ $scope ?? 'all' }}">
-
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.3rem;">Cari Judul / Ketua / NIDN / Anggota</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik judul, nama ketua, NIDN, atau anggota..."
-                   style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.83rem;">
-        </div>
-
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.3rem;">Semester</label>
-            <select name="semester" style="width: 100%; height: 38px; padding: 0 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.83rem; background: #fff;">
-                <option value="">Semua Semester ({{ $semesterList->count() }})</option>
-                @foreach($semesterList as $sem)
-                    <option value="{{ $sem }}" {{ request('semester') === $sem ? 'selected' : '' }}>{{ $sem }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.3rem;">Program Studi (Prodi)</label>
-            <select name="prodi" style="width: 100%; height: 38px; padding: 0 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.83rem; background: #fff;">
-                <option value="">Semua Prodi ({{ $prodiList->count() }})</option>
-                @foreach($prodiList as $pr)
-                    <option value="{{ $pr }}" {{ request('prodi') === $pr ? 'selected' : '' }}>{{ $pr }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.3rem;">Baris / Halaman</label>
-            <select name="per_page" onchange="this.form.submit()" style="width: 100%; height: 38px; padding: 0 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.83rem; background: #fff;">
-                <option value="500" {{ ($perPage ?? 500) == 500 ? 'selected' : '' }}>Semua (438)</option>
-                <option value="250" {{ ($perPage ?? 500) == 250 ? 'selected' : '' }}>250 Baris</option>
-                <option value="100" {{ ($perPage ?? 500) == 100 ? 'selected' : '' }}>100 Baris</option>
-                <option value="50" {{ ($perPage ?? 500) == 50 ? 'selected' : '' }}>50 Baris</option>
-                <option value="25" {{ ($perPage ?? 500) == 25 ? 'selected' : '' }}>25 Baris</option>
-            </select>
-        </div>
-
-        <div style="display: flex; gap: 0.45rem;">
-            <button type="submit" style="height: 38px; padding: 0 1rem; background: #1B365D; color: #fff; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
-                Filter
-            </button>
-            @if(request()->hasAny(['search', 'semester', 'prodi']))
-                <a href="{{ route('usulan.index', ['scope' => $scope ?? 'all', 'per_page' => $perPage ?? 500]) }}"
-                   style="height: 38px; padding: 0 0.85rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center;">
-                    Reset
-                </a>
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+            <!-- Flash Notifications -->
+            @if(session('success'))
+                <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xs">
+                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ session('success') }}</span>
+                </div>
             @endif
-        </div>
-    </form>
-</div>
 
-<!-- Main Table: 8 Columns (Semester | No | Judul | Ketua | NIDN / NUPN | Anggota | Prodi | Nominal) -->
-<div class="card" style="padding: 0; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff;">
-    @if($proposals->isEmpty())
-        <div style="text-align: center; padding: 3.5rem 2rem;">
-            <h3 style="font-size: 1.05rem; font-weight: 700; color: #334155; margin-bottom: 0.4rem;">Tidak Ada Data Penelitian Ditemukan</h3>
-            <p style="color: #64748b; max-width: 460px; margin: 0 auto 1.25rem; font-size: 0.86rem;">
-                Tidak ada data penelitian dosen yang cocok dengan filter pencarian saat ini.
-            </p>
-            <a href="{{ route('usulan.index', ['scope' => 'all']) }}" class="btn btn-primary" style="text-decoration: none; font-size: 0.82rem;">
-                Tampilkan Semua 438 Penelitian Dosen
-            </a>
-        </div>
-    @else
-        <div style="overflow-x: auto;">
-            <table class="penelitian-table">
-                <thead>
-                    <tr>
-                        <th style="width: 130px;">Semester</th>
-                        <th style="width: 55px; text-align: center;">No</th>
-                        <th style="min-width: 280px;">Judul</th>
-                        <th style="min-width: 190px;">Ketua</th>
-                        <th style="width: 130px;">NIDN / NUPN</th>
-                        <th style="min-width: 200px;">Anggota</th>
-                        <th style="min-width: 170px;">Prodi</th>
-                        <th style="width: 130px; text-align: right;">Nominal</th>
-                        <th style="width: 155px; text-align: center;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($proposals as $idx => $p)
-                        @php
-                            $semesterVal = $p->semester ?: ($p->periode ? trim($p->periode->tahun_akademik . ' ' . $p->periode->semester) : '-');
-                            $noUrutVal = $p->no_urut ?? ($proposals->firstItem() + $idx);
-                            $ketuaVal = $p->nama_ketua ?: ($p->pengusul?->name ?? '-');
-                            $nidnVal = $p->nidn_ketua ?: ($p->pengusul?->nidn_nim ?? '-');
-                            $anggotaVal = $p->nama_anggota;
-                            if (empty($anggotaVal) || $anggotaVal === '-') {
-                                $anggotaNames = $p->anggota?->pluck('nama')->filter()->values()->all() ?? [];
-                                $anggotaVal = !empty($anggotaNames) ? implode('; ', $anggotaNames) : '-';
-                            }
-                            $prodiVal = $p->nama_prodi ?: ($p->prodi?->nama_prodi ?? ($p->pengusul?->prodi?->nama_prodi ?? '-'));
-                            $nominalVal = (float) ($p->total_rab ?? 0);
-                            $canManage = $isAdmin || $p->id_pengusul === auth()->id();
-                        @endphp
-                        <tr>
-                            <td>
-                                <span class="semester-badge">{{ $semesterVal }}</span>
-                            </td>
-                            <td style="text-align: center;">
-                                <span class="no-badge">{{ $noUrutVal }}</span>
-                            </td>
-                            <td>
-                                <div style="font-weight: 700; color: #0f172a; line-height: 1.45;">
-                                    {{ $p->judul_usulan ?: '(Judul Belum Diisi)' }}
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-weight: 700; color: #1e293b; line-height: 1.35;">
-                                    {{ $ketuaVal }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="nidn-code">{{ $nidnVal }}</span>
-                            </td>
-                            <td>
-                                <div style="color: #334155; line-height: 1.4; font-size: 0.81rem;">
-                                    {{ $anggotaVal }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="prodi-badge">{{ $prodiVal }}</span>
-                            </td>
-                            <td style="text-align: right;">
-                                <span class="nominal-text">Rp. {{ number_format($nominalVal, 0, '.', ',') }}</span>
-                            </td>
-                            <td style="text-align: center;">
-                                <div class="action-group">
-                                    @if($canManage)
-                                        <button type="button"
-                                                class="btn-act btn-act-edit"
-                                                onclick="openEditPenelitianModal({{ json_encode([
-                                                    'id' => $p->id,
-                                                    'update_url' => route('usulan.update-basic', $p->id),
-                                                    'semester' => $semesterVal,
-                                                    'no_urut' => $noUrutVal,
-                                                    'judul_usulan' => $p->judul_usulan,
-                                                    'nama_ketua' => $ketuaVal,
-                                                    'nidn_ketua' => $nidnVal,
-                                                    'nama_anggota' => $anggotaVal,
-                                                    'nama_prodi' => $prodiVal,
-                                                    'total_rab' => $nominalVal,
-                                                ]) }})"
-                                                title="Edit Data Penelitian">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                            Edit
-                                        </button>
-                                    @endif
-
-                                    <a href="{{ route('usulan.step', ['usulan' => $p->id, 'step' => ($p->status === 'Draft' ? 1 : 6)]) }}"
-                                       class="btn-act btn-act-view"
-                                       title="Lihat Detail">
-                                        Detail
-                                    </a>
-
-                                    @if($canManage)
-                                        <form action="{{ route('usulan.destroy', $p->id) }}" method="POST" style="margin: 0; display: inline;"
-                                              onsubmit="return confirm('Hapus data penelitian No. {{ $noUrutVal }} ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-act btn-act-del" title="Hapus Data Penelitian">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
-                                                Hapus
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        @if($proposals->hasPages())
-            <div style="padding: 1rem 1.25rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                <div style="font-size: 0.8rem; color: #64748b;">
-                    Menampilkan baris <strong>{{ $proposals->firstItem() }}</strong> – <strong>{{ $proposals->lastItem() }}</strong> dari total <strong>{{ $proposals->total() }}</strong> penelitian
+            @if(session('error'))
+                <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xs">
+                    <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ session('error') }}</span>
                 </div>
-                <div>
-                    {{ $proposals->links() }}
-                </div>
-            </div>
-        @endif
-    @endif
-</div>
+            @endif
 
-<!-- Modal Edit 8 Kolom Dasar Penelitian -->
-<div id="editPenelitianModal" class="modal-backdrop-custom">
-    <div class="modal-card-custom">
-        <div style="padding: 1.1rem 1.4rem; background: #1B365D; color: #ffffff; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1rem; font-weight: 800;">Edit Data Penelitian Dosen</h3>
-            <button type="button" onclick="closeEditPenelitianModal()" style="background: transparent; border: none; color: #ffffff; font-size: 1.25rem; cursor: pointer; line-height: 1;">&times;</button>
-        </div>
+            <!-- Category Tabs & Filter Toolbar -->
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3.5">
+                <!-- Row 1: Category Pills & Summary Counter -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div class="inline-flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'all'])) }}"
+                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ ($scope ?? 'all') === 'all' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                            <span>Semua Penelitian Dosen UHN</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ ($scope ?? 'all') === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
+                                {{ $totalAllCount }}
+                            </span>
+                        </a>
+                        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'mine'])) }}"
+                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ ($scope ?? 'all') === 'mine' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                            <span>Penelitian Saya (Ketua / Anggota)</span>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ ($scope ?? 'all') === 'mine' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
+                                {{ $totalMineCount }}
+                            </span>
+                        </a>
+                    </div>
 
-        <form id="editPenelitianForm" method="POST" action="" style="padding: 1.35rem 1.4rem;">
-            @csrf
-            @method('PUT')
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700">
+                            Periode: <strong class="text-slate-900">{{ $semesterList->count() }} Semester</strong>
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                            Menampilkan <strong class="font-extrabold">{{ $proposals->count() }}</strong> dari <strong class="font-extrabold">{{ $proposals->total() }}</strong> penelitian
+                        </span>
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
+                            Total Nominal: <strong class="font-extrabold">Rp. {{ number_format($totalNominal, 0, '.', ',') }}</strong>
+                        </span>
+                    </div>
+                </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.85rem; margin-bottom: 0.85rem;">
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">No</label>
-                    <input type="number" name="no_urut" id="edit_no_urut" required
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Semester</label>
-                    <input type="text" name="semester" id="edit_semester" required placeholder="Contoh: 2024 2025 Genap"
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
+                <!-- Row 2: Search & Filter Form -->
+                <form method="GET" action="{{ route('usulan.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+                    <input type="hidden" name="scope" value="{{ $scope ?? 'all' }}">
+
+                    <div class="lg:col-span-4 relative">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                               placeholder="Cari Judul, Ketua, NIDN / NUPN, atau Anggota..."
+                               class="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <select name="semester" class="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                            <option value="">Semua Semester ({{ $semesterList->count() }} Periode)</option>
+                            @foreach($semesterList as $sem)
+                                <option value="{{ $sem }}" {{ request('semester') === $sem ? 'selected' : '' }}>{{ $sem }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-3">
+                        <select name="prodi" class="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                            <option value="">Semua Program Studi ({{ $prodiList->count() }} Prodi)</option>
+                            @foreach($prodiList as $pr)
+                                <option value="{{ $pr }}" {{ request('prodi') === $pr ? 'selected' : '' }}>{{ $pr }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="lg:col-span-2 flex items-center gap-1.5">
+                        <select name="per_page" onchange="this.form.submit()" title="Jumlah baris per halaman"
+                                class="h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                            <option value="500" {{ ($perPage ?? 500) == 500 ? 'selected' : '' }}>Semua (438)</option>
+                            <option value="250" {{ ($perPage ?? 500) == 250 ? 'selected' : '' }}>250 Baris</option>
+                            <option value="100" {{ ($perPage ?? 500) == 100 ? 'selected' : '' }}>100 Baris</option>
+                            <option value="50" {{ ($perPage ?? 500) == 50 ? 'selected' : '' }}>50 Baris</option>
+                            <option value="25" {{ ($perPage ?? 500) == 25 ? 'selected' : '' }}>25 Baris</option>
+                        </select>
+
+                        <button type="submit" class="flex-1 h-9 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition shadow-2xs cursor-pointer">
+                            Filter
+                        </button>
+
+                        @if(request()->anyFilled(['search', 'semester', 'prodi']))
+                            <a href="{{ route('usulan.index', ['scope' => $scope ?? 'all', 'per_page' => $perPage ?? 500]) }}"
+                               class="h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition inline-flex items-center justify-center" title="Reset Filter">
+                                Reset
+                            </a>
+                        @endif
+                    </div>
+                </form>
             </div>
 
-            <div style="margin-bottom: 0.85rem;">
-                <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Judul Penelitian</label>
-                <textarea name="judul_usulan" id="edit_judul_usulan" rows="3" required
-                          style="width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem; font-family: inherit;"></textarea>
-            </div>
+            <!-- Main Table: 8 Standard Columns (Semester | No | Judul | Ketua | NIDN / NUPN | Anggota | Prodi | Nominal) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/90 border-b border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                                <th class="py-3.5 px-3.5 w-36 whitespace-nowrap">Semester</th>
+                                <th class="py-3.5 px-2.5 w-14 text-center">No</th>
+                                <th class="py-3.5 px-4 min-w-[280px] max-w-[390px]">Judul</th>
+                                <th class="py-3.5 px-3.5 min-w-[185px]">Ketua</th>
+                                <th class="py-3.5 px-3.5 w-32 whitespace-nowrap">NIDN / NUPN</th>
+                                <th class="py-3.5 px-3.5 min-w-[195px] max-w-[260px]">Anggota</th>
+                                <th class="py-3.5 px-3.5 min-w-[165px]">Prodi</th>
+                                <th class="py-3.5 px-3.5 w-36 text-right whitespace-nowrap">Nominal</th>
+                                <th class="py-3.5 px-4 w-40 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            @forelse($proposals as $idx => $p)
+                                @php
+                                    $semesterVal = $p->semester ?: ($p->periode ? trim($p->periode->tahun_akademik . ' ' . $p->periode->semester) : '-');
+                                    $noUrutVal = $p->no_urut ?? ($proposals->firstItem() + $idx);
+                                    $ketuaVal = $p->nama_ketua ?: ($p->pengusul?->name ?? '-');
+                                    $nidnVal = $p->nidn_ketua ?: ($p->pengusul?->nidn_nim ?? '-');
+                                    $anggotaVal = $p->nama_anggota;
+                                    if (empty($anggotaVal) || $anggotaVal === '-') {
+                                        $anggotaNames = $p->anggota?->pluck('nama')->filter()->values()->all() ?? [];
+                                        $anggotaVal = !empty($anggotaNames) ? implode('; ', $anggotaNames) : '-';
+                                    }
+                                    $prodiVal = $p->nama_prodi ?: ($p->prodi?->nama_prodi ?? ($p->pengusul?->prodi?->nama_prodi ?? '-'));
+                                    $nominalVal = (float) ($p->total_rab ?? 0);
+                                    $canManage = $isAdmin || $p->id_pengusul === auth()->id();
+                                @endphp
+                                <tr class="hover:bg-slate-50/80 transition-colors align-top">
+                                    <!-- 1. Semester -->
+                                    <td class="py-3 px-3.5 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                                            {{ $semesterVal }}
+                                        </span>
+                                    </td>
 
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Ketua</label>
-                    <input type="text" name="nama_ketua" id="edit_nama_ketua" required
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">NIDN / NUPN</label>
-                    <input type="text" name="nidn_ketua" id="edit_nidn_ketua"
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
-            </div>
+                                    <!-- 2. No -->
+                                    <td class="py-3 px-2.5 text-center font-extrabold text-slate-500">
+                                        <span class="inline-flex items-center justify-center min-w-7 h-7 px-1.5 rounded-lg bg-slate-100 text-slate-700 font-extrabold text-xs border border-slate-200">
+                                            {{ $noUrutVal }}
+                                        </span>
+                                    </td>
 
-            <div style="margin-bottom: 0.85rem;">
-                <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Anggota</label>
-                <input type="text" name="nama_anggota" id="edit_nama_anggota"
-                       style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-            </div>
+                                    <!-- 3. Judul -->
+                                    <td class="py-3 px-4">
+                                        <div class="font-bold text-slate-900 text-xs sm:text-[13px] leading-relaxed">
+                                            {{ $p->judul_usulan ?: '(Judul Belum Diisi)' }}
+                                        </div>
+                                    </td>
 
-            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 0.85rem; margin-bottom: 1.25rem;">
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Prodi</label>
-                    <input type="text" name="nama_prodi" id="edit_nama_prodi" required
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 0.3rem;">Nominal (Rp)</label>
-                    <input type="number" step="1" min="0" name="total_rab" id="edit_total_rab" required
-                           style="width: 100%; height: 38px; padding: 0 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.84rem;">
-                </div>
-            </div>
+                                    <!-- 4. Ketua -->
+                                    <td class="py-3 px-3.5">
+                                        <div class="font-extrabold text-slate-900 text-xs leading-snug">
+                                            {{ $ketuaVal }}
+                                        </div>
+                                    </td>
 
-            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                <button type="button" onclick="closeEditPenelitianModal()"
-                        style="height: 38px; padding: 0 1rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
-                    Batal
+                                    <!-- 5. NIDN / NUPN -->
+                                    <td class="py-3 px-3.5 whitespace-nowrap">
+                                        @if(!empty($nidnVal) && $nidnVal !== '-')
+                                            <span class="inline-block font-mono font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-[11px]">
+                                                {{ $nidnVal }}
+                                            </span>
+                                        @else
+                                            <span class="inline-block text-slate-400 font-bold text-xs px-2 py-0.5 bg-slate-50 rounded border border-slate-200">-</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- 6. Anggota -->
+                                    <td class="py-3 px-3.5">
+                                        @if(!empty($anggotaVal) && $anggotaVal !== '-')
+                                            <div class="text-xs font-semibold text-slate-700 leading-relaxed">
+                                                {{ $anggotaVal }}
+                                            </div>
+                                        @else
+                                            <span class="text-slate-400 italic text-[11px]">-</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- 7. Prodi -->
+                                    <td class="py-3 px-3.5">
+                                        @if(!empty($prodiVal) && $prodiVal !== '-')
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 leading-tight">
+                                                {{ $prodiVal }}
+                                            </span>
+                                        @else
+                                            <span class="text-slate-400 italic text-[11px]">-</span>
+                                        @endif
+                                    </td>
+
+                                    <!-- 8. Nominal -->
+                                    <td class="py-3 px-3.5 text-right whitespace-nowrap">
+                                        @if($nominalVal > 0)
+                                            <span class="inline-block font-mono font-extrabold text-slate-900 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
+                                                Rp. {{ number_format($nominalVal, 0, '.', ',') }}
+                                            </span>
+                                        @else
+                                            <span class="inline-block font-mono font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-xs">
+                                                Rp. 0
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <!-- 9. Aksi (Edit & Hapus Rapi Sejajar) -->
+                                    <td class="py-3 px-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-1.5">
+                                            @if($canManage)
+                                                <button type="button"
+                                                        @click="openEditModal({{ json_encode([
+                                                            'update_url' => route('usulan.update-basic', $p->id),
+                                                            'no_urut' => $noUrutVal,
+                                                            'semester' => $semesterVal,
+                                                            'judul_usulan' => $p->judul_usulan,
+                                                            'nama_ketua' => $ketuaVal,
+                                                            'nidn_ketua' => $nidnVal,
+                                                            'nama_anggota' => $anggotaVal,
+                                                            'nama_prodi' => $prodiVal,
+                                                            'total_rab' => round($nominalVal),
+                                                        ]) }})"
+                                                        class="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                                                        title="Edit Data Penelitian">
+                                                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                    <span>Edit</span>
+                                                </button>
+
+                                                <form method="POST" action="{{ route('usulan.destroy', $p->id) }}"
+                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus data penelitian No. {{ $noUrutVal }} ini?');"
+                                                      class="inline-flex m-0 p-0">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 hover:border-rose-600 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
+                                                            title="Hapus Data Penelitian">
+                                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        <span>Hapus</span>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <a href="{{ route('usulan.step', ['usulan' => $p->id, 'step' => 6]) }}"
+                                                   class="h-8 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5">
+                                                    <span>Detail</span>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="py-12 text-center text-slate-400 font-semibold">
+                                        Tidak ada data penelitian dosen yang sesuai dengan kriteria pencarian.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($proposals->hasPages())
+                    <div class="p-4 border-t border-slate-200 bg-slate-50">
+                        {{ $proposals->links() }}
+                    </div>
+                @endif
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Edit 8 Kolom Standar Penelitian (Alpine.js x-show + x-cloak) -->
+    <div x-show="editModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         @keydown.escape.window="editModalOpen = false">
+        <div @click.away="editModalOpen = false"
+             class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div class="px-5 py-4 bg-[#681727] text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base">Edit Data Penelitian Dosen</h3>
+                    <p class="text-[11px] text-rose-100 font-medium">Perbarui 8 kolom standar penelitian dosen UHN</p>
+                </div>
+                <button type="button" @click="editModalOpen = false" class="text-white/80 hover:text-white p-1 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
-                <button type="submit"
-                        style="height: 38px; padding: 0 1.2rem; background: #1B365D; color: #ffffff; border: none; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
-                    Simpan Perubahan
-                </button>
             </div>
-        </form>
+
+            <form method="POST" :action="editData.update_url" class="p-5 space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">No Urut</label>
+                        <input type="number" name="no_urut" x-model="editData.no_urut" required
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Semester</label>
+                        <input type="text" name="semester" x-model="editData.semester" required placeholder="Contoh: 2024 2025 Genap"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Judul Penelitian</label>
+                    <textarea name="judul_usulan" x-model="editData.judul_usulan" rows="3" required
+                              class="w-full p-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Ketua</label>
+                        <input type="text" name="nama_ketua" x-model="editData.nama_ketua" required
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">NIDN / NUPN</label>
+                        <input type="text" name="nidn_ketua" x-model="editData.nidn_ketua"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Anggota</label>
+                    <input type="text" name="nama_anggota" x-model="editData.nama_anggota"
+                           class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Program Studi (Prodi)</label>
+                        <input type="text" name="nama_prodi" x-model="editData.nama_prodi" required
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Nominal (Rp)</label>
+                        <input type="number" step="1" min="0" name="total_rab" x-model="editData.total_rab" required
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                    <button type="button" @click="editModalOpen = false"
+                            class="h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            style="background-color: #681727 !important; color: #ffffff !important;"
+                            class="h-9 px-5 rounded-xl text-white font-extrabold text-xs shadow-xs transition hover:opacity-90 cursor-pointer">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
-
-<script>
-    function openEditPenelitianModal(data) {
-        const modal = document.getElementById('editPenelitianModal');
-        const form = document.getElementById('editPenelitianForm');
-        form.action = data.update_url;
-        document.getElementById('edit_no_urut').value = data.no_urut || '';
-        document.getElementById('edit_semester').value = data.semester || '';
-        document.getElementById('edit_judul_usulan').value = data.judul_usulan || '';
-        document.getElementById('edit_nama_ketua').value = data.nama_ketua || '';
-        document.getElementById('edit_nidn_ketua').value = data.nidn_ketua || '-';
-        document.getElementById('edit_nama_anggota').value = data.nama_anggota || '-';
-        document.getElementById('edit_nama_prodi').value = data.nama_prodi || '';
-        document.getElementById('edit_total_rab').value = Math.round(data.total_rab || 0);
-        modal.classList.add('show');
-    }
-
-    function closeEditPenelitianModal() {
-        document.getElementById('editPenelitianModal').classList.remove('show');
-    }
-</script>
 @endsection
