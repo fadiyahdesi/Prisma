@@ -173,27 +173,27 @@
     <table class="data-table">
         <thead>
             <tr>
+                <th style="width: 85px;">Semester</th>
                 <th style="width: 25px;" class="text-center">No</th>
-                <th style="width: 60px;" class="text-center">Tahun</th>
-                <th>Nama Dosen (Ketua)</th>
-                <th style="width: 70px;">NIDN</th>
-                <th>Program Studi</th>
-                <th>Judul Kegiatan Penelitian</th>
-                <th>Skema / Sumber Dana</th>
-                <th style="width: 80px;" class="text-right">Dana (Rp)</th>
+                <th>Judul</th>
+                <th style="width: 120px;">Ketua</th>
+                <th style="width: 70px;">NIDN / NUPN</th>
+                <th style="width: 120px;">Anggota</th>
+                <th style="width: 110px;">Prodi</th>
+                <th style="width: 80px;" class="text-right">Nominal</th>
             </tr>
         </thead>
         <tbody class="divide-y">
             @forelse($tables['penelitian'] as $item)
             <tr>
+                <td class="font-bold">{{ $item['semester'] ?? $item['tahun'] }}</td>
                 <td class="text-center">{{ $item['no'] }}</td>
-                <td class="text-center font-bold">{{ $item['tahun'] }}</td>
-                <td class="font-bold">{{ $item['nama_dosen'] }}</td>
-                <td>{{ $item['nidn'] }}</td>
-                <td>{{ $item['prodi'] }}</td>
                 <td>{{ $item['judul'] }}</td>
-                <td>{{ $item['skema'] }}</td>
-                <td class="text-right font-bold">{{ number_format($item['pagu'], 0, ',', '.') }}</td>
+                <td class="font-bold">{{ $item['ketua'] ?? $item['nama_dosen'] }}</td>
+                <td>{{ $item['nidn'] }}</td>
+                <td>{{ $item['anggota'] ?? '-' }}</td>
+                <td>{{ $item['prodi'] }}</td>
+                <td class="text-right font-bold">Rp. {{ number_format($item['nominal'] ?? $item['pagu'], 0, '.', ',') }}</td>
             </tr>
             @empty
             <tr>
@@ -204,8 +204,8 @@
         @if(count($tables['penelitian']) > 0)
         <tfoot>
             <tr style="background-color: #e2e8f0; font-weight: bold;">
-                <td colspan="7" class="text-right">Total Anggaran Penelitian:</td>
-                <td class="text-right">Rp {{ number_format(array_sum(array_column($tables['penelitian'], 'pagu')), 0, ',', '.') }}</td>
+                <td colspan="7" class="text-right">Total Nominal Penelitian:</td>
+                <td class="text-right">Rp. {{ number_format(array_sum(array_column($tables['penelitian'], 'pagu')), 0, '.', ',') }}</td>
             </tr>
         </tfoot>
         @endif

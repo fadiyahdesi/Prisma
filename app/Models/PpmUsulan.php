@@ -14,11 +14,18 @@ class PpmUsulan extends Model
     protected $table = 'ppm_usulan';
 
     protected $fillable = [
+        'no_urut',
+        'semester',
         'id_pengusul',
         'id_skema_bima',
         'id_periode_hibah',
         'kode_usulan',
         'judul_usulan',
+        'nama_ketua',
+        'nidn_ketua',
+        'nama_anggota',
+        'nama_prodi',
+        'id_prodi',
         'rumpun_ilmu_level_1',
         'rumpun_ilmu_level_2',
         'rumpun_ilmu_level_3',
@@ -71,7 +78,17 @@ class PpmUsulan extends Model
 
     public function pengusul(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_pengusul');
+        return $this->belongsTo(User::class, 'id_pengusul')->withDefault(function (User $user, PpmUsulan $usulan) {
+            $user->name = $usulan->nama_ketua ?? 'Dosen Pengusul';
+            $user->nidn_nim = $usulan->nidn_ketua ?? '-';
+            $user->id_prodi = $usulan->id_prodi;
+            $user->email = '-';
+        });
+    }
+
+    public function prodi(): BelongsTo
+    {
+        return $this->belongsTo(RefProgramStudi::class, 'id_prodi', 'id_prodi');
     }
 
     public function skema(): BelongsTo

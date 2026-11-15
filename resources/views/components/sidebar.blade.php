@@ -6,8 +6,8 @@
     $availableRoles = \App\Models\Role::all();
     $currentRoute = Route::currentRouteName() ?? '';
 
-    // 1. EPIC 05: Wizard Usulan Proposal BIMA (Ketua Pengusul)
-    $canSubmitProposals = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
+    // 1. EPIC 05: Data Penelitian Dosen & Wizard Usulan Proposal BIMA
+    $canSubmitProposals = in_array($currentRole, ['Dosen / Pengusul', 'Admin P3M', 'Kepala P3M', 'Kaprodi', 'Dekanat', 'Superadmin'], true);
 
     // 2. EPIC 06: Persetujuan Anggota Tim - Member Consent (Calon Anggota Tim)
     $pendingConsentCount = $user ? \App\Models\PpmUsulanAnggota::where('user_id', $user->id)
@@ -250,6 +250,16 @@
                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 <span>Dasbor Utama</span>
+            </a>
+
+            {{-- Data Penelitian Dosen (438) --}}
+            <a href="{{ route('usulan.index') }}" 
+               class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'usulan') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                <span class="flex items-center gap-2.5">
+                    <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Data Penelitian Dosen</span>
+                </span>
+                <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-extrabold">438</span>
             </a>
 
             {{-- Persetujuan Anggota untuk Role Non-Pengusul (Mahasiswa Anggota) --}}

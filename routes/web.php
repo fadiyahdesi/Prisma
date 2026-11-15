@@ -43,7 +43,7 @@ Route::get('/system/setup-demo-database', function () {
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 });
 
-// Rute Cepat Migrasi & Seeding Sinkronisasi 146 Dosen Tetap UHN Tanpa Reset Data
+// Rute Cepat Migrasi & Seeding Sinkronisasi 146 Dosen Tetap + 438 Penelitian Dosen UHN Tanpa Reset Data
 Route::get('/system/migrate-and-seed', function () {
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
     $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
@@ -51,7 +51,8 @@ Route::get('/system/migrate-and-seed', function () {
     try {
         (new \Database\Seeders\RbacSeeder())->run();
         (new \Database\Seeders\RealLecturerCsvSeeder())->run();
-        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi dan 146 Dosen Tetap UHN.';
+        (new \Database\Seeders\RealPenelitianCsvSeeder())->run();
+        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi, 146 Dosen Tetap UHN, dan 438 Data Penelitian Dosen UHN.';
     } catch (\Throwable $e) {
         $seedOutput = $e->getMessage();
     }
@@ -60,9 +61,10 @@ Route::get('/system/migrate-and-seed', function () {
 
     return response()->json([
         'status' => 'success',
-        'message' => 'Migrasi dan Sinkronisasi 146 Dosen Tetap UHN berhasil dijalankan!',
+        'message' => 'Migrasi dan Sinkronisasi 146 Dosen Tetap + 438 Data Penelitian Dosen UHN berhasil dijalankan!',
         'total_dosen_tetap' => \App\Models\User::whereNotNull('no_urut')->count(),
         'total_semua_akun' => \App\Models\User::count(),
+        'total_penelitian_dosen' => \App\Models\PpmUsulan::count(),
         'migrate_output' => trim($migrateOutput),
         'seed_output' => trim($seedOutput),
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -225,8 +227,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/periode-hibah/{periodeHibah}/toggle', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'toggleActive'])->name('admin.periode-hibah.toggle');
         Route::delete('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'destroy'])->name('admin.periode-hibah.destroy');
 
-        // EPIC 05: Wizard 6 Langkah Usulan Proposal BIMA (US-05.1 s.d. US-05.6)
+        // EPIC 05: Data Penelitian Dosen UHN (438) & Wizard 6 Langkah Usulan Proposal BIMA
         Route::get('/usulan', [\App\Http\Controllers\ProposalWizardController::class, 'index'])->name('usulan.index');
+        Route::post('/usulan/sync-penelitian', [\App\Http\Controllers\ProposalWizardController::class, 'syncPenelitian'])->name('usulan.sync-penelitian');
+        Route::put('/usulan/{usulan}/basic', [\App\Http\Controllers\ProposalWizardController::class, 'updateBasic'])->name('usulan.update-basic');
+        Route::delete('/usulan/{usulan}', [\App\Http\Controllers\ProposalWizardController::class, 'destroy'])->name('usulan.destroy');
         Route::get('/usulan/buat/{skema}', [\App\Http\Controllers\ProposalWizardController::class, 'start'])->name('usulan.start');
         Route::get('/usulan/{usulan}/step/{step}', [\App\Http\Controllers\ProposalWizardController::class, 'showStep'])->name('usulan.step');
         Route::post('/usulan/{usulan}/step/1', [\App\Http\Controllers\ProposalWizardController::class, 'saveStep1'])->name('usulan.save-step1');

@@ -28,20 +28,133 @@ class ProposalWizardController extends Controller
     }
 
     /**
-     * Display list of proposals for current lecturer.
+     * Display list of research data (438 Penelitian Dosen UHN) & lecturer proposals.
      */
-    public function index()
+    public function index(Request $request)
     {
+        // Auto-sync 438 official research records if not yet seeded or if dummy proposals remain
+        if (
+            PpmUsulan::whereNotNull('no_urut')->count() < 438 ||
+            PpmUsulan::whereIn('kode_usulan', ['USL-2026-GWS-01', 'USL-2026-IDF-02', 'USL-2026-SW-03', 'USL-2026-SFH-04'])->exists()
+        ) {
+            try {
+                app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         $user = Auth::user();
-        $proposals = PpmUsulan::with(['skema', 'periode', 'anggota'])
-            ->where('id_pengusul', $user->id)
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $scope = $request->input('scope', 'all'); // 'all' (Semua 438 Penelitian Dosen) or 'mine' (Penelitian Saya)
+
+        $query = PpmUsulan::with(['pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota']);
+
+        if ($scope === 'mine') {
+            $query->where(function ($q) use ($user) {
+                $q->where('id_pengusul', $user->id)
+                  ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id));
+            });
+        }
+
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->input('semester'));
+        }
+
+        if ($request->filled('prodi')) {
+            $prodiFilter = $request->input('prodi');
+            $query->where(function ($q) use ($prodiFilter) {
+                $q->where('nama_prodi', $prodiFilter)
+                  ->orWhere('id_prodi', is_numeric($prodiFilter) ? (int) $prodiFilter : -1);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $s = trim($request->input('search'));
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->where(function ($q) use ($s, $like) {
+                $q->where('judul_usulan', $like, "%{$s}%")
+                  ->orWhere('nama_ketua', $like, "%{$s}%")
+                  ->orWhere('nidn_ketua', $like, "%{$s}%")
+                  ->orWhere('nama_anggota', $like, "%{$s}%")
+                  ->orWhere('nama_prodi', $like, "%{$s}%")
+                  ->orWhere('semester', $like, "%{$s}%")
+                  ->orWhere('kode_usulan', $like, "%{$s}%");
+            });
+        }
+
+        $perPage = (int) $request->input('per_page', 500);
+        if (!in_array($perPage, [25, 50, 100, 250, 500], true)) {
+            $perPage = 500;
+        }
+
+        $proposals = $query
+            ->orderByRaw('CASE WHEN no_urut IS NULL THEN 0 ELSE 1 END ASC')
+            ->orderBy('no_urut', 'asc')
+            ->orderBy('id', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $totalAllCount = PpmUsulan::count();
+        $totalMineCount = PpmUsulan::where('id_pengusul', $user->id)
+            ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id))
+            ->count();
+        $totalNominal = (float) (clone $query)->sum('total_rab');
+
+        $semesterList = PpmUsulan::whereNotNull('semester')
+            ->select('semester')
+            ->distinct()
+            ->pluck('semester');
+
+        $prodiList = PpmUsulan::whereNotNull('nama_prodi')
+            ->where('nama_prodi', '!=', '')
+            ->select('nama_prodi')
+            ->distinct()
+            ->orderBy('nama_prodi')
+            ->pluck('nama_prodi');
 
         $periodService = new BimaPeriodService();
         $activePeriod = $periodService->getLatestActivePeriod();
 
-        return view('proposal.index', compact('proposals', 'activePeriod'));
+        return view('proposal.index', compact(
+            'proposals',
+            'activePeriod',
+            'scope',
+            'totalAllCount',
+            'totalMineCount',
+            'totalNominal',
+            'semesterList',
+            'prodiList',
+            'perPage'
+        ));
+    }
+
+    /**
+     * Force re-sync 438 official lecturer research records from CSV and wipe dummy data.
+     */
+    public function syncPenelitian()
+    {
+        app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
+        $count = PpmUsulan::count();
+
+        return redirect()->route('usulan.index')->with(
+            'success',
+            "Sinkronisasi berhasil! Total {$count} data Penelitian Dosen UHN telah dimuat sesuai file CSV resmi dan seluruh data dummy telah dihapus."
+        );
+    }
+
+    /**
+     * Delete a research record / proposal.
+     */
+    public function destroy(PpmUsulan $usulan)
+    {
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
+        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk menghapus data penelitian ini.');
+
+        $judul = $usulan->judul_usulan;
+        $usulan->delete();
+
+        return redirect()->route('usulan.index')->with('success', "Data penelitian \"{$judul}\" berhasil dihapus.");
     }
 
     /**
@@ -585,13 +698,54 @@ class ProposalWizardController extends Controller
         $usulan->save();
     }
 
+    /**
+     * Update basic 8-column research record fields directly (Semester, No, Judul, Ketua, NIDN / NUPN, Anggota, Prodi, Nominal).
+     */
+    public function updateBasic(Request $request, PpmUsulan $usulan)
+    {
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
+        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk mengubah data penelitian ini.');
+
+        $validated = $request->validate([
+            'semester' => 'required|string|max:50',
+            'no_urut' => 'nullable|integer|min:1',
+            'judul_usulan' => 'required|string',
+            'nama_ketua' => 'required|string|max:255',
+            'nidn_ketua' => 'nullable|string|max:100',
+            'nama_anggota' => 'nullable|string',
+            'nama_prodi' => 'required|string|max:150',
+            'total_rab' => 'required|numeric|min:0',
+        ]);
+
+        $usulan->update([
+            'semester' => trim($validated['semester']),
+            'no_urut' => $validated['no_urut'] ?? $usulan->no_urut,
+            'judul_usulan' => trim($validated['judul_usulan']),
+            'nama_ketua' => trim($validated['nama_ketua']),
+            'nidn_ketua' => trim($validated['nidn_ketua'] ?? '-') ?: '-',
+            'nama_anggota' => trim($validated['nama_anggota'] ?? '-') ?: '-',
+            'nama_prodi' => trim($validated['nama_prodi']),
+            'total_rab' => (float) $validated['total_rab'],
+        ]);
+
+        return redirect()->back()->with('success', "Data penelitian No. {$usulan->no_urut} berhasil diperbarui.");
+    }
+
     protected function authorizeOwner(PpmUsulan $usulan): void
     {
-        if ($usulan->id_pengusul !== Auth::id() && !Auth::user()->hasRole('Superadmin')) {
+        $user = Auth::user();
+        $isAdminOrViewer = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Kaprodi', 'Dekanat', 'Reviewer']);
+
+        if (request()->isMethod('get')) {
+            return;
+        }
+
+        if ($usulan->id_pengusul !== $user->id && !$isAdminOrViewer) {
             abort(403, 'Anda tidak memiliki akses ke usulan proposal ini.');
         }
 
-        if (request()->isMethod('post') && $usulan->status !== 'Draft') {
+        if (request()->isMethod('post') && $usulan->status !== 'Draft' && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M'])) {
             abort(403, 'Usulan ini sudah dikunci karena tidak lagi berstatus Draft.');
         }
     }

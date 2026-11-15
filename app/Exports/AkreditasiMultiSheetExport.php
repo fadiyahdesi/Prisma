@@ -47,18 +47,14 @@ class PenelitianSheet implements FromArray, WithTitle, WithHeadings, ShouldAutoS
     public function headings(): array
     {
         return [
+            'Semester',
             'No',
-            'Tahun',
-            'Judul Penelitian',
-            'Nama Dosen (DTPS)',
-            'NIDN',
-            'Fakultas',
-            'Program Studi',
-            'Skema Hibah',
-            'Pagu Disetujui (Rp)',
-            'Nomor Kontrak/SPK',
-            'Status',
-            'TKT',
+            'Judul',
+            'Ketua',
+            'NIDN / NUPN',
+            'Anggota',
+            'Prodi',
+            'Nominal',
         ];
     }
 
@@ -66,18 +62,14 @@ class PenelitianSheet implements FromArray, WithTitle, WithHeadings, ShouldAutoS
     {
         return array_map(function ($r) {
             return [
+                $r['semester'] ?? $r['tahun'],
                 $r['no'],
-                $r['tahun'],
                 $r['judul'],
-                $r['nama_dosen'],
+                $r['ketua'] ?? $r['nama_dosen'],
                 $r['nidn'],
-                $r['fakultas'],
+                $r['anggota'] ?? '-',
                 $r['prodi'],
-                $r['skema'],
-                $r['pagu'],
-                $r['nomor_kontrak'],
-                $r['status'],
-                $r['tkt'],
+                'Rp. ' . number_format((float) ($r['nominal'] ?? $r['pagu'] ?? 0), 0, '.', ','),
             ];
         }, $this->rows);
     }

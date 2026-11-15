@@ -110,28 +110,28 @@
                     </div>
                 </form>
 
-                <!-- Rekapitulasi Sinkronisasi Pendanaan Internal & Eksternal -->
+                <!-- Rekapitulasi Sinkronisasi Pendanaan Penelitian Dosen UHN -->
                 @php
-                    $totalDanaInternal = collect($tables['penelitian'])->sum('jumlah_dana') + collect($tables['pkm'])->sum('jumlah_dana');
-                    $estimasiDanaEksternal = count($tables['penelitian']) * 15000000;
-                    $totalAkumulasi = $totalDanaInternal + $estimasiDanaEksternal;
+                    $totalDanaPenelitian = collect($tables['penelitian'])->sum('pagu');
+                    $totalDanaPkm = collect($tables['pkm'])->sum('pagu');
+                    $totalAkumulasi = $totalDanaPenelitian + $totalDanaPkm;
                 @endphp
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
                     <div class="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100">
-                        <span class="text-[10px] font-extrabold text-blue-900 uppercase tracking-wider block">Pendanaan Internal UHN</span>
-                        <span class="text-base font-black text-blue-800 block mt-0.5">Rp {{ number_format($totalDanaInternal, 0, ',', '.') }}</span>
-                        <span class="text-[10px] text-blue-600 font-semibold block mt-0.5">Pagu BIMA &amp; Insentif Kampus</span>
+                        <span class="text-[10px] font-extrabold text-blue-900 uppercase tracking-wider block">Total Penelitian Dosen</span>
+                        <span class="text-base font-black text-blue-800 block mt-0.5">{{ count($tables['penelitian']) }} Penelitian</span>
+                        <span class="text-[10px] text-blue-600 font-semibold block mt-0.5">Basis Data Penelitian UHN</span>
                     </div>
 
                     <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
-                        <span class="text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider block">Hibah Eksternal (Luar Kampus)</span>
-                        <span class="text-base font-black text-emerald-800 block mt-0.5">Rp {{ number_format($estimasiDanaEksternal, 0, ',', '.') }}</span>
-                        <span class="text-[10px] text-emerald-600 font-semibold block mt-0.5">Kemdiktisaintek, BRIN &amp; Mitra</span>
+                        <span class="text-[10px] font-extrabold text-emerald-900 uppercase tracking-wider block">Total Nominal Penelitian</span>
+                        <span class="text-base font-black text-emerald-800 block mt-0.5">Rp. {{ number_format($totalDanaPenelitian, 0, '.', ',') }}</span>
+                        <span class="text-[10px] text-emerald-600 font-semibold block mt-0.5">Akumulasi Pendanaan Penelitian</span>
                     </div>
 
                     <div class="p-3.5 rounded-2xl bg-slate-100 border border-slate-200">
                         <span class="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider block">Total Akumulasi Dana Riset</span>
-                        <span class="text-base font-black text-slate-900 block mt-0.5">Rp {{ number_format($totalAkumulasi, 0, ',', '.') }}</span>
+                        <span class="text-base font-black text-slate-900 block mt-0.5">Rp. {{ number_format($totalAkumulasi, 0, '.', ',') }}</span>
                         <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">Realisasi Serapan DTPS</span>
                     </div>
 
@@ -256,54 +256,55 @@
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
-                                    <th class="py-3.5 px-4 w-12 text-center">No</th>
-                                    <th class="py-3.5 px-4">Nama Dosen &amp; Unit</th>
-                                    <th class="py-3.5 px-5">Judul Penelitian</th>
-                                    <th class="py-3.5 px-4">Skema &amp; Sumber Dana</th>
-                                    <th class="py-3.5 px-4 text-center">Tahun</th>
-                                    <th class="py-3.5 px-5 text-right">Pagu Disetujui</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap">Semester</th>
+                                    <th class="py-3.5 px-3 w-12 text-center">No</th>
+                                    <th class="py-3.5 px-5 min-w-[260px]">Judul</th>
+                                    <th class="py-3.5 px-4 min-w-[180px]">Ketua</th>
+                                    <th class="py-3.5 px-4 whitespace-nowrap">NIDN / NUPN</th>
+                                    <th class="py-3.5 px-4 min-w-[190px]">Anggota</th>
+                                    <th class="py-3.5 px-4 min-w-[160px]">Prodi</th>
+                                    <th class="py-3.5 px-5 text-right whitespace-nowrap">Nominal</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse($tables['penelitian'] as $item)
                                 <tr class="hover:bg-slate-50/90 transition-colors">
-                                    <td class="py-4 px-4 text-center font-bold text-slate-400 text-xs">{{ $item['no'] }}</td>
-                                    <td class="py-4 px-4">
-                                        <div class="font-extrabold text-slate-900 text-xs">{{ $item['nama_dosen'] }}</div>
-                                        <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                                            <span class="text-slate-400">NIDN: {{ $item['nidn'] }}</span>
-                                            <span class="text-slate-300">&bull;</span>
-                                            <span class="text-slate-600 font-semibold">{{ $item['prodi'] }}</span>
-                                        </div>
+                                    <td class="py-3.5 px-4 whitespace-nowrap">
+                                        <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-[11px] border border-blue-200/70">
+                                            {{ $item['semester'] ?? $item['tahun'] }}
+                                        </span>
                                     </td>
-                                    <td class="py-4 px-5">
-                                        <div class="font-bold text-slate-800 text-xs leading-relaxed max-w-lg min-w-[260px]">
+                                    <td class="py-3.5 px-3 text-center font-extrabold text-slate-600 text-xs">{{ $item['no'] }}</td>
+                                    <td class="py-3.5 px-5">
+                                        <div class="font-bold text-slate-800 text-xs leading-relaxed">
                                             {{ $item['judul'] }}
                                         </div>
-                                        <div class="text-[10px] text-slate-400 mt-1">Fakultas: {{ $item['fakultas'] }}</div>
                                     </td>
-                                    <td class="py-4 px-4">
-                                        <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-extrabold text-xs border border-indigo-200/60 inline-block">
-                                            {{ $item['skema'] }}
-                                        </span>
-                                        <div class="text-[11px] text-slate-500 font-medium mt-1">
-                                            {{ $item['sumber_dana'] ?? 'Internal UHN' }}
-                                        </div>
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-extrabold text-slate-900 text-xs">{{ $item['ketua'] ?? $item['nama_dosen'] }}</div>
                                     </td>
-                                    <td class="py-4 px-4 text-center">
-                                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-extrabold text-xs border border-slate-200/60">
-                                            {{ $item['tahun'] }}
+                                    <td class="py-3.5 px-4 whitespace-nowrap">
+                                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono text-[11px] font-semibold border border-slate-200">
+                                            {{ $item['nidn'] }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-5 text-right">
-                                        <div class="font-black text-slate-900 text-xs whitespace-nowrap">
-                                            Rp {{ number_format($item['pagu'], 0, ',', '.') }}
+                                    <td class="py-3.5 px-4 text-slate-600 text-xs leading-relaxed">
+                                        {{ $item['anggota'] ?? '-' }}
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200/70 inline-block">
+                                            {{ $item['prodi'] }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-5 text-right">
+                                        <div class="font-black text-slate-900 text-xs font-mono whitespace-nowrap">
+                                            Rp. {{ number_format($item['nominal'] ?? $item['pagu'], 0, '.', ',') }}
                                         </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="py-12 text-center">
+                                    <td colspan="8" class="py-12 text-center">
                                         <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         </div>
