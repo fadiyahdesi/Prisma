@@ -8,10 +8,14 @@ use App\Models\Role;
 use App\Models\RefFakultas;
 use App\Models\RefProgramStudi;
 use App\Services\AuditLogService;
+use Database\Seeders\RbacSeeder;
+use Database\Seeders\RealLecturerCsvSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -24,7 +28,35 @@ class UserController extends Controller
         $admin = Auth::user();
         abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas untuk Pengelola Akun.');
 
+        // Self-healing: ensure migrations and 146 Dosen Tetap UHN are synced if database still has old/incomplete data
+        try {
+            if (!Schema::hasColumn('users', 'no_urut')) {
+                Artisan::call('migrate', ['--force' => true]);
+            }
+            if (User::whereNotNull('no_urut')->count() < 146 && !session('manual_user_deleted')) {
+                (new RbacSeeder())->run();
+                (new RealLecturerCsvSeeder())->run();
+            }
+        } catch (\Throwable $e) {
+            // Continue gracefully if read-only or transient error
+        }
+
+        $totalDosenTetap = User::whereNotNull('no_urut')->count();
+        $totalAkunSistem = User::whereNull('no_urut')->count();
+        $totalSemuaAkun = $totalDosenTetap + $totalAkunSistem;
+
+        $kategori = $request->input('kategori', 'dosen');
+        if ($request->filled('role') && in_array($request->input('role'), ['Admin P3M', 'Superadmin'], true) && !$request->has('kategori')) {
+            $kategori = 'semua';
+        }
+
         $query = User::with(['roles', 'fakultas', 'prodi']);
+
+        if ($kategori === 'dosen') {
+            $query->whereNotNull('no_urut');
+        } elseif ($kategori === 'sistem') {
+            $query->whereNull('no_urut');
+        }
 
         if ($search = $request->input('search')) {
             $s = strtolower(trim($search));
@@ -46,11 +78,55 @@ class UserController extends Controller
             $query->where('id_prodi', $prodiId);
         }
 
-        $users = $query->orderBy('id')->paginate(20)->withQueryString();
+        $perPageInput = (int) $request->input('per_page', 150);
+        $perPage = in_array($perPageInput, [25, 50, 100, 150], true) ? $perPageInput : 150;
+
+        $users = $query
+            ->orderByRaw('CASE WHEN no_urut IS NULL THEN 1 ELSE 0 END ASC, no_urut ASC, id ASC')
+            ->paginate($perPage)
+            ->withQueryString();
+
         $roles = Role::orderBy('name')->get();
         $prodis = RefProgramStudi::orderBy('nama_prodi')->get();
 
-        return view('admin.users.index', compact('users', 'roles', 'prodis'));
+        return view('admin.users.index', compact(
+            'users',
+            'roles',
+            'prodis',
+            'kategori',
+            'perPage',
+            'totalDosenTetap',
+            'totalAkunSistem',
+            'totalSemuaAkun'
+        ));
+    }
+
+    /**
+     * Synchronize all 146 official UHN lecturers from SDM CSV.
+     */
+    public function syncSdm(): RedirectResponse
+    {
+        $admin = Auth::user();
+        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+
+        if (!Schema::hasColumn('users', 'no_urut')) {
+            Artisan::call('migrate', ['--force' => true]);
+        }
+
+        session()->forget('manual_user_deleted');
+
+        (new RbacSeeder())->run();
+        (new RealLecturerCsvSeeder())->run();
+
+        $count = User::whereNotNull('no_urut')->count();
+
+        AuditLogService::log('admin_synced_sdm_lecturers', null, [
+            'synced_count' => $count,
+            'synced_by' => $admin->id,
+        ]);
+
+        return redirect()->route('admin.users.index', ['kategori' => 'dosen'])
+            ->with('success', "Sinkronisasi berhasil! Seluruh {$count} data Dosen Tetap UHN telah diselaraskan sesuai dokumen resmi SDM.");
     }
 
     /**
@@ -104,7 +180,10 @@ class UserController extends Controller
             $fakultasId = RefProgramStudi::where('id_prodi', $validated['id_prodi'])->value('id_fakultas');
         }
 
+        $nextNoUrut = ((int) User::max('no_urut')) + 1;
+
         $user = User::create([
+            'no_urut' => $nextNoUrut,
             'name' => trim($validated['name']),
             'nipy' => !empty($validated['nipy']) ? trim($validated['nipy']) : null,
             'nidn_nim' => !empty($validated['nidn_nim']) ? trim($validated['nidn_nim']) : null,
@@ -219,6 +298,8 @@ class UserController extends Controller
 
         $user->roles()->detach();
         $user->delete();
+
+        session(['manual_user_deleted' => true]);
 
         AuditLogService::log('admin_deleted_user', null, [
             'deleted_user_id' => $deletedId,

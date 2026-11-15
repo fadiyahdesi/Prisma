@@ -27,16 +27,17 @@ class DemoRealLecturerWorkflowSeeder extends Seeder
         $kplRole = Role::firstOrCreate(['name' => 'Kepala P3M']);
 
         // 1. Kepala P3M: Sharfina Febbi Handayani (dari daftar 146 Dosen Tetap UHN)
-        $sharfina = User::where('nidn_nim', '0617029201')->first()
+        $sharfina = User::where('nidn_nim', 'like', '0617029201%')->first()
             ?? User::where('nipy', '08.020.451')->first();
 
         if (!$sharfina) {
             $sharfina = User::create([
+                'no_urut' => 45,
                 'name' => 'Sharfina Febbi Handayani, M.Kom.',
                 'nipy' => '08.020.451',
                 'email' => null,
                 'password' => Hash::make('0617029201'),
-                'nidn_nim' => '0617029201',
+                'nidn_nim' => '0617029201 / 9549770671230292',
                 'jabatan' => 'Dosen',
                 'sinta_id' => '6753189',
                 'jabatan_fungsional' => 'Lektor (200)',
@@ -60,26 +61,23 @@ class DemoRealLecturerWorkflowSeeder extends Seeder
         $sharfina->roles()->syncWithoutDetaching([$kplRole->id, $dosenRole->id]);
 
         // 2. Real Lecturer: Ginanjar Wiro Sasmito
-        $ginanjar = User::where('nidn_nim', '0613028601')->first()
-            ?? User::where('email', 'dosen.0613028601@harkatnegeri.ac.id')->first();
+        $ginanjar = User::where('nidn_nim', 'like', '0613028601%')->first();
         if ($ginanjar) {
-            $ginanjar->update(['password' => Hash::make('0613028601'), 'is_otp_verified' => true]);
+            $ginanjar->update(['is_otp_verified' => true]);
             $ginanjar->roles()->syncWithoutDetaching([$dosenRole->id]);
         }
 
         // 3. Real Lecturer: Ida Farida
-        $ida = User::where('nidn_nim', '0626017902')->first()
-            ?? User::where('email', 'dosen.0626017902@harkatnegeri.ac.id')->first();
+        $ida = User::where('nidn_nim', 'like', '0626017902%')->first();
         if ($ida) {
-            $ida->update(['password' => Hash::make('0626017902'), 'is_otp_verified' => true]);
+            $ida->update(['is_otp_verified' => true]);
             $ida->roles()->syncWithoutDetaching([$dosenRole->id]);
         }
 
         // 4. Real Lecturer: Slamet Wiyono
-        $slamet = User::where('nidn_nim', '0626059001')->first()
-            ?? User::where('email', 'dosen.0626059001@harkatnegeri.ac.id')->first();
+        $slamet = User::where('nidn_nim', 'like', '0626059001%')->first();
         if ($slamet) {
-            $slamet->update(['password' => Hash::make('0626059001'), 'is_otp_verified' => true]);
+            $slamet->update(['is_otp_verified' => true]);
             $slamet->roles()->syncWithoutDetaching([$dosenRole->id]);
         }
 

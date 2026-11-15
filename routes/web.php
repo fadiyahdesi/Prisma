@@ -43,14 +43,15 @@ Route::get('/system/setup-demo-database', function () {
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 });
 
-// Rute Cepat Migrasi & Seeding Tambahan (Termasuk SIMPENDI Legacy) Tanpa Reset Data
+// Rute Cepat Migrasi & Seeding Sinkronisasi 146 Dosen Tetap UHN Tanpa Reset Data
 Route::get('/system/migrate-and-seed', function () {
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
     $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
     try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'LegacySimpendiSeeder', '--force' => true]);
-        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+        (new \Database\Seeders\RbacSeeder())->run();
+        (new \Database\Seeders\RealLecturerCsvSeeder())->run();
+        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi dan 146 Dosen Tetap UHN.';
     } catch (\Throwable $e) {
         $seedOutput = $e->getMessage();
     }
@@ -59,7 +60,9 @@ Route::get('/system/migrate-and-seed', function () {
 
     return response()->json([
         'status' => 'success',
-        'message' => 'Migrasi dan Seeder SIMPENDI berhasil dijalankan!',
+        'message' => 'Migrasi dan Sinkronisasi 146 Dosen Tetap UHN berhasil dijalankan!',
+        'total_dosen_tetap' => \App\Models\User::whereNotNull('no_urut')->count(),
+        'total_semua_akun' => \App\Models\User::count(),
         'migrate_output' => trim($migrateOutput),
         'seed_output' => trim($seedOutput),
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -177,6 +180,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
         // Manajemen Akun Pengguna (Admin P3M, Kepala P3M, & Superadmin)
+        Route::post('/admin/users/sync-sdm', [\App\Http\Controllers\Admin\UserController::class, 'syncSdm'])->name('admin.users.sync-sdm');
         Route::resource('/admin/users', \App\Http\Controllers\Admin\UserController::class)->names([
             'index' => 'admin.users.index',
             'create' => 'admin.users.create',

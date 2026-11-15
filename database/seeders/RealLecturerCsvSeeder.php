@@ -27,7 +27,9 @@ class RealLecturerCsvSeeder extends Seeder
     {
         $csv146Path = database_path('data/dosen_tetap_uhn.csv');
         if (!file_exists($csv146Path)) {
-            $this->command->error("File CSV 146 dosen tetap tidak ditemukan di: {$csv146Path}");
+            if ($this->command) {
+                $this->command->error("File CSV 146 dosen tetap tidak ditemukan di: {$csv146Path}");
+            }
             return;
         }
 
@@ -124,6 +126,7 @@ class RealLecturerCsvSeeder extends Seeder
 
         $keptUserIds = [];
         $importedCount = 0;
+        $defaultPasswordHash = Hash::make('password');
 
         while (($row = fgetcsv($handle)) !== false) {
             $no = trim($row[1] ?? '');
@@ -131,6 +134,7 @@ class RealLecturerCsvSeeder extends Seeder
                 continue;
             }
 
+            $noUrut = (int) $no;
             $nama = trim($row[5] ?? '');
             $nipy = trim($row[6] ?? '');
             $nidnRaw = trim(preg_replace('/\s+/', ' ', $row[7] ?? ''));
@@ -202,9 +206,8 @@ class RealLecturerCsvSeeder extends Seeder
                 || $existingEmail === 'kepalap3m@harkatnegeri.ac.id';
             $emailToSave = $isGeneratedEmail ? null : $existingEmail;
 
-            $defaultPasswordPlain = $primaryNidn !== '' ? $primaryNidn : ($nipy !== '' ? $nipy : 'password123');
-
             $userData = [
+                'no_urut' => $noUrut,
                 'name' => $nama,
                 'nipy' => $nipy !== '' ? $nipy : null,
                 'nidn_nim' => $nidnRaw !== '' ? $nidnRaw : null,
@@ -218,7 +221,7 @@ class RealLecturerCsvSeeder extends Seeder
                 'sinta_score_3yr' => $sinta['sinta_score_3yr'] ?: ($user->sinta_score_3yr ?? 0),
                 'is_otp_verified' => true,
                 'email_verified_at' => now(),
-                'password' => $user ? $user->password : Hash::make($defaultPasswordPlain),
+                'password' => $user ? $user->password : $defaultPasswordHash,
             ];
 
             if ($user) {
@@ -262,9 +265,17 @@ class RealLecturerCsvSeeder extends Seeder
                 }
                 DB::table('users')->whereIn('id', $extraIds)->delete();
             });
-            $this->command->info('Menghapus ' . count($extraIds) . ' user dosen yang tidak ada di daftar 146 Dosen Tetap UHN.');
+            if ($this->command) {
+                $this->command->info('Menghapus ' . count($extraIds) . ' user dosen yang tidak ada di daftar 146 Dosen Tetap UHN.');
+            }
         }
 
-        $this->command->info("Berhasil menyelaraskan {$importedCount} data Dosen Tetap UHN sesuai SK SDM.");
+        // Ensure system accounts have no_urut = null
+        User::whereIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+            ->update(['no_urut' => null]);
+
+        if ($this->command) {
+            $this->command->info("Berhasil menyelaraskan {$importedCount} data Dosen Tetap UHN sesuai SK SDM.");
+        }
     }
 }
