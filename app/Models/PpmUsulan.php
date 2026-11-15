@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class PpmUsulan extends Model
 {
@@ -158,6 +160,63 @@ class PpmUsulan extends Model
     public function laporanAkhir(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(PpmLaporanAkhir::class, 'id_usulan');
+    }
+
+    /**
+     * Scope query to records created by or involving the given user (as Ketua or Anggota).
+     */
+    public function scopeOwnedByUser(Builder $query, User $user): Builder
+    {
+        $likeOp = DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        $baseName = $user->cleanedBaseName();
+        $isLecturerLike = !$user->hasRole(['Superadmin', 'Admin P3M']) && $user->nidn_nim !== 'ADM-P3M-01';
+        $nidnDigits = preg_replace('/\D+/', '', (string) $user->nidn_nim);
+
+        return $query->where(function (Builder $q) use ($user, $likeOp, $baseName, $isLecturerLike, $nidnDigits) {
+            $q->where('id_pengusul', $user->id)
+              ->orWhereHas('anggota', fn (Builder $aq) => $aq->where('user_id', $user->id));
+
+            if ($isLecturerLike && strlen($nidnDigits) >= 5) {
+                $q->orWhere('nidn_ketua', $user->nidn_nim);
+            }
+
+            if ($isLecturerLike && strlen($baseName) >= 5) {
+                $q->orWhere('nama_ketua', $likeOp, '%' . $baseName . '%')
+                  ->orWhere('nama_anggota', $likeOp, '%' . $baseName . '%');
+            }
+        });
+    }
+
+    /**
+     * Check if a specific user owns or participates in this record.
+     */
+    public function isOwnedBy(User $user): bool
+    {
+        if ((int) $this->id_pengusul === (int) $user->id) {
+            return true;
+        }
+
+        if ($this->anggota()->where('user_id', $user->id)->exists()) {
+            return true;
+        }
+
+        $isLecturerLike = !$user->hasRole(['Superadmin', 'Admin P3M']) && $user->nidn_nim !== 'ADM-P3M-01';
+        if ($isLecturerLike) {
+            $nidnDigits = preg_replace('/\D+/', '', (string) $user->nidn_nim);
+            if (strlen($nidnDigits) >= 5 && trim((string) $this->nidn_ketua) === trim((string) $user->nidn_nim)) {
+                return true;
+            }
+
+            $baseName = $user->cleanedBaseName();
+            if (strlen($baseName) >= 5) {
+                $haystack = strtolower(($this->nama_ketua ?? '') . ' ' . ($this->nama_anggota ?? ''));
+                if (str_contains($haystack, strtolower($baseName))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

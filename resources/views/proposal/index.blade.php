@@ -4,7 +4,7 @@
     $kat = $kategori ?? 'penelitian';
     $isPengabdian = $kat === 'pengabdian';
     $labelBidang = $isPengabdian ? 'Pengabdian Masyarakat' : 'Penelitian Dosen';
-    $isAdmin = auth()->user()->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
+    $isAdmin = $canViewAll ?? auth()->user()->isFullDivisionFor($kat);
 @endphp
 
 @section('title', 'Database ' . $labelBidang . ' UHN - PRISMA UHN')
@@ -57,36 +57,41 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
-                    @if($isPengabdian)
-                        <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
-                              onsubmit="return confirm('Sinkronkan ulang 420 Data Pengabdian Masyarakat Dosen dari CSV resmi?');">
-                            @csrf
-                            <input type="hidden" name="kategori" value="pengabdian">
-                            <button type="submit"
-                                    class="h-9 px-3.5 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                <span>Sinkronkan 420 Pengabdian CSV</span>
-                            </button>
-                        </form>
-                    @else
-                        <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
-                              onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi?');">
-                            @csrf
-                            <input type="hidden" name="kategori" value="penelitian">
-                            <button type="submit"
-                                    class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                <span>Sinkronkan 438 Penelitian CSV</span>
-                            </button>
-                        </form>
-                    @endif
-
                     @if($isAdmin)
+                        @if($isPengabdian)
+                            <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
+                                  onsubmit="return confirm('Sinkronkan ulang 420 Data Pengabdian Masyarakat Dosen dari CSV resmi?');">
+                                @csrf
+                                <input type="hidden" name="kategori" value="pengabdian">
+                                <button type="submit"
+                                        class="h-9 px-3.5 rounded-xl bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span>Sinkronkan 420 Pengabdian CSV</span>
+                                </button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
+                                  onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi?');">
+                                @csrf
+                                <input type="hidden" name="kategori" value="penelitian">
+                                <button type="submit"
+                                        class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <span>Sinkronkan 438 Penelitian CSV</span>
+                                </button>
+                            </form>
+                        @endif
+
                         <button type="button" @click="createModalOpen = true"
                                 class="h-9 px-3.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                             <span>Tambah Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}</span>
                         </button>
+                    @else
+                        <span class="h-9 px-3.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs inline-flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span>Hanya Data Yang Anda Hasilkan</span>
+                        </span>
                     @endif
 
                     <a href="{{ route('sinta.profile') }}"
@@ -140,13 +145,15 @@
 
                         <!-- Switcher Scope: Semua vs Milik Saya -->
                         <div class="inline-flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                            <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', array_merge(request()->except('page'), ['kategori' => $kat, 'scope' => 'all'])) }}"
-                               class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ ($scope ?? 'all') === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
-                                Semua ({{ $totalAllCount }})
-                            </a>
+                            @if($isAdmin)
+                                <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', array_merge(request()->except('page'), ['kategori' => $kat, 'scope' => 'all'])) }}"
+                                   class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ ($scope ?? 'all') === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
+                                    Semua ({{ $totalAllCount }})
+                                </a>
+                            @endif
                             <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', array_merge(request()->except('page'), ['kategori' => $kat, 'scope' => 'mine'])) }}"
-                               class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ ($scope ?? 'all') === 'mine' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
-                                Milik Saya ({{ $totalMineCount }})
+                               class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ (!$isAdmin || ($scope ?? 'all') === 'mine') ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
+                                {{ $isAdmin ? 'Milik Saya' : 'Data Milik Saya' }} ({{ $totalMineCount }})
                             </a>
                         </div>
                     </div>
@@ -249,7 +256,7 @@
                                     }
                                     $prodiVal = $p->nama_prodi ?: ($p->prodi?->nama_prodi ?? ($p->pengusul?->prodi?->nama_prodi ?? '-'));
                                     $nominalVal = (float) ($p->total_rab ?? 0);
-                                    $canManage = $isAdmin || $p->id_pengusul === auth()->id();
+                                    $canManage = $isAdmin || ($p->id_pengusul === auth()->id() && $p->status === 'Draft');
                                 @endphp
                                 <tr class="hover:bg-slate-50/80 transition-colors align-top">
                                     <!-- 1. Semester -->
@@ -373,8 +380,8 @@
                                 <tr>
                                     <td colspan="9" class="py-12 text-center">
                                         <p class="text-slate-600 font-bold text-sm mb-1">Belum ada data {{ strtolower($labelBidang) }} yang ditampilkan</p>
-                                        <p class="text-slate-400 text-xs mb-3">Silakan gunakan tombol Tambah Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }} atau unggah data CSV resmi.</p>
                                         @if($isAdmin)
+                                            <p class="text-slate-400 text-xs mb-3">Silakan gunakan tombol Tambah Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }} atau unggah data CSV resmi.</p>
                                             <button type="button" @click="createModalOpen = true"
                                                     class="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
                                                 + Tambah Data {{ $labelBidang }}

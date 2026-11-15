@@ -19,9 +19,9 @@ class AnalyticsController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Superadmin', 'Rektor', 'Admin P3M']),
+            $user->hasRole(['Kepala P3M', 'Superadmin', 'Rektor']),
             403,
-            'Akses ditolak: Khusus Rektor & Pimpinan P3M.'
+            'Akses ditolak: Khusus Rektor & Kepala P3M.'
         );
 
         $periodeId = $request->input('periode_id') ? (int) $request->input('periode_id') : null;

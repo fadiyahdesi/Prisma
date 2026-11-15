@@ -62,13 +62,23 @@ class ProposalWizardController extends Controller
         $user = Auth::user();
         $activeRole = session('active_role') ?? $user->primaryRoleName();
 
-        $defaultKategori = $activeRole === 'Divisi Pengabdian' ? 'pengabdian' : 'penelitian';
+        $defaultKategori = request()->routeIs('pengabdian.index')
+            ? 'pengabdian'
+            : ($activeRole === 'Divisi Pengabdian' ? 'pengabdian' : 'penelitian');
         $kategori = strtolower($request->input('kategori', $defaultKategori));
         if (!in_array($kategori, ['penelitian', 'pengabdian'], true)) {
             $kategori = 'penelitian';
         }
 
-        $scope = $request->input('scope', 'all'); // 'all' or 'mine'
+        $canViewAll = $user->isFullDivisionFor($kategori);
+        $canManagePenelitian = $user->isFullDivisionFor('penelitian');
+        $canManagePengabdian = $user->isFullDivisionFor('pengabdian');
+
+        // Hanya divisi masing-masing (atau Superadmin) yang boleh mengakses scope 'all'
+        $scope = $canViewAll ? $request->input('scope', 'all') : 'mine';
+        if (!in_array($scope, ['all', 'mine'], true)) {
+            $scope = $canViewAll ? 'all' : 'mine';
+        }
 
         $baseKategoriQuery = PpmUsulan::where(function ($q) use ($kategori) {
             $q->where('kategori_usulan', $kategori)
@@ -77,11 +87,8 @@ class ProposalWizardController extends Controller
 
         $query = (clone $baseKategoriQuery)->with(['pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota']);
 
-        if ($scope === 'mine') {
-            $query->where(function ($q) use ($user) {
-                $q->where('id_pengusul', $user->id)
-                  ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id));
-            });
+        if (!$canViewAll || $scope === 'mine') {
+            $query->ownedByUser($user);
         }
 
         if ($request->filled('semester')) {
@@ -122,26 +129,45 @@ class ProposalWizardController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $totalAllCount = (clone $baseKategoriQuery)->count();
-        $totalPenelitianCount = PpmUsulan::where('kategori_usulan', 'penelitian')->count();
-        $totalPengabdianCount = PpmUsulan::where('kategori_usulan', 'pengabdian')->count();
-        $totalMineCount = (clone $baseKategoriQuery)->where(function ($q) use ($user) {
-            $q->where('id_pengusul', $user->id)
-              ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id));
-        })->count();
+        $totalMineCount = (clone $baseKategoriQuery)->ownedByUser($user)->count();
+        $totalAllCount = $canViewAll ? (clone $baseKategoriQuery)->count() : $totalMineCount;
+
+        $penelitianStatQuery = PpmUsulan::where(function ($q) {
+            $q->where('kategori_usulan', 'penelitian')
+              ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', 'penelitian'));
+        });
+        if (!$canManagePenelitian) {
+            $penelitianStatQuery->ownedByUser($user);
+        }
+        $totalPenelitianCount = $penelitianStatQuery->count();
+
+        $pengabdianStatQuery = PpmUsulan::where(function ($q) {
+            $q->where('kategori_usulan', 'pengabdian')
+              ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', 'pengabdian'));
+        });
+        if (!$canManagePengabdian) {
+            $pengabdianStatQuery->ownedByUser($user);
+        }
+        $totalPengabdianCount = $pengabdianStatQuery->count();
+
         $totalNominal = (float) (clone $query)->sum('total_rab');
 
-        $semesterList = (clone $baseKategoriQuery)->whereNotNull('semester')
+        $scopedMetaQuery = clone $baseKategoriQuery;
+        if (!$canViewAll) {
+            $scopedMetaQuery->ownedByUser($user);
+        }
+
+        $semesterList = (clone $scopedMetaQuery)->whereNotNull('semester')
             ->select('semester')
             ->distinct()
             ->pluck('semester');
 
-        if ($semesterList->isEmpty()) {
+        if ($semesterList->isEmpty() && $canViewAll) {
             $semesterList = PpmUsulan::whereNotNull('semester')->select('semester')->distinct()->pluck('semester');
         }
 
-        $prodiList = \App\Models\RefProgramStudi::orderBy('nama_prodi')->pluck('nama_prodi');
-        $csvProdiList = (clone $baseKategoriQuery)->whereNotNull('nama_prodi')
+        $prodiList = collect();
+        $csvProdiList = (clone $scopedMetaQuery)->whereNotNull('nama_prodi')
             ->where('nama_prodi', '!=', '')
             ->select('nama_prodi')
             ->distinct()
@@ -149,6 +175,8 @@ class ProposalWizardController extends Controller
             ->pluck('nama_prodi');
         if ($csvProdiList->isNotEmpty()) {
             $prodiList = $csvProdiList;
+        } elseif ($canViewAll) {
+            $prodiList = \App\Models\RefProgramStudi::orderBy('nama_prodi')->pluck('nama_prodi');
         }
 
         $periodService = new BimaPeriodService();
@@ -159,6 +187,9 @@ class ProposalWizardController extends Controller
             'activePeriod',
             'kategori',
             'scope',
+            'canViewAll',
+            'canManagePenelitian',
+            'canManagePengabdian',
             'totalAllCount',
             'totalPenelitianCount',
             'totalPengabdianCount',
@@ -175,7 +206,10 @@ class ProposalWizardController extends Controller
      */
     public function syncPenelitian(Request $request)
     {
-        $kategori = $request->input('kategori', 'penelitian');
+        $kategoriInput = strtolower((string) $request->input('kategori', 'penelitian'));
+        $kategori = $kategoriInput === 'pengabdian' ? 'pengabdian' : 'penelitian';
+        abort_unless(Auth::user()->isFullDivisionFor($kategori), 403, 'Hanya Divisi ' . ucfirst($kategori) . ' yang dapat menyinkronkan database CSV ini.');
+
         if ($kategori === 'pengabdian') {
             app(\Database\Seeders\RealPengabdianCsvSeeder::class)->run();
             $count = PpmUsulan::where('kategori_usulan', 'pengabdian')->count();
@@ -201,8 +235,9 @@ class ProposalWizardController extends Controller
     public function storeBasic(Request $request)
     {
         $user = Auth::user();
-        $isAdminOrDivisi = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
-        abort_unless($isAdminOrDivisi, 403, 'Anda tidak memiliki akses untuk menambah data ini.');
+        $kategoriInput = strtolower((string) $request->input('kategori_usulan', 'penelitian'));
+        $kategori = in_array($kategoriInput, ['penelitian', 'pengabdian'], true) ? $kategoriInput : 'penelitian';
+        abort_unless($user->isFullDivisionFor($kategori), 403, 'Hanya Divisi ' . ucfirst($kategori) . ' yang dapat menambah data ini.');
 
         $validated = $request->validate([
             'kategori_usulan' => 'required|in:penelitian,pengabdian',
@@ -256,8 +291,10 @@ class ProposalWizardController extends Controller
     public function destroy(PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
-        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk menghapus data ini.');
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $isDivisionOwner = $user->isFullDivisionFor($kategori);
+        $isOwnDraft = $usulan->id_pengusul === $user->id && $usulan->status === 'Draft';
+        abort_unless($isDivisionOwner || $isOwnDraft, 403, 'Anda tidak memiliki akses untuk menghapus data ini.');
 
         $judul = $usulan->judul_usulan;
         $usulan->delete();
@@ -782,9 +819,17 @@ class ProposalWizardController extends Controller
     public function downloadProposal(PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isVerifier = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin', 'Kaprodi', 'Reviewer', 'Dekanat']);
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $isDivisionOwner = $user->isFullDivisionFor($kategori);
+        $isAssignedReviewer = $user->hasRole('Reviewer')
+            && $usulan->penugasanReviewer()->where('id_reviewer', $user->id)->exists();
+        $isProdiKaprodi = $user->hasRole('Kaprodi') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
 
-        abort_unless($usulan->id_pengusul === $user->id || $isVerifier, 403, 'Anda tidak memiliki akses ke dokumen proposal ini.');
+        abort_unless(
+            $usulan->isOwnedBy($user) || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi,
+            403,
+            'Anda tidak memiliki akses ke dokumen proposal ini.'
+        );
         abort_unless($usulan->file_proposal_path, 404, 'Dokumen proposal belum tersedia.');
 
         $disk = config('services.minio.enabled', false) ? 's3' : 'public';
@@ -812,8 +857,10 @@ class ProposalWizardController extends Controller
     public function updateBasic(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
-        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk mengubah data ini.');
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $isDivisionOwner = $user->isFullDivisionFor($kategori);
+        $isOwnDraft = $usulan->id_pengusul === $user->id && $usulan->status === 'Draft';
+        abort_unless($isDivisionOwner || $isOwnDraft, 403, 'Anda tidak memiliki akses untuk mengubah data ini.');
 
         $validated = $request->validate([
             'semester' => 'required|string|max:50',
@@ -843,17 +890,30 @@ class ProposalWizardController extends Controller
     protected function authorizeOwner(PpmUsulan $usulan): void
     {
         $user = Auth::user();
-        $isAdminOrViewer = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Divisi Publikasi', 'Kaprodi', 'Dekanat', 'Reviewer']);
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $isDivisionOwner = $user->isFullDivisionFor($kategori);
+        $isOwnerOrMember = $usulan->isOwnedBy($user);
+        $isAssignedReviewer = $user->hasRole('Reviewer')
+            && $usulan->penugasanReviewer()->where('id_reviewer', $user->id)->exists();
+        $isProdiKaprodi = $user->hasRole('Kaprodi') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
 
         if (request()->isMethod('get')) {
+            abort_unless(
+                $isOwnerOrMember || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi,
+                403,
+                'Anda tidak memiliki akses ke usulan proposal ini.'
+            );
+
             return;
         }
 
-        if ($usulan->id_pengusul !== $user->id && !$isAdminOrViewer) {
-            abort(403, 'Anda tidak memiliki akses ke usulan proposal ini.');
-        }
+        abort_unless(
+            (int) $usulan->id_pengusul === (int) $user->id || $isDivisionOwner,
+            403,
+            'Anda tidak memiliki akses untuk mengubah usulan proposal ini.'
+        );
 
-        if (request()->isMethod('post') && $usulan->status !== 'Draft' && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian'])) {
+        if (request()->isMethod('post') && $usulan->status !== 'Draft' && !$isDivisionOwner) {
             abort(403, 'Usulan ini sudah dikunci karena tidak lagi berstatus Draft.');
         }
     }

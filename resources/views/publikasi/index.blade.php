@@ -69,8 +69,8 @@
                     </button>
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200">
-                                Divisi Publikasi &bull; Database Resmi UHN
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $isStaff ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+                                {{ $isStaff ? 'Divisi Publikasi • Database Resmi UHN' : 'Publikasi Ilmiah Saya • Repositori Pribadi' }}
                             </span>
                         </div>
                         <h1 class="font-extrabold text-xl text-slate-900 leading-tight mt-0.5">Data Publikasi Ilmiah Dosen UHN</h1>
@@ -80,17 +80,24 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <form action="{{ route('publikasi.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan ulang 589 data Publikasi Dosen UHN dari file CSV resmi?');">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-xs shadow-xs transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            <span>Sinkronkan CSV (589 Data)</span>
+                    @if($isStaff)
+                        <form action="{{ route('publikasi.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan ulang 589 data Publikasi Dosen UHN dari file CSV resmi?');">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-xs shadow-xs transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span>Sinkronkan CSV (589 Data)</span>
+                            </button>
+                        </form>
+                        <button type="button" @click="openCreateModal = true" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span>Tambah Data Publikasi</span>
                         </button>
-                    </form>
-                    <button type="button" @click="openCreateModal = true" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Tambah Data Publikasi</span>
-                    </button>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs">
+                            <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span>Hanya Publikasi Yang Anda Hasilkan</span>
+                        </span>
+                    @endif
                 </div>
             </div>
         </header>
@@ -114,7 +121,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
                     <div>
-                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Publikasi Dosen</p>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">{{ $isStaff ? 'Total Publikasi Dosen' : 'Publikasi Milik Saya' }}</p>
                         <p class="text-2xl font-black text-slate-900 mt-1">{{ number_format($totalAllCount) }}</p>
                         <p class="text-[11px] font-semibold text-emerald-600 mt-0.5">{{ number_format($countTerverifikasi) }} Terverifikasi Divisi Publikasi</p>
                     </div>
@@ -176,10 +183,16 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <select name="scope" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white">
-                            <option value="all" {{ ($scope ?? 'all') === 'all' ? 'selected' : '' }}>Semua Dosen UHN</option>
-                            <option value="mine" {{ ($scope ?? 'all') === 'mine' ? 'selected' : '' }}>Publikasi Saya</option>
-                        </select>
+                        @if($isStaff)
+                            <select name="scope" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white">
+                                <option value="all" {{ ($scope ?? 'all') === 'all' ? 'selected' : '' }}>Semua Dosen UHN</option>
+                                <option value="mine" {{ ($scope ?? 'all') === 'mine' ? 'selected' : '' }}>Publikasi Saya</option>
+                            </select>
+                        @else
+                            <div class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-slate-100 text-slate-700 text-center">
+                                Publikasi Saya ({{ $totalAllCount }})
+                            </div>
+                        @endif
                     </div>
 
                     <div class="md:col-span-1">
@@ -208,9 +221,11 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/60">
                     <div>
-                        <h2 class="font-extrabold text-sm text-slate-900">Tabel Data Publikasi Dosen Universitas Harkat Negeri</h2>
+                        <h2 class="font-extrabold text-sm text-slate-900">
+                            {{ $isStaff ? 'Tabel Data Publikasi Dosen Universitas Harkat Negeri' : 'Tabel Data Publikasi Yang Anda Hasilkan' }}
+                        </h2>
                         <p class="text-xs text-slate-500 font-semibold">
-                            Menampilkan <strong class="text-slate-800">{{ $publikasiList->count() }}</strong> dari total <strong class="text-slate-800">{{ $publikasiList->total() }}</strong> data publikasi resmi
+                            Menampilkan <strong class="text-slate-800">{{ $publikasiList->count() }}</strong> dari total <strong class="text-slate-800">{{ $publikasiList->total() }}</strong> data publikasi {{ $isStaff ? 'resmi' : 'milik Anda' }}
                         </p>
                     </div>
                     <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
@@ -223,8 +238,12 @@
 
                 @if($publikasiList->isEmpty())
                     <div class="p-12 text-center">
-                        <p class="font-bold text-slate-700 text-sm">Tidak ada data publikasi yang sesuai dengan pencarian.</p>
-                        <a href="{{ route('publikasi.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">Tampilkan Semua Data</a>
+                        <p class="font-bold text-slate-700 text-sm">
+                            {{ $isStaff ? 'Tidak ada data publikasi yang sesuai dengan pencarian.' : 'Belum ada data publikasi milik Anda yang tercatat.' }}
+                        </p>
+                        @if(request('search') || request('jenis_publikasi'))
+                            <a href="{{ route('publikasi.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">Reset Pencarian</a>
+                        @endif
                     </div>
                 @else
                     <div class="overflow-x-auto">
@@ -338,33 +357,38 @@
                                         <!-- Aksi -->
                                         <td class="py-3 px-3 text-center whitespace-nowrap">
                                             <div class="inline-flex items-center justify-center gap-1">
-                                                <button type="button"
-                                                    @click="openEdit(@js($rowPayload))"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 font-bold text-[11px] transition shadow-2xs"
-                                                    title="Edit Data Publikasi">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                    <span>Edit</span>
-                                                </button>
-
                                                 @if($isStaff)
+                                                    <button type="button"
+                                                        @click="openEdit(@js($rowPayload))"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 font-bold text-[11px] transition shadow-2xs"
+                                                        title="Edit Data Publikasi">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                        <span>Edit</span>
+                                                    </button>
+
                                                     <button type="button"
                                                         @click="openVerify(@js($rowPayload))"
                                                         class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-bold text-[11px] transition shadow-2xs"
                                                         title="Verifikasi Template & Similarity">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                     </button>
-                                                @endif
 
-                                                <form action="{{ route('publikasi.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data publikasi No. {{ $no }} ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-[11px] transition shadow-2xs"
-                                                        title="Hapus Data Publikasi">
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                        <span>Hapus</span>
-                                                    </button>
-                                                </form>
+                                                    <form action="{{ route('publikasi.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data publikasi No. {{ $no }} ini?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-[11px] transition shadow-2xs"
+                                                            title="Hapus Data Publikasi">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                            <span>Hapus</span>
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <a href="{{ route('publikasi.show', $item) }}"
+                                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-[11px] transition shadow-2xs">
+                                                        <span>Detail</span>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -383,6 +407,7 @@
         </main>
     </div>
 
+    @if($isStaff)
     <!-- Modal Tambah Data Publikasi (6 Kolom CSV) -->
     <div x-show="openCreateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
         <div @click.away="openCreateModal = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
@@ -553,5 +578,6 @@
             </form>
         </div>
     </div>
+    @endif
 </div>
 @endsection

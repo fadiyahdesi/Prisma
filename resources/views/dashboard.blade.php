@@ -282,19 +282,19 @@
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div class="p-5 rounded-2xl bg-blue-50/60 border border-blue-200">
-                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">Usulan Proposal Anda:</span>
-                            <h4 class="text-xl font-extrabold text-slate-900 mt-1">Draf Proposal Riset</h4>
-                            <a href="{{ route('usulan.index') }}" class="text-xs font-bold text-blue-700 hover:underline mt-2 inline-block">Lihat Semua Draf Usulan &rarr;</a>
-                        </div>
-                        <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200">
-                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Pagu Anggaran Standar BIMA:</span>
-                            <h4 class="text-xl font-extrabold text-emerald-800 mt-1">Rp 25M - Rp 250M</h4>
-                            <span class="text-xs font-semibold text-slate-600 mt-2 inline-block">Format RAB SBM Terstandar</span>
+                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">Penelitian Yang Anda Hasilkan:</span>
+                            <h4 class="text-xl font-extrabold text-slate-900 mt-1">{{ $stats['my_penelitian'] ?? 0 }} Penelitian Saya</h4>
+                            <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" class="text-xs font-bold text-blue-700 hover:underline mt-2 inline-block">Lihat Penelitian Saya &rarr;</a>
                         </div>
                         <div class="p-5 rounded-2xl bg-purple-50/60 border border-purple-200">
-                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">Kelayakan Pengusulan:</span>
-                            <h4 class="text-xl font-extrabold text-purple-900 mt-1">Status Eligible</h4>
-                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md mt-2 inline-block border border-emerald-300">SINTA 3Yr &ge; 50.00</span>
+                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">Pengabdian Yang Anda Hasilkan:</span>
+                            <h4 class="text-xl font-extrabold text-purple-900 mt-1">{{ $stats['my_pengabdian'] ?? 0 }} Pengabdian Saya</h4>
+                            <a href="{{ route('pengabdian.index') }}" class="text-xs font-bold text-purple-700 hover:underline mt-2 inline-block">Lihat Pengabdian Saya &rarr;</a>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-teal-50/60 border border-teal-200">
+                            <span class="text-xs font-bold text-teal-900 uppercase tracking-wider block">Publikasi Yang Anda Hasilkan:</span>
+                            <h4 class="text-xl font-extrabold text-teal-900 mt-1">{{ $stats['my_publikasi'] ?? 0 }} Publikasi Saya</h4>
+                            <a href="{{ route('publikasi.index') }}" class="text-xs font-bold text-teal-700 hover:underline mt-2 inline-block">Lihat Publikasi Saya &rarr;</a>
                         </div>
                     </div>
 
@@ -305,7 +305,7 @@
                             <p class="text-xs text-blue-100 mt-1">Isi Identitas Usulan, Tim & Mitra, RAB SBM, Target Luaran Scopus/SINTA, & Member Consent.</p>
                         </div>
                         <a href="{{ route('usulan.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-blue-900 hover:bg-blue-50 font-extrabold text-sm shadow-md transition-all whitespace-nowrap text-center">
-                            Lihat Draf Usulan Proposal &rarr;
+                            Buka Penelitian Saya &rarr;
                         </a>
                     </div>
 
@@ -576,9 +576,9 @@
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div class="p-5 rounded-2xl bg-purple-50 border border-purple-200">
-                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">Total Penelitian Dosen:</span>
-                            <h4 class="text-xl font-extrabold text-purple-950 mt-1">{{ $stats['total_proposals'] }} Penelitian</h4>
-                            <span class="text-xs font-semibold text-purple-800">Basis Data Penelitian UHN</span>
+                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">Penelitian Saya:</span>
+                            <h4 class="text-xl font-extrabold text-purple-950 mt-1">{{ $stats['my_penelitian'] ?? 0 }} Penelitian</h4>
+                            <span class="text-xs font-semibold text-purple-800">Karya yang Anda hasilkan</span>
                         </div>
                         <div class="p-5 rounded-2xl bg-blue-50 border border-blue-200">
                             <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">Batas Waktu Penilaian:</span>
@@ -586,19 +586,19 @@
                             <span class="text-xs font-semibold text-blue-800">Skala Rubrik 1-7 BIMA</span>
                         </div>
                         <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200">
-                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Penelitian Disetujui:</span>
-                            <h4 class="text-xl font-extrabold text-emerald-950 mt-1">{{ $stats['approved_lppm'] }} Penelitian</h4>
-                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Data Resmi Terverifikasi</span>
+                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider block">Publikasi Saya:</span>
+                            <h4 class="text-xl font-extrabold text-emerald-950 mt-1">{{ $stats['my_publikasi'] ?? 0 }} Publikasi</h4>
+                            <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Akses Pribadi</span>
                         </div>
                     </div>
                     <div class="p-6 rounded-3xl bg-purple-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
                         <div>
-                            <span class="text-xs font-bold text-purple-200 uppercase">Database Penelitian & Double-Blind Assessment</span>
-                            <h4 class="text-lg font-extrabold mt-0.5">Kelola Penilaian & Lihat {{ $stats['total_proposals'] }} Data Penelitian Dosen</h4>
-                            <p class="text-xs text-purple-100 mt-1">Penilaian objektif berbasis rubrik BIMA dan rekapitulasi penelitian dosen Universitas Harkat Negeri.</p>
+                            <span class="text-xs font-bold text-purple-200 uppercase">Double-Blind Assessment</span>
+                            <h4 class="text-lg font-extrabold mt-0.5">Kelola Penilaian Usulan Yang Ditugaskan Kepada Anda</h4>
+                            <p class="text-xs text-purple-100 mt-1">Penilaian objektif berbasis rubrik BIMA hanya untuk proposal yang ditugaskan kepada Anda oleh Divisi terkait.</p>
                         </div>
-                        <a href="{{ route('usulan.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-purple-900 font-extrabold text-sm hover:bg-purple-50 shadow-md whitespace-nowrap text-center">
-                            Lihat Data Penelitian &rarr;
+                        <a href="{{ route('reviewer.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-purple-900 font-extrabold text-sm hover:bg-purple-50 shadow-md whitespace-nowrap text-center">
+                            Buka Penugasan Review &rarr;
                         </a>
                     </div>
                 </div>
@@ -607,16 +607,16 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-indigo-50 border border-indigo-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider">Database Penelitian Program Studi</span>
-                            <h4 class="text-lg font-extrabold text-indigo-950 mt-1">{{ $stats['total_proposals'] }} Data Penelitian Dosen Terdaftar</h4>
-                            <p class="text-xs text-slate-700 mt-1">Pantau daftar penelitian dosen per Semester & Program Studi serta keselarasan roadmap keilmuan.</p>
+                            <span class="text-xs font-bold text-indigo-900 uppercase tracking-wider">Keselarasan Roadmap Program Studi</span>
+                            <h4 class="text-lg font-extrabold text-indigo-950 mt-1">Review Keselarasan Roadmap Prodi &amp; Karya Pribadi ({{ $stats['my_penelitian'] ?? 0 }} Penelitian Saya)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Evaluasi kesesuaian roadmap usulan prodi Anda serta pantau penelitian yang Anda hasilkan sendiri.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-indigo-700 text-white font-extrabold text-xs sm:text-sm hover:bg-indigo-800 shadow-md whitespace-nowrap">
-                                Data Penelitian Dosen ({{ $stats['total_proposals'] }}) &rarr;
+                            <a href="{{ route('admin.prodi-roadmap.index') }}" class="px-5 py-3 rounded-2xl bg-indigo-700 text-white font-extrabold text-xs sm:text-sm hover:bg-indigo-800 shadow-md whitespace-nowrap">
+                                Roadmap Prodi &rarr;
                             </a>
-                            <a href="{{ route('admin.prodi-roadmap.index') }}" class="px-5 py-3 rounded-2xl bg-white text-indigo-800 border border-indigo-300 font-extrabold text-xs sm:text-sm hover:bg-indigo-100 whitespace-nowrap">
-                                Roadmap Prodi
+                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-white text-indigo-800 border border-indigo-300 font-extrabold text-xs sm:text-sm hover:bg-indigo-100 whitespace-nowrap">
+                                Penelitian Saya ({{ $stats['my_penelitian'] ?? 0 }})
                             </a>
                         </div>
                     </div>
@@ -626,13 +626,18 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-emerald-50 border border-emerald-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Rekapitulasi Penelitian Fakultas & Universitas</span>
-                            <h4 class="text-lg font-extrabold text-emerald-950 mt-1">{{ $stats['total_proposals'] }} Penelitian Dosen ({{ $stats['total_pagu'] }})</h4>
-                            <p class="text-xs text-slate-700 mt-1">Monitoring capaian penelitian 146 Dosen Tetap UHN lintas Program Studi dan Semester.</p>
+                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Monitoring Performa Fakultas</span>
+                            <h4 class="text-lg font-extrabold text-emerald-950 mt-1">Dasbor Analitik Fakultas &amp; Karya Pribadi ({{ $stats['my_penelitian'] ?? 0 }} Penelitian Saya)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Akses metrik kinerja fakultas Anda; rincian penuh seluruh data penelitian/pengabdian/publikasi hanya dibuka oleh divisi terkait.</p>
                         </div>
-                        <a href="{{ route('usulan.index') }}" class="px-6 py-3.5 rounded-2xl bg-emerald-700 text-white font-extrabold text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
-                            Buka Data Penelitian ({{ $stats['total_proposals'] }}) &rarr;
-                        </a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('analitik.fakultas') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs sm:text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
+                                Analitik Fakultas &rarr;
+                            </a>
+                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-white text-emerald-800 border border-emerald-300 font-extrabold text-xs sm:text-sm hover:bg-emerald-100 whitespace-nowrap">
+                                Data Saya ({{ $stats['my_penelitian'] ?? 0 }})
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -642,7 +647,7 @@
                         <div>
                             <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Admin P3M (General &amp; Master Data)</span>
                             <h4 class="text-lg font-extrabold text-amber-950 mt-1">{{ $stats['total_users'] }} Dosen Tetap UHN &bull; Pengelolaan Master Sistem</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola fitur general P3M: Database Dosen Tetap (146), Master Skema BIMA, Periode Call for Proposals, Laporan Akreditasi, dan Integrasi API.</p>
+                            <p class="text-xs text-slate-700 mt-1">Kelola fitur general P3M: Database Dosen Tetap (146), Master Skema BIMA, Periode Call for Proposals, Audit Log, dan Integrasi API.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-amber-700 text-white font-extrabold text-xs sm:text-sm hover:bg-amber-800 shadow-md whitespace-nowrap">
@@ -663,12 +668,12 @@
                     <div class="p-6 rounded-3xl bg-blue-50 border border-blue-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Divisi Penelitian P3M UHN</span>
-                            <h4 class="text-lg font-extrabold text-blue-950 mt-1">{{ \App\Models\PpmUsulan::where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan'))->count() }} Data Penelitian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola basis data penelitian dosen, pengecekan kesesuaian template &amp; similarity (&le; 20%), plotting reviewer penelitian, serta Semhas.</p>
+                            <h4 class="text-lg font-extrabold text-blue-950 mt-1">{{ $stats['penelitian_count'] ?? 0 }} Data Penelitian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola penuh basis data penelitian dosen, pengecekan kesesuaian template &amp; similarity (&le; 20%), plotting reviewer penelitian, serta Semhas.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" class="px-5 py-3 rounded-2xl bg-blue-700 text-white font-extrabold text-xs sm:text-sm hover:bg-blue-800 shadow-md whitespace-nowrap">
-                                Data Penelitian &rarr;
+                                Data Penelitian ({{ $stats['penelitian_count'] ?? 0 }}) &rarr;
                             </a>
                             <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'penelitian']) }}" class="px-5 py-3 rounded-2xl bg-white text-blue-900 border border-blue-300 font-extrabold text-xs sm:text-sm hover:bg-blue-100 whitespace-nowrap">
                                 Verifikasi Template &amp; Similarity
@@ -685,12 +690,12 @@
                     <div class="p-6 rounded-3xl bg-purple-50 border border-purple-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <span class="text-xs font-bold text-purple-900 uppercase tracking-wider">Divisi Pengabdian kepada Masyarakat P3M UHN</span>
-                            <h4 class="text-lg font-extrabold text-purple-950 mt-1">{{ \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->count() }} Data Pengabdian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola basis data pengabdian masyarakat, pengecekan kesesuaian template, similarity (&le; 20%) &amp; surat mitra, plotting reviewer, serta Semhas.</p>
+                            <h4 class="text-lg font-extrabold text-purple-950 mt-1">{{ $stats['pengabdian_count'] ?? 0 }} Data Pengabdian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola penuh basis data pengabdian masyarakat, pengecekan kesesuaian template, similarity (&le; 20%) &amp; surat mitra, plotting reviewer, serta Semhas.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('pengabdian.index') }}" class="px-5 py-3 rounded-2xl bg-purple-700 text-white font-extrabold text-xs sm:text-sm hover:bg-purple-800 shadow-md whitespace-nowrap">
-                                Data Pengabdian &rarr;
+                                Data Pengabdian ({{ $stats['pengabdian_count'] ?? 0 }}) &rarr;
                             </a>
                             <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'pengabdian']) }}" class="px-5 py-3 rounded-2xl bg-white text-purple-900 border border-purple-300 font-extrabold text-xs sm:text-sm hover:bg-purple-100 whitespace-nowrap">
                                 Verifikasi Template &amp; Similarity
@@ -708,7 +713,7 @@
                         <div>
                             <span class="text-xs font-bold text-teal-900 uppercase tracking-wider">Divisi Publikasi &amp; Sentra HKI P3M UHN</span>
                             <h4 class="text-lg font-extrabold text-teal-950 mt-1">{{ $stats['scopus_articles'] }} Publikasi Jurnal &bull; {{ $stats['hki_granted'] }} HKI / Paten Terdaftar</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola Bank Publikasi Jurnal, pengecekan template &amp; similarity artikel, verifikasi Sentra HKI / Paten DJKI, serta klaim insentif reward.</p>
+                            <p class="text-xs text-slate-700 mt-1">Kelola penuh Bank Publikasi Jurnal, pengecekan template &amp; similarity artikel, verifikasi Sentra HKI / Paten DJKI, serta klaim insentif reward.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('publikasi.index') }}" class="px-5 py-3 rounded-2xl bg-teal-700 text-white font-extrabold text-xs sm:text-sm hover:bg-teal-800 shadow-md whitespace-nowrap">
@@ -728,13 +733,16 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-cyan-50 border border-cyan-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-cyan-900 uppercase tracking-wider">Rekapitulasi & Persetujuan Kepala P3M</span>
-                            <h4 class="text-lg font-extrabold text-cyan-950 mt-1">{{ $stats['total_proposals'] }} Penelitian Dosen Resmi ({{ $stats['total_pagu'] }})</h4>
-                            <p class="text-xs text-slate-700 mt-1">Monitoring seluruh penelitian dosen Universitas Harkat Negeri, verifikasi LPPM, dan laporan akreditasi.</p>
+                            <span class="text-xs font-bold text-cyan-900 uppercase tracking-wider">Analitik &amp; Persetujuan Kepala P3M</span>
+                            <h4 class="text-lg font-extrabold text-cyan-950 mt-1">Monitoring Kebijakan P3M &bull; Karya Pribadi ({{ $stats['my_penelitian'] ?? 0 }} Penelitian / {{ $stats['my_pengabdian'] ?? 0 }} Pengabdian)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Pantau analitik eksekutif, akreditasi, serta persetujuan usulan aktif; akses full repositori data tetap khusus per divisi.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-cyan-700 text-white font-extrabold text-xs sm:text-sm hover:bg-cyan-800 shadow-md whitespace-nowrap">
-                                Data Penelitian ({{ $stats['total_proposals'] }}) &rarr;
+                            <a href="{{ route('analitik.eksekutif') }}" class="px-5 py-3 rounded-2xl bg-cyan-700 text-white font-extrabold text-xs sm:text-sm hover:bg-cyan-800 shadow-md whitespace-nowrap">
+                                Analitik Eksekutif &rarr;
+                            </a>
+                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-white text-cyan-900 border border-cyan-300 font-extrabold text-xs sm:text-sm hover:bg-cyan-100 whitespace-nowrap">
+                                Data Saya ({{ $stats['my_penelitian'] ?? 0 }})
                             </a>
                             <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-white text-cyan-900 border border-cyan-300 font-extrabold text-xs sm:text-sm hover:bg-cyan-100 whitespace-nowrap">
                                 Data Dosen ({{ $stats['total_users'] }})
@@ -747,13 +755,18 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-emerald-50 border border-emerald-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Rekapitulasi Nominal Penelitian Dosen</span>
-                            <h4 class="text-lg font-extrabold text-emerald-950 mt-1">Total Nominal: {{ $stats['total_pagu'] }} ({{ $stats['total_proposals'] }} Penelitian)</h4>
-                            <p class="text-xs text-slate-700 mt-1">Monitoring anggaran penelitian dosen Universitas Harkat Negeri dan pencairan multi-termin.</p>
+                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">Divisi Keuangan &amp; Pencairan Hibah / Reward</span>
+                            <h4 class="text-lg font-extrabold text-emerald-950 mt-1">Pencairan Multi-Termin Kontrak &amp; Insentif Publikasi/HKI</h4>
+                            <p class="text-xs text-slate-700 mt-1">Verifikasi nomor rekening bank, pencairan termin 70%/30%, validasi SPJ/SPTB, serta penyaluran reward insentif.</p>
                         </div>
-                        <a href="{{ route('usulan.index') }}" class="px-6 py-3.5 rounded-2xl bg-emerald-700 text-white font-extrabold text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
-                            Lihat Nominal Penelitian &rarr;
-                        </a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('keuangan.disbursement.index') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs sm:text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
+                                Pencairan Termin &rarr;
+                            </a>
+                            <a href="{{ route('keuangan.reward.index') }}" class="px-5 py-3 rounded-2xl bg-white text-emerald-900 border border-emerald-300 font-extrabold text-xs sm:text-sm hover:bg-emerald-100 whitespace-nowrap">
+                                Pencairan Reward
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -762,12 +775,12 @@
                     <div class="p-6 rounded-3xl bg-red-50 border border-red-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <span class="text-xs font-bold text-red-900 uppercase tracking-wider">Pusat Kendali Superadmin & Basis Data Resmi UHN</span>
-                            <h4 class="text-lg font-extrabold text-red-950 mt-1">{{ $stats['total_users'] }} Dosen Tetap &bull; {{ $stats['total_proposals'] }} Penelitian Dosen Resmi</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola langsung database 146 Dosen Tetap UHN dan 438 Data Penelitian Dosen bebas data dummy.</p>
+                            <h4 class="text-lg font-extrabold text-red-950 mt-1">{{ $stats['total_users'] }} Dosen Tetap &bull; {{ $stats['penelitian_count'] ?? 0 }} Penelitian &bull; {{ $stats['pengabdian_count'] ?? 0 }} Pengabdian</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola sistem &amp; berpindah peran ke masing-masing Divisi (Penelitian, Pengabdian, Publikasi) atau Admin P3M General.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-red-700 text-white font-extrabold text-xs sm:text-sm hover:bg-red-800 shadow-md whitespace-nowrap">
-                                Data Penelitian ({{ $stats['total_proposals'] }}) &rarr;
+                                Data Penelitian ({{ $stats['penelitian_count'] ?? 0 }}) &rarr;
                             </a>
                             <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-white text-red-800 border border-red-300 font-extrabold text-xs sm:text-sm hover:bg-red-100 whitespace-nowrap">
                                 Data Dosen ({{ $stats['total_users'] }})

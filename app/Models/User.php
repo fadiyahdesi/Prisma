@@ -100,7 +100,57 @@ class User extends Authenticatable
     public function primaryRoleName(): string
     {
         $role = $this->roles()->first();
-        return $role ? $role->name : 'Dosen/Pengusul';
+        return $role ? $role->name : 'Dosen / Pengusul';
+    }
+
+    /**
+     * Resolve effective active role (respects session active_role when present).
+     */
+    public function effectiveRoleName(): string
+    {
+        $sessionRole = session('active_role');
+        if (!empty($sessionRole)) {
+            return $sessionRole;
+        }
+
+        return $this->primaryRoleName();
+    }
+
+    /**
+     * Check whether the user holds full-dataset access for a division module.
+     * Modules: 'penelitian', 'pengabdian', 'publikasi', 'hki'.
+     */
+    public function isFullDivisionFor(string $module): bool
+    {
+        $divisionMap = [
+            'penelitian' => 'Divisi Penelitian',
+            'pengabdian' => 'Divisi Pengabdian',
+            'publikasi' => 'Divisi Publikasi',
+            'hki' => 'Divisi Publikasi',
+        ];
+
+        $requiredDivision = $divisionMap[strtolower(trim($module))] ?? null;
+        if (!$requiredDivision) {
+            return false;
+        }
+
+        $activeRole = session('active_role');
+        if (!empty($activeRole)) {
+            return in_array($activeRole, [$requiredDivision, 'Superadmin'], true);
+        }
+
+        return $this->hasRole([$requiredDivision, 'Superadmin']);
+    }
+
+    /**
+     * Extract clean lecturer name without academic titles for author matching.
+     */
+    public function cleanedBaseName(): string
+    {
+        $firstSegment = trim(explode(',', (string) $this->name)[0]);
+        $cleaned = preg_replace('/^(?:(?:Prof|Dr|Ir|apt|Bdn|Ns|H|Hj)\.?\s+)+/i', '', $firstSegment);
+
+        return trim((string) $cleaned);
     }
 
     public function isOtpLocked(): bool

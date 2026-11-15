@@ -13,10 +13,17 @@
                 </p>
             </div>
             <div class="shrink-0">
-                <a href="{{ route('publikasi.katalog-publik') }}" class="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
-                    <span>Lihat Seluruh Publikasi Dosen</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </a>
+                @auth
+                    <a href="{{ route('publikasi.index') }}" class="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+                        <span>{{ auth()->user()->isFullDivisionFor('publikasi') ? 'Kelola Database Publikasi (Divisi)' : 'Buka Data Publikasi Saya' }}</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+                        <span>Login untuk Akses Data Publikasi</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                @endauth
             </div>
         </div>
 
@@ -52,8 +59,12 @@
                 @endforeach
             </div>
         @else
-            <div class="bg-slate-50 rounded-3xl border border-slate-200 p-8 text-center text-sm font-semibold text-slate-500">
-                Pangkalan data publikasi sedang dalam proses sinkronisasi dengan pangkalan data nasional.
+            <div class="bg-slate-50 rounded-3xl border border-slate-200 p-8 text-center text-sm font-semibold text-slate-600">
+                @auth
+                    Anda belum memiliki publikasi ilmiah pribadi yang tercatat. Gunakan portal Publikasi Saya untuk mengelola artikel Anda.
+                @else
+                    Data penelitian, pengabdian, dan publikasi kini terisolasi khusus untuk akun dosen bersangkutan dan masing-masing Divisi P3M terkait. Silakan masuk terlebih dahulu untuk mengaksesnya.
+                @endauth
             </div>
         @endif
     </div>

@@ -18,14 +18,22 @@ class SemhasController extends Controller
     public function adminIndex(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus P3M.');
+        abort_unless($user->hasRole(['Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus Divisi / Kepala P3M.');
 
+        $activeRole = $user->effectiveRoleName();
         $filter = $request->query('filter', 'all');
         $search = $request->query('search');
-        $defaultDivisi = $user->hasRole('Divisi Penelitian') ? 'penelitian' : ($user->hasRole('Divisi Pengabdian') ? 'pengabdian' : null);
-        $divisi = $request->query('divisi', $defaultDivisi);
+        $forcedDivisi = match ($activeRole) {
+            'Divisi Penelitian' => 'penelitian',
+            'Divisi Pengabdian' => 'pengabdian',
+            default => null,
+        };
+        $divisi = $forcedDivisi ?? $request->query('divisi');
 
         $baseQuery = PpmUsulan::whereIn('status', ['Ongoing', 'Completed', 'Approved']);
+        if ($activeRole === 'Kepala P3M') {
+            $baseQuery->whereNull('no_urut');
+        }
         if (in_array($divisi, ['penelitian', 'pengabdian'])) {
             $baseQuery->where(function ($q) use ($divisi) {
                 $q->where('kategori_usulan', $divisi)
@@ -57,6 +65,10 @@ class SemhasController extends Controller
             'laporanAkhir',
         ])
         ->whereIn('status', ['Ongoing', 'Completed', 'Approved']);
+
+        if ($activeRole === 'Kepala P3M') {
+            $query->whereNull('no_urut');
+        }
 
         if (in_array($divisi, ['penelitian', 'pengabdian'])) {
             $query->where(function ($q) use ($divisi) {
@@ -103,7 +115,12 @@ class SemhasController extends Controller
     public function adminSchedule(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak.');
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        abort_unless(
+            $user->isFullDivisionFor($kategori) || $user->hasRole('Kepala P3M'),
+            403,
+            'Akses ditolak: Khusus Divisi terkait.'
+        );
 
         $validated = $request->validate([
             'jadwal_seminar' => 'required|date',
@@ -127,7 +144,12 @@ class SemhasController extends Controller
     public function adminGrade(Request $request, PpmSeminarHasil $semhas)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Reviewer', 'Superadmin']), 403, 'Akses ditolak.');
+        $kategori = strtolower((string) ($semhas->usulan?->kategori_usulan ?? $semhas->usulan?->skema?->kategori ?? 'penelitian'));
+        abort_unless(
+            $user->isFullDivisionFor($kategori) || $user->hasRole(['Kepala P3M', 'Reviewer']),
+            403,
+            'Akses ditolak.'
+        );
 
         $validated = $request->validate([
             'skor_seminar' => 'required|numeric|min:0|max:100',
@@ -148,7 +170,12 @@ class SemhasController extends Controller
     public function kepalaApproval(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Kepala P3M', 'Admin P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus P3M.');
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        abort_unless(
+            $user->isFullDivisionFor($kategori) || $user->hasRole('Kepala P3M'),
+            403,
+            'Akses khusus Divisi / Kepala P3M.'
+        );
 
         $status = $request->input('status', 'acc');
 
@@ -266,8 +293,9 @@ class SemhasController extends Controller
     public function downloadPengesahan(PpmUsulan $usulan)
     {
         $user = Auth::user();
+        $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
 
-        if ($usulan->id_pengusul !== $user->id && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Keuangan'])) {
+        if ($usulan->id_pengusul !== $user->id && !$user->isFullDivisionFor($kategori) && !$user->hasRole(['Kepala P3M', 'Keuangan'])) {
             abort(403, 'Akses ditolak.');
         }
 

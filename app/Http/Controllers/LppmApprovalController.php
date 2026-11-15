@@ -14,16 +14,17 @@ class LppmApprovalController extends Controller
         $this->authorizeVerifier();
 
         $user = Auth::user();
-        $activeRole = session('active_role') ?? $user->primaryRoleName();
+        $activeRole = $user->effectiveRoleName();
 
-        $defaultDivisi = match ($activeRole) {
-            'Divisi Penelitian' => 'penelitian',
-            'Divisi Pengabdian' => 'pengabdian',
-            default => 'all',
+        $forcedDivisi = match (true) {
+            $activeRole === 'Divisi Penelitian' => 'penelitian',
+            $activeRole === 'Divisi Pengabdian' => 'pengabdian',
+            default => null,
         };
-        $divisi = strtolower($request->input('divisi', $defaultDivisi));
+
+        $divisi = $forcedDivisi ?? strtolower($request->input('divisi', 'all'));
         if (!in_array($divisi, ['all', 'penelitian', 'pengabdian'], true)) {
-            $divisi = 'all';
+            $divisi = $forcedDivisi ?? 'all';
         }
 
         $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota', 'luaran'])
@@ -57,7 +58,7 @@ class LppmApprovalController extends Controller
 
     public function update(Request $request, PpmUsulan $usulan)
     {
-        $this->authorizeVerifier();
+        $this->authorizeVerifier($usulan);
 
         $validated = $request->validate([
             'decision' => 'required|in:in_review,approved,draft,rejected',
@@ -121,7 +122,7 @@ class LppmApprovalController extends Controller
 
     public function markInReview(PpmUsulan $usulan)
     {
-        $this->authorizeVerifier();
+        $this->authorizeVerifier($usulan);
 
         if ($usulan->status !== 'Submitted') {
             return back()->with('error', 'Hanya usulan Submitted yang dapat masuk proses verifikasi.');
@@ -171,12 +172,22 @@ class LppmApprovalController extends Controller
         return back()->with('success', 'Rekomendasi keselarasan roadmap berhasil disimpan.');
     }
 
-    private function authorizeVerifier(): void
+    private function authorizeVerifier(?PpmUsulan $usulan = null): void
     {
+        $user = Auth::user();
         abort_unless(
-            Auth::user()->hasRole(['Divisi Penelitian', 'Divisi Pengabdian', 'Operator P3M', 'Admin P3M', 'Kepala P3M', 'Superadmin']),
+            $user->hasRole(['Divisi Penelitian', 'Divisi Pengabdian', 'Kepala P3M', 'Superadmin']),
             403,
             'Anda tidak memiliki akses ke antrean verifikasi dokumen usulan.'
         );
+
+        if ($usulan !== null && !$user->hasRole(['Kepala P3M', 'Superadmin'])) {
+            $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+            abort_unless(
+                $user->isFullDivisionFor($kategori),
+                403,
+                'Usulan ini bukan wewenang divisi Anda.'
+            );
+        }
     }
 }

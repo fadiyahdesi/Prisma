@@ -58,16 +58,44 @@ class DashboardController extends Controller
         }
 
         $availableRoles = Role::all();
-        $totalNominal = (float) \App\Models\PpmUsulan::sum('total_rab');
+        $penelitianBase = \App\Models\PpmUsulan::where(function ($q) {
+            $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
+        });
+        $pengabdianBase = \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian');
+
+        $myPenelitian = (clone $penelitianBase)->ownedByUser($user)->count();
+        $myPengabdian = (clone $pengabdianBase)->ownedByUser($user)->count();
+        $myPublikasi = \App\Models\PpmPublikasiJurnal::ownedByUser($user)->count();
+
+        $proposalStatQuery = match ($activeRole) {
+            'Divisi Penelitian' => (clone $penelitianBase),
+            'Divisi Pengabdian' => (clone $pengabdianBase),
+            'Superadmin' => \App\Models\PpmUsulan::query(),
+            default => \App\Models\PpmUsulan::ownedByUser($user),
+        };
+
+        $totalNominal = (float) (clone $proposalStatQuery)->sum('total_rab');
+        $publikasiCountStat = in_array($activeRole, ['Divisi Publikasi', 'Superadmin'], true)
+            ? \App\Models\PpmPublikasiJurnal::count()
+            : $myPublikasi;
+        $hkiCountStat = in_array($activeRole, ['Divisi Publikasi', 'Superadmin'], true)
+            ? \App\Models\PpmHki::count()
+            : \App\Models\PpmHki::where('user_id', $user->id)->count();
+
         $stats = [
-            'total_proposals' => \App\Models\PpmUsulan::count(),
-            'approved_lppm' => \App\Models\PpmUsulan::where('status', 'Approved')->count(),
-            'under_review' => \App\Models\PpmUsulan::whereIn('status', ['Submitted', 'In_review'])->count(),
+            'total_proposals' => (clone $proposalStatQuery)->count(),
+            'approved_lppm' => (clone $proposalStatQuery)->where('status', 'Approved')->count(),
+            'under_review' => (clone $proposalStatQuery)->whereIn('status', ['Submitted', 'In_review'])->count(),
             'total_pagu' => 'Rp. ' . number_format($totalNominal, 0, '.', ','),
-            'scopus_articles' => \App\Models\PpmPublikasiJurnal::count(),
-            'hki_granted' => \App\Models\PpmHki::count(),
+            'scopus_articles' => $publikasiCountStat,
+            'hki_granted' => $hkiCountStat,
             'total_users' => User::whereNotNull('no_urut')->count(),
             'audit_logs_count' => AuditLog::count(),
+            'penelitian_count' => in_array($activeRole, ['Divisi Penelitian', 'Superadmin'], true) ? (clone $penelitianBase)->count() : $myPenelitian,
+            'pengabdian_count' => in_array($activeRole, ['Divisi Pengabdian', 'Superadmin'], true) ? (clone $pengabdianBase)->count() : $myPengabdian,
+            'my_penelitian' => $myPenelitian,
+            'my_pengabdian' => $myPengabdian,
+            'my_publikasi' => $myPublikasi,
         ];
 
         $recentLogs = AuditLog::with('user')->orderBy('id', 'desc')->take(5)->get();

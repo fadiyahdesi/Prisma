@@ -33,23 +33,17 @@ class PublikasiController extends Controller
         }
 
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
-        $scope = $request->input('scope', 'all'); // 'all' or 'mine'
+        $isStaff = $user->isFullDivisionFor('publikasi');
+        // Hanya Divisi Publikasi (atau Superadmin) yang boleh mengakses scope 'all'
+        $scope = $isStaff ? $request->input('scope', 'all') : 'mine';
+        if (!in_array($scope, ['all', 'mine'], true)) {
+            $scope = $isStaff ? 'all' : 'mine';
+        }
 
         $query = PpmPublikasiJurnal::with('user');
 
-        if ($scope === 'mine') {
-            $likeOp = DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
-            $baseName = trim(explode(',', (string) $user->name)[0]);
-            $query->where(function ($q) use ($user, $likeOp, $baseName) {
-                $q->where('user_id', $user->id);
-                if (!empty($user->nipy)) {
-                    $q->orWhere('penulis', $likeOp, '%' . $user->nipy . '%');
-                }
-                if (strlen($baseName) >= 4) {
-                    $q->orWhere('penulis', $likeOp, '%' . $baseName . '%');
-                }
-            });
+        if (!$isStaff || $scope === 'mine') {
+            $query->ownedByUser($user);
         }
 
         if ($search = trim((string) $request->input('search', ''))) {
@@ -86,13 +80,20 @@ class PublikasiController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $totalAllCount = PpmPublikasiJurnal::count();
-        $countNasionalTerakreditasi = PpmPublikasiJurnal::where('jenis_publikasi', 'nasional terakreditasi')->count();
-        $countInternasional = PpmPublikasiJurnal::where('jenis_publikasi', 'internasional')->count();
-        $countNasionalTidakTerakreditasi = PpmPublikasiJurnal::where('jenis_publikasi', 'nasional tidak terakreditasi')->count();
-        $countTerverifikasi = PpmPublikasiJurnal::where('status_verifikasi', 'Terverifikasi')->count();
+        $statsBase = PpmPublikasiJurnal::query();
+        if (!$isStaff) {
+            $statsBase->ownedByUser($user);
+        }
 
-        $dosenList = User::whereNotNull('no_urut')->orderBy('no_urut')->get(['id', 'name', 'nipy', 'nidn_nim']);
+        $totalAllCount = (clone $statsBase)->count();
+        $countNasionalTerakreditasi = (clone $statsBase)->where('jenis_publikasi', 'nasional terakreditasi')->count();
+        $countInternasional = (clone $statsBase)->where('jenis_publikasi', 'internasional')->count();
+        $countNasionalTidakTerakreditasi = (clone $statsBase)->where('jenis_publikasi', 'nasional tidak terakreditasi')->count();
+        $countTerverifikasi = (clone $statsBase)->where('status_verifikasi', 'Terverifikasi')->count();
+
+        $dosenList = $isStaff
+            ? User::whereNotNull('no_urut')->orderBy('no_urut')->get(['id', 'name', 'nipy', 'nidn_nim'])
+            : collect();
 
         return view('publikasi.index', compact(
             'publikasiList',
@@ -113,6 +114,7 @@ class PublikasiController extends Controller
      */
     public function syncPublikasi(): RedirectResponse
     {
+        abort_unless(Auth::user()->isFullDivisionFor('publikasi'), 403, 'Hanya Divisi Publikasi yang dapat menyinkronkan data publikasi CSV.');
         app(RealPublikasiCsvSeeder::class)->run();
         $count = PpmPublikasiJurnal::count();
 
@@ -125,6 +127,8 @@ class PublikasiController extends Controller
      */
     public function storeBasic(Request $request): RedirectResponse
     {
+        abort_unless(Auth::user()->isFullDivisionFor('publikasi'), 403, 'Hanya Divisi Publikasi yang dapat menambah data resmi publikasi.');
+
         $validated = $request->validate([
             'no_urut' => 'nullable|integer|min:1',
             'jenis_publikasi' => 'nullable|string|max:150',
@@ -181,6 +185,8 @@ class PublikasiController extends Controller
      */
     public function updateBasic(Request $request, PpmPublikasiJurnal $publikasi): RedirectResponse
     {
+        abort_unless(Auth::user()->isFullDivisionFor('publikasi'), 403, 'Hanya Divisi Publikasi yang dapat mengubah data publikasi.');
+
         $validated = $request->validate([
             'no_urut' => 'nullable|integer|min:1',
             'jenis_publikasi' => 'nullable|string|max:150',
@@ -312,7 +318,9 @@ class PublikasiController extends Controller
     public function show(PpmPublikasiJurnal $publikasi): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
+        $isStaff = $user->isFullDivisionFor('publikasi');
+
+        abort_unless($isStaff || $publikasi->isOwnedBy($user), 403, 'Anda tidak memiliki akses untuk melihat data publikasi ini.');
 
         $publikasi->load(['user', 'klaimReward.distribusi']);
 
@@ -325,7 +333,7 @@ class PublikasiController extends Controller
     public function verify(Request $request, PpmPublikasiJurnal $publikasi): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Divisi Publikasi', 'Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Divisi Publikasi / P3M.');
+        abort_unless($user->isFullDivisionFor('publikasi'), 403, 'Khusus Divisi Publikasi.');
 
         $validated = $request->validate([
             'template_status' => 'required|in:sesuai,revisi,tidak_sesuai',
@@ -352,8 +360,9 @@ class PublikasiController extends Controller
     public function destroy(PpmPublikasiJurnal $publikasi): RedirectResponse
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Divisi Publikasi', 'Admin P3M', 'Kepala P3M', 'Superadmin']);
-        abort_unless($isStaff || $publikasi->user_id === $user->id, 403, 'Akses ditolak.');
+        $isStaff = $user->isFullDivisionFor('publikasi');
+        $isDeletableOwn = (int) $publikasi->user_id === (int) $user->id && $publikasi->status_verifikasi !== 'Terverifikasi';
+        abort_unless($isStaff || $isDeletableOwn, 403, 'Akses ditolak. Hanya Divisi Publikasi yang dapat menghapus data publikasi ini.');
 
         $judul = $publikasi->judul_artikel;
         $publikasi->delete();

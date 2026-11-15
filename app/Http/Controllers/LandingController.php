@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LandingController extends Controller
 {
@@ -291,9 +292,17 @@ class LandingController extends Controller
         ];
 
         try {
-            $recentPublications = \Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')
-                ? \App\Models\PpmPublikasiJurnal::with('user')->where('judul_artikel', '!=', '-')->orderBy('no_urut', 'asc')->take(6)->get()
-                : collect();
+            if (\Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal') && Auth::check()) {
+                $pubQuery = \App\Models\PpmPublikasiJurnal::with('user')
+                    ->where('judul_artikel', '!=', '-')
+                    ->orderBy('no_urut', 'asc');
+                if (!Auth::user()->isFullDivisionFor('publikasi')) {
+                    $pubQuery->ownedByUser(Auth::user());
+                }
+                $recentPublications = $pubQuery->take(6)->get();
+            } else {
+                $recentPublications = collect();
+            }
         } catch (\Throwable $e) {
             $recentPublications = collect();
         }
@@ -311,14 +320,25 @@ class LandingController extends Controller
     }
 
     /**
-     * Katalog Publikasi Dosen Terbuka (Akses Tanpa Login).
+     * Katalog Publikasi (Terisolasi: Full hanya Divisi Publikasi; Dosen melihat karya sendiri).
      */
     public function publikasi(Request $request)
     {
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Silakan login terlebih dahulu untuk mengakses data publikasi sesuai akun atau divisi Anda.');
+        }
+
+        $user = Auth::user();
+        $canViewAll = $user->isFullDivisionFor('publikasi');
+
         $search = $request->input('search');
         $kategori = $request->input('kategori_peringkat');
 
         $query = \App\Models\PpmPublikasiJurnal::with('user');
+        if (!$canViewAll) {
+            $query->ownedByUser($user);
+        }
 
         if ($search) {
             $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
