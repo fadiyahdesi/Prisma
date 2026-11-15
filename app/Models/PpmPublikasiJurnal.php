@@ -15,6 +15,8 @@ class PpmPublikasiJurnal extends Model
     protected $table = 'ppm_publikasi_jurnal';
 
     protected $fillable = [
+        'no_urut',
+        'semester',
         'user_id',
         'judul_artikel',
         'nama_jurnal',
@@ -29,6 +31,12 @@ class PpmPublikasiJurnal extends Model
         'peran_penulis',
         'metadata_source',
         'is_claimed_reward',
+        'template_status',
+        'similarity_score',
+        'status_verifikasi',
+        'catatan_verifikasi',
+        'verified_by',
+        'verified_at',
     ];
 
     protected function casts(): array
@@ -37,6 +45,8 @@ class PpmPublikasiJurnal extends Model
             'tahun_terbit' => 'integer',
             'jumlah_penulis' => 'integer',
             'is_claimed_reward' => 'boolean',
+            'similarity_score' => 'float',
+            'verified_at' => 'datetime',
         ];
     }
 

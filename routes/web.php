@@ -227,8 +227,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/periode-hibah/{periodeHibah}/toggle', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'toggleActive'])->name('admin.periode-hibah.toggle');
         Route::delete('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'destroy'])->name('admin.periode-hibah.destroy');
 
-        // EPIC 05: Data Penelitian Dosen UHN (438) & Wizard 6 Langkah Usulan Proposal BIMA
+        // EPIC 05: Data Penelitian Dosen UHN (438), Data Pengabdian Masyarakat & Wizard 6 Langkah Usulan Proposal BIMA
         Route::get('/usulan', [\App\Http\Controllers\ProposalWizardController::class, 'index'])->name('usulan.index');
+        Route::get('/pengabdian', [\App\Http\Controllers\ProposalWizardController::class, 'pengabdianIndex'])->name('pengabdian.index');
+        Route::post('/usulan/basic', [\App\Http\Controllers\ProposalWizardController::class, 'storeBasic'])->name('usulan.store-basic');
         Route::post('/usulan/sync-penelitian', [\App\Http\Controllers\ProposalWizardController::class, 'syncPenelitian'])->name('usulan.sync-penelitian');
         Route::put('/usulan/{usulan}/basic', [\App\Http\Controllers\ProposalWizardController::class, 'updateBasic'])->name('usulan.update-basic');
         Route::delete('/usulan/{usulan}', [\App\Http\Controllers\ProposalWizardController::class, 'destroy'])->name('usulan.destroy');
@@ -311,12 +313,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/keuangan/pencairan/{kontrak}/termin-2', [\App\Http\Controllers\DisbursementController::class, 'disburseTermin2'])->name('keuangan.pencairan.disburse-termin-2');
         Route::get('/keuangan/pencairan/{kontrak}/pelunasan-pdf', [\App\Http\Controllers\DisbursementController::class, 'downloadPelunasanPdf'])->name('keuangan.pencairan.pelunasan-pdf');
 
-        // EPIC 11: Bank Publikasi Jurnal Kampus (US-11.1)
+        // EPIC 11: Bank Publikasi Jurnal Kampus & Verifikasi Divisi Publikasi (US-11.1)
         Route::get('/publikasi/fetch-doi', [\App\Http\Controllers\PublikasiController::class, 'fetchDoi'])->name('publikasi.fetch-doi');
         Route::get('/publikasi', [\App\Http\Controllers\PublikasiController::class, 'index'])->name('publikasi.index');
         Route::get('/publikasi/create', [\App\Http\Controllers\PublikasiController::class, 'create'])->name('publikasi.create');
         Route::post('/publikasi', [\App\Http\Controllers\PublikasiController::class, 'store'])->name('publikasi.store');
         Route::get('/publikasi/{publikasi}', [\App\Http\Controllers\PublikasiController::class, 'show'])->name('publikasi.show');
+        Route::post('/publikasi/{publikasi}/verify', [\App\Http\Controllers\PublikasiController::class, 'verify'])->name('publikasi.verify');
+        Route::delete('/publikasi/{publikasi}', [\App\Http\Controllers\PublikasiController::class, 'destroy'])->name('publikasi.destroy');
 
         // EPIC 11: Sentra HKI UHN & Verifikasi DJKI (US-11.2)
         Route::get('/hki', [\App\Http\Controllers\SentraHkiController::class, 'index'])->name('hki.index');

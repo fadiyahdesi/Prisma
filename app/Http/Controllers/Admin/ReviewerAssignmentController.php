@@ -17,7 +17,7 @@ class ReviewerAssignmentController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Superadmin']), 403, 'Akses ditolak: Khusus Admin P3M.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Penelitian / Pengabdian / Admin P3M.');
 
         $query = PpmUsulan::with([
             'pengusul.fakultas',
@@ -35,10 +35,21 @@ class ReviewerAssignmentController extends Controller
             $query->where('status', $request->string('status_filter'));
         }
 
+        // Default Divisi filter based on Role
+        $defaultDivisi = null;
+        if ($user->hasRole('Divisi Penelitian')) {
+            $defaultDivisi = 'penelitian';
+        } elseif ($user->hasRole('Divisi Pengabdian')) {
+            $defaultDivisi = 'pengabdian';
+        }
+
         // Filter by Divisi: Penelitian or Pengabdian
-        $kategoriFilter = $request->input('divisi');
+        $kategoriFilter = $request->input('divisi', $defaultDivisi);
         if (in_array($kategoriFilter, ['penelitian', 'pengabdian'])) {
-            $query->whereHas('skema', fn($q) => $q->whereRaw('LOWER(kategori) = ?', [$kategoriFilter]));
+            $query->where(function ($q) use ($kategoriFilter) {
+                $q->where('kategori_usulan', $kategoriFilter)
+                  ->orWhereHas('skema', fn($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$kategoriFilter]));
+            });
         }
 
         $proposals = $query->paginate(12)->withQueryString();
@@ -62,7 +73,7 @@ class ReviewerAssignmentController extends Controller
     public function assign(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak.');
 
         $isPengabdian = strtolower($usulan->skema?->kategori ?? '') === 'pengabdian';
 
@@ -107,7 +118,7 @@ class ReviewerAssignmentController extends Controller
     public function assignAdjudicator(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak.');
 
         if ($usulan->status !== 'Adjudication') {
             return redirect()->back()->with('error', 'Usulan ini tidak berada dalam status Adjudication.');
@@ -139,7 +150,7 @@ class ReviewerAssignmentController extends Controller
     public function eligibleReviewers(PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak.');
 
         $eligible = ReviewEngineService::getEligibleReviewers($usulan);
 

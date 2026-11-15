@@ -20,7 +20,7 @@ class RewardClaimController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin', 'Keuangan']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin', 'Keuangan']);
 
         $query = PpmKlaimReward::with(['user', 'publikasi', 'hki', 'distribusi']);
 
@@ -140,7 +140,7 @@ class RewardClaimController extends Controller
     public function show(PpmKlaimReward $klaim): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin', 'Keuangan']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin', 'Keuangan']);
 
         if (!$isStaff && $klaim->user_id !== $user->id) {
             // Check if user is one of the distribution members
@@ -161,7 +161,7 @@ class RewardClaimController extends Controller
     public function adminIndex(Request $request): View
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola P3M.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola P3M / Divisi Publikasi.');
 
         $status = $request->query('status', 'Submitted');
         $search = $request->query('search');
@@ -198,7 +198,7 @@ class RewardClaimController extends Controller
     public function adminApprove(Request $request, PpmKlaimReward $klaim, RewardDistributionService $service): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola P3M.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola P3M / Divisi Publikasi.');
 
         if ($klaim->jenis_klaim === 'Publikasi' && $klaim->publikasi) {
             if ($klaim->publikasi->peran_penulis && !in_array($klaim->publikasi->peran_penulis, ['Penulis Pertama', 'First Author', 'Penulis Utama', 'First & Corresponding Author'])) {
@@ -218,7 +218,7 @@ class RewardClaimController extends Controller
     public function adminReject(Request $request, PpmKlaimReward $klaim, RewardDistributionService $service): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola P3M.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola P3M / Divisi Publikasi.');
 
         $request->validate([
             'catatan_p3m' => 'required|string|max:1000',

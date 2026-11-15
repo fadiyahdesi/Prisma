@@ -18,12 +18,20 @@ class SemhasController extends Controller
     public function adminIndex(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses khusus P3M.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus P3M.');
 
         $filter = $request->query('filter', 'all');
         $search = $request->query('search');
+        $defaultDivisi = $user->hasRole('Divisi Penelitian') ? 'penelitian' : ($user->hasRole('Divisi Pengabdian') ? 'pengabdian' : null);
+        $divisi = $request->query('divisi', $defaultDivisi);
 
-        $baseQuery = PpmUsulan::whereIn('status', ['Ongoing', 'Completed']);
+        $baseQuery = PpmUsulan::whereIn('status', ['Ongoing', 'Completed', 'Approved']);
+        if (in_array($divisi, ['penelitian', 'pengabdian'])) {
+            $baseQuery->where(function ($q) use ($divisi) {
+                $q->where('kategori_usulan', $divisi)
+                  ->orWhereHas('skema', fn($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$divisi]));
+            });
+        }
 
         $stats = [
             'total' => (clone $baseQuery)->count(),
@@ -48,7 +56,14 @@ class SemhasController extends Controller
             'seminarHasil.penguji2',
             'laporanAkhir',
         ])
-        ->whereIn('status', ['Ongoing', 'Completed']);
+        ->whereIn('status', ['Ongoing', 'Completed', 'Approved']);
+
+        if (in_array($divisi, ['penelitian', 'pengabdian'])) {
+            $query->where(function ($q) use ($divisi) {
+                $q->where('kategori_usulan', $divisi)
+                  ->orWhereHas('skema', fn($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$divisi]));
+            });
+        }
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -88,7 +103,7 @@ class SemhasController extends Controller
     public function adminSchedule(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'jadwal_seminar' => 'required|date',
@@ -112,7 +127,7 @@ class SemhasController extends Controller
     public function adminGrade(Request $request, PpmSeminarHasil $semhas)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Reviewer', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Reviewer', 'Superadmin']), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'skor_seminar' => 'required|numeric|min:0|max:100',
@@ -133,7 +148,7 @@ class SemhasController extends Controller
     public function kepalaApproval(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Kepala P3M', 'Admin P3M', 'Superadmin']), 403, 'Akses khusus Kepala P3M.');
+        abort_unless($user->hasRole(['Kepala P3M', 'Admin P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus P3M.');
 
         $status = $request->input('status', 'acc');
 

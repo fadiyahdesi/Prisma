@@ -28,16 +28,21 @@ class ProposalWizardController extends Controller
     }
 
     /**
-     * Display list of research data (438 Penelitian Dosen UHN) & lecturer proposals.
+     * Display list of Pengabdian Masyarakat Dosen UHN.
+     */
+    public function pengabdianIndex(Request $request)
+    {
+        $request->merge(['kategori' => 'pengabdian']);
+        return $this->index($request);
+    }
+
+    /**
+     * Display list of research data (438 Penelitian Dosen UHN) or Pengabdian Masyarakat data.
      */
     public function index(Request $request)
     {
-        // Auto-sync 438 official research records if not yet seeded or if any dummy data remains
-        if (
-            PpmUsulan::whereNotNull('no_urut')->count() < 438 ||
-            PpmUsulan::whereNull('no_urut')->exists() ||
-            PpmPeriodeHibah::count() > 9
-        ) {
+        // Auto-sync 438 official research records if not yet seeded
+        if (PpmUsulan::where('kategori_usulan', 'penelitian')->whereNotNull('no_urut')->count() < 438) {
             try {
                 app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
             } catch (\Throwable $e) {
@@ -46,9 +51,22 @@ class ProposalWizardController extends Controller
         }
 
         $user = Auth::user();
-        $scope = $request->input('scope', 'all'); // 'all' (Semua 438 Penelitian Dosen) or 'mine' (Penelitian Saya)
+        $activeRole = session('active_role') ?? $user->primaryRoleName();
 
-        $query = PpmUsulan::with(['pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota']);
+        $defaultKategori = $activeRole === 'Divisi Pengabdian' ? 'pengabdian' : 'penelitian';
+        $kategori = strtolower($request->input('kategori', $defaultKategori));
+        if (!in_array($kategori, ['penelitian', 'pengabdian'], true)) {
+            $kategori = 'penelitian';
+        }
+
+        $scope = $request->input('scope', 'all'); // 'all' or 'mine'
+
+        $baseKategoriQuery = PpmUsulan::where(function ($q) use ($kategori) {
+            $q->where('kategori_usulan', $kategori)
+              ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', $kategori));
+        });
+
+        $query = (clone $baseKategoriQuery)->with(['pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota']);
 
         if ($scope === 'mine') {
             $query->where(function ($q) use ($user) {
@@ -95,23 +113,34 @@ class ProposalWizardController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $totalAllCount = PpmUsulan::count();
-        $totalMineCount = PpmUsulan::where('id_pengusul', $user->id)
-            ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id))
-            ->count();
+        $totalAllCount = (clone $baseKategoriQuery)->count();
+        $totalPenelitianCount = PpmUsulan::where('kategori_usulan', 'penelitian')->count();
+        $totalPengabdianCount = PpmUsulan::where('kategori_usulan', 'pengabdian')->count();
+        $totalMineCount = (clone $baseKategoriQuery)->where(function ($q) use ($user) {
+            $q->where('id_pengusul', $user->id)
+              ->orWhereHas('anggota', fn ($aq) => $aq->where('user_id', $user->id));
+        })->count();
         $totalNominal = (float) (clone $query)->sum('total_rab');
 
-        $semesterList = PpmUsulan::whereNotNull('semester')
+        $semesterList = (clone $baseKategoriQuery)->whereNotNull('semester')
             ->select('semester')
             ->distinct()
             ->pluck('semester');
 
-        $prodiList = PpmUsulan::whereNotNull('nama_prodi')
+        if ($semesterList->isEmpty()) {
+            $semesterList = PpmUsulan::whereNotNull('semester')->select('semester')->distinct()->pluck('semester');
+        }
+
+        $prodiList = \App\Models\RefProgramStudi::orderBy('nama_prodi')->pluck('nama_prodi');
+        $csvProdiList = (clone $baseKategoriQuery)->whereNotNull('nama_prodi')
             ->where('nama_prodi', '!=', '')
             ->select('nama_prodi')
             ->distinct()
             ->orderBy('nama_prodi')
             ->pluck('nama_prodi');
+        if ($csvProdiList->isNotEmpty()) {
+            $prodiList = $csvProdiList;
+        }
 
         $periodService = new BimaPeriodService();
         $activePeriod = $periodService->getLatestActivePeriod();
@@ -119,8 +148,11 @@ class ProposalWizardController extends Controller
         return view('proposal.index', compact(
             'proposals',
             'activePeriod',
+            'kategori',
             'scope',
             'totalAllCount',
+            'totalPenelitianCount',
+            'totalPengabdianCount',
             'totalMineCount',
             'totalNominal',
             'semesterList',
@@ -135,7 +167,7 @@ class ProposalWizardController extends Controller
     public function syncPenelitian()
     {
         app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
-        $count = PpmUsulan::count();
+        $count = PpmUsulan::where('kategori_usulan', 'penelitian')->count();
 
         return redirect()->route('usulan.index')->with(
             'success',
@@ -144,18 +176,73 @@ class ProposalWizardController extends Controller
     }
 
     /**
-     * Delete a research record / proposal.
+     * Store a new 8-column Penelitian / Pengabdian record directly.
+     */
+    public function storeBasic(Request $request)
+    {
+        $user = Auth::user();
+        $isAdminOrDivisi = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
+        abort_unless($isAdminOrDivisi, 403, 'Anda tidak memiliki akses untuk menambah data ini.');
+
+        $validated = $request->validate([
+            'kategori_usulan' => 'required|in:penelitian,pengabdian',
+            'semester' => 'required|string|max:50',
+            'no_urut' => 'nullable|integer|min:1',
+            'judul_usulan' => 'required|string',
+            'nama_ketua' => 'required|string|max:255',
+            'nidn_ketua' => 'nullable|string|max:100',
+            'nama_anggota' => 'nullable|string',
+            'nama_prodi' => 'required|string|max:150',
+            'total_rab' => 'required|numeric|min:0',
+        ]);
+
+        $kat = $validated['kategori_usulan'];
+        $nextNo = $validated['no_urut'] ?: ((int) PpmUsulan::where('kategori_usulan', $kat)->max('no_urut') + 1);
+        $prefix = $kat === 'pengabdian' ? 'PKM' : 'PNL';
+        $kodeUsulan = sprintf('%s-%03d-%s', $prefix, $nextNo, strtoupper(\Illuminate\Support\Str::random(3)));
+
+        $skema = PpmSkemaBima::where('kategori', $kat)->first() ?? PpmSkemaBima::first();
+        $periode = PpmPeriodeHibah::first();
+
+        PpmUsulan::create([
+            'no_urut' => $nextNo,
+            'semester' => trim($validated['semester']),
+            'kategori_usulan' => $kat,
+            'id_pengusul' => null,
+            'id_skema_bima' => $skema->id,
+            'id_periode_hibah' => $periode->id,
+            'kode_usulan' => $kodeUsulan,
+            'judul_usulan' => trim($validated['judul_usulan']),
+            'nama_ketua' => trim($validated['nama_ketua']),
+            'nidn_ketua' => trim($validated['nidn_ketua'] ?? '-') ?: '-',
+            'nama_anggota' => trim($validated['nama_anggota'] ?? '-') ?: '-',
+            'nama_prodi' => trim($validated['nama_prodi']),
+            'total_rab' => (float) $validated['total_rab'],
+            'status' => 'Approved',
+            'template_status' => 'sesuai',
+            'similarity_score' => 12.0,
+            'similarity_status' => 'lolos',
+            'submitted_at' => now(),
+            'verified_at' => now(),
+        ]);
+
+        $label = $kat === 'pengabdian' ? 'Pengabdian Masyarakat' : 'Penelitian Dosen';
+        return redirect()->back()->with('success', "Data {$label} No. {$nextNo} berhasil ditambahkan.");
+    }
+
+    /**
+     * Delete a research / community service record.
      */
     public function destroy(PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
-        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk menghapus data penelitian ini.');
+        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
+        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk menghapus data ini.');
 
         $judul = $usulan->judul_usulan;
         $usulan->delete();
 
-        return redirect()->route('usulan.index')->with('success', "Data penelitian \"{$judul}\" berhasil dihapus.");
+        return redirect()->back()->with('success', "Data \"{$judul}\" berhasil dihapus.");
     }
 
     /**
@@ -705,8 +792,8 @@ class ProposalWizardController extends Controller
     public function updateBasic(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
-        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk mengubah data penelitian ini.');
+        $isAdmin = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
+        abort_unless($isAdmin || $usulan->id_pengusul === $user->id, 403, 'Anda tidak memiliki akses untuk mengubah data ini.');
 
         $validated = $request->validate([
             'semester' => 'required|string|max:50',
@@ -730,13 +817,13 @@ class ProposalWizardController extends Controller
             'total_rab' => (float) $validated['total_rab'],
         ]);
 
-        return redirect()->back()->with('success', "Data penelitian No. {$usulan->no_urut} berhasil diperbarui.");
+        return redirect()->back()->with('success', "Data No. {$usulan->no_urut} berhasil diperbarui.");
     }
 
     protected function authorizeOwner(PpmUsulan $usulan): void
     {
         $user = Auth::user();
-        $isAdminOrViewer = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Kaprodi', 'Dekanat', 'Reviewer']);
+        $isAdminOrViewer = $user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Divisi Publikasi', 'Kaprodi', 'Dekanat', 'Reviewer']);
 
         if (request()->isMethod('get')) {
             return;
@@ -746,7 +833,7 @@ class ProposalWizardController extends Controller
             abort(403, 'Anda tidak memiliki akses ke usulan proposal ini.');
         }
 
-        if (request()->isMethod('post') && $usulan->status !== 'Draft' && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M'])) {
+        if (request()->isMethod('post') && $usulan->status !== 'Draft' && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian'])) {
             abort(403, 'Usulan ini sudah dikunci karena tidak lagi berstatus Draft.');
         }
     }

@@ -84,14 +84,17 @@ class RbacSeeder extends Seeder
             $obs->delete();
         }
 
-        // 3. Seed 8 RBAC Roles + Superadmin
+        // 3. Seed RBAC Roles + 3 Division Roles + Superadmin
         $rolesDef = [
             ['name' => 'Dosen / Pengusul', 'display_name' => 'Dosen / Pengusul Riset & Abmas', 'description' => 'Membuat usulan proposal via Wizard 6 langkah, mengunggah laporan monev & luaran.'],
             ['name' => 'Dosen / Mahasiswa Anggota', 'display_name' => 'Anggota Tim Riset / Abmas', 'description' => 'Menerima notifikasi undangan tim & mengeksekusi konfirmasi Member Consent.'],
             ['name' => 'Reviewer', 'display_name' => 'Reviewer Ilmiah Substantif', 'description' => 'Menilai proposal secara Double-Blind menggunakan rubrik BIMA berskala 1-7.'],
             ['name' => 'Kaprodi', 'display_name' => 'Ketua Program Studi', 'description' => 'Memantau usulan riset dosen homebase & verifikasi keselarasan roadmap prodi.'],
             ['name' => 'Dekanat', 'display_name' => 'Pimpinan Fakultas (Dekan/Wadek)', 'description' => 'Memantau dasbor capaian IKU & serapan pagu anggaran tingkat fakultas.'],
-            ['name' => 'Admin P3M', 'display_name' => 'Operator / Admin P3M', 'description' => 'Mengonfigurasi periode Call for Proposals & penugasan reviewer matching.'],
+            ['name' => 'Admin P3M', 'display_name' => 'Admin P3M (General)', 'description' => 'Mengelola operasional umum P3M: manajemen akun & database dosen, periode usulan, master skema, laporan akreditasi, dan analitik.'],
+            ['name' => 'Divisi Penelitian', 'display_name' => 'Divisi Penelitian P3M', 'description' => 'Mengelola data penelitian, verifikasi dokumen (template & similarity), plotting reviewer penelitian, dan semhas penelitian.'],
+            ['name' => 'Divisi Pengabdian', 'display_name' => 'Divisi Pengabdian Masyarakat P3M', 'description' => 'Mengelola data pengabdian masyarakat, verifikasi dokumen (template, similarity & surat mitra), plotting reviewer pengabdian, dan semhas pengabdian.'],
+            ['name' => 'Divisi Publikasi', 'display_name' => 'Divisi Publikasi, HKI & Insentif P3M', 'description' => 'Mengelola data publikasi ilmiah, sentra HKI/paten, verifikasi dokumen (template & similarity), serta verifikasi klaim insentif.'],
             ['name' => 'Kepala P3M', 'display_name' => 'Kepala Unit P3M UHN', 'description' => 'Verifikasi kelembagaan LPPM Approval, penetapan pemenang, & penetapan SK.'],
             ['name' => 'Keuangan', 'display_name' => 'Divisi Keuangan LPPM', 'description' => 'Memverifikasi RAB SBM & mengeksekusi pencairan dana Termin I (70%) & II (30%).'],
             ['name' => 'Superadmin', 'display_name' => 'Super Administrator Sistem', 'description' => 'Akses penuh seluruh konfigurasi sistem & pemantauan Audit Trail Logging.'],

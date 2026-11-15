@@ -1,14 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Data Penelitian Dosen UHN - PRISMA UHN')
-
-@section('content')
 @php
-    $isAdmin = auth()->user()->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M']);
+    $kat = $kategori ?? 'penelitian';
+    $isPengabdian = $kat === 'pengabdian';
+    $labelBidang = $isPengabdian ? 'Pengabdian Masyarakat' : 'Penelitian Dosen';
+    $isAdmin = auth()->user()->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian']);
 @endphp
 
+@section('title', 'Database ' . $labelBidang . ' UHN - PRISMA UHN')
+
+@section('content')
 <div x-data="{
     sidebarOpen: false,
+    createModalOpen: false,
     editModalOpen: false,
     editData: {
         update_url: '',
@@ -41,9 +45,9 @@
                     </a>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight">Database Penelitian Dosen UHN</h1>
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                {{ $totalAllCount }} Penelitian Resmi
+                            <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight">Database {{ $labelBidang }} UHN</h1>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold {{ $isPengabdian ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200' }}">
+                                {{ $totalAllCount }} Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}
                             </span>
                         </div>
                         <p class="text-xs font-semibold text-slate-500">
@@ -52,16 +56,26 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
-                          onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi dan hapus seluruh data dummy?');">
-                        @csrf
-                        <button type="submit"
-                                class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            <span>Sinkronkan 438 Penelitian CSV</span>
+                <div class="flex flex-wrap items-center gap-2">
+                    @if(!$isPengabdian)
+                        <form method="POST" action="{{ route('usulan.sync-penelitian') }}" class="inline-flex m-0 p-0"
+                              onsubmit="return confirm('Sinkronkan ulang 438 Data Penelitian Dosen dari CSV resmi?');">
+                            @csrf
+                            <button type="submit"
+                                    class="h-9 px-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span>Sinkronkan 438 Penelitian CSV</span>
+                            </button>
+                        </form>
+                    @endif
+
+                    @if($isAdmin)
+                        <button type="button" @click="createModalOpen = true"
+                                class="h-9 px-3.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 font-extrabold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span>Tambah Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}</span>
                         </button>
-                    </form>
+                    @endif
 
                     <a href="{{ route('sinta.profile') }}"
                        style="background-color: #681727 !important; color: #ffffff !important;"
@@ -93,21 +107,36 @@
             <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3.5">
                 <!-- Row 1: Category Pills & Summary Counter -->
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                    <div class="inline-flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'all'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ ($scope ?? 'all') === 'all' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                            <span>Semua Penelitian Dosen UHN</span>
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ ($scope ?? 'all') === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
-                                {{ $totalAllCount }}
-                            </span>
-                        </a>
-                        <a href="{{ route('usulan.index', array_merge(request()->except('page'), ['scope' => 'mine'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ ($scope ?? 'all') === 'mine' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                            <span>Penelitian Saya (Ketua / Anggota)</span>
-                            <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ ($scope ?? 'all') === 'mine' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
-                                {{ $totalMineCount }}
-                            </span>
-                        </a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Switcher Bidang: Penelitian vs Pengabdian -->
+                        <div class="inline-flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                            <a href="{{ route('usulan.index', ['kategori' => 'penelitian', 'scope' => $scope ?? 'all']) }}"
+                               class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ !$isPengabdian ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                                <span>🔬 Penelitian Dosen</span>
+                                <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ !$isPengabdian ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
+                                    {{ $totalPenelitianCount ?? 438 }}
+                                </span>
+                            </a>
+                            <a href="{{ route('pengabdian.index', ['scope' => $scope ?? 'all']) }}"
+                               class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $isPengabdian ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                                <span>🤝 Pengabdian Masyarakat</span>
+                                <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $isPengabdian ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
+                                    {{ $totalPengabdianCount ?? 0 }}
+                                </span>
+                            </a>
+                        </div>
+
+                        <!-- Switcher Scope: Semua vs Milik Saya -->
+                        <div class="inline-flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                            <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', array_merge(request()->except('page'), ['kategori' => $kat, 'scope' => 'all'])) }}"
+                               class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ ($scope ?? 'all') === 'all' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
+                                Semua ({{ $totalAllCount }})
+                            </a>
+                            <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', array_merge(request()->except('page'), ['kategori' => $kat, 'scope' => 'mine'])) }}"
+                               class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition {{ ($scope ?? 'all') === 'mine' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:text-slate-900' }}">
+                                Milik Saya ({{ $totalMineCount }})
+                            </a>
+                        </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
@@ -115,7 +144,7 @@
                             Periode: <strong class="text-slate-900">{{ $semesterList->count() }} Semester</strong>
                         </span>
                         <span class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
-                            Menampilkan <strong class="font-extrabold">{{ $proposals->count() }}</strong> dari <strong class="font-extrabold">{{ $proposals->total() }}</strong> penelitian
+                            Menampilkan <strong class="font-extrabold">{{ $proposals->count() }}</strong> dari <strong class="font-extrabold">{{ $proposals->total() }}</strong> data
                         </span>
                         <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
                             Total Nominal: <strong class="font-extrabold">Rp. {{ number_format($totalNominal, 0, '.', ',') }}</strong>
@@ -124,7 +153,8 @@
                 </div>
 
                 <!-- Row 2: Search & Filter Form -->
-                <form method="GET" action="{{ route('usulan.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+                <form method="GET" action="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
+                    <input type="hidden" name="kategori" value="{{ $kat }}">
                     <input type="hidden" name="scope" value="{{ $scope ?? 'all' }}">
 
                     <div class="lg:col-span-4 relative">
@@ -155,7 +185,7 @@
                     <div class="lg:col-span-2 flex items-center gap-1.5">
                         <select name="per_page" onchange="this.form.submit()" title="Jumlah baris per halaman"
                                 class="h-9 px-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
-                            <option value="500" {{ ($perPage ?? 500) == 500 ? 'selected' : '' }}>Semua (438)</option>
+                            <option value="500" {{ ($perPage ?? 500) == 500 ? 'selected' : '' }}>Semua</option>
                             <option value="250" {{ ($perPage ?? 500) == 250 ? 'selected' : '' }}>250 Baris</option>
                             <option value="100" {{ ($perPage ?? 500) == 100 ? 'selected' : '' }}>100 Baris</option>
                             <option value="50" {{ ($perPage ?? 500) == 50 ? 'selected' : '' }}>50 Baris</option>
@@ -167,7 +197,7 @@
                         </button>
 
                         @if(request()->anyFilled(['search', 'semester', 'prodi']))
-                            <a href="{{ route('usulan.index', ['scope' => $scope ?? 'all', 'per_page' => $perPage ?? 500]) }}"
+                            <a href="{{ route($isPengabdian ? 'pengabdian.index' : 'usulan.index', ['kategori' => $kat, 'scope' => $scope ?? 'all', 'per_page' => $perPage ?? 500]) }}"
                                class="h-9 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition inline-flex items-center justify-center" title="Reset Filter">
                                 Reset
                             </a>
@@ -301,19 +331,19 @@
                                                             'total_rab' => round($nominalVal),
                                                         ]) }})"
                                                         class="h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
-                                                        title="Edit Data Penelitian">
+                                                        title="Edit Data">
                                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     <span>Edit</span>
                                                 </button>
 
                                                 <form method="POST" action="{{ route('usulan.destroy', $p->id) }}"
-                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus data penelitian No. {{ $noUrutVal }} ini?');"
+                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus data No. {{ $noUrutVal }} ini?');"
                                                       class="inline-flex m-0 p-0">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
                                                             class="h-8 px-3 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 hover:border-rose-600 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
-                                                            title="Hapus Data Penelitian">
+                                                            title="Hapus Data">
                                                         <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                         <span>Hapus</span>
                                                     </button>
@@ -329,8 +359,15 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="py-12 text-center text-slate-400 font-semibold">
-                                        Tidak ada data penelitian dosen yang sesuai dengan kriteria pencarian.
+                                    <td colspan="9" class="py-12 text-center">
+                                        <p class="text-slate-600 font-bold text-sm mb-1">Belum ada data {{ strtolower($labelBidang) }} yang ditampilkan</p>
+                                        <p class="text-slate-400 text-xs mb-3">Silakan gunakan tombol Tambah Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }} atau unggah data CSV resmi.</p>
+                                        @if($isAdmin)
+                                            <button type="button" @click="createModalOpen = true"
+                                                    class="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                                                + Tambah Data {{ $labelBidang }}
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforelse
@@ -347,7 +384,94 @@
         </main>
     </div>
 
-    <!-- Modal Edit 8 Kolom Standar Penelitian (Alpine.js x-show + x-cloak) -->
+    <!-- Modal Tambah Data 8 Kolom (Penelitian / Pengabdian) -->
+    <div x-show="createModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         @keydown.escape.window="createModalOpen = false">
+        <div @click.away="createModalOpen = false"
+             class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden">
+            <div class="px-5 py-4 bg-[#681727] text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base">Tambah Data {{ $labelBidang }}</h3>
+                    <p class="text-[11px] text-rose-100 font-medium">Input 8 kolom standar {{ strtolower($labelBidang) }} UHN</p>
+                </div>
+                <button type="button" @click="createModalOpen = false" class="text-white/80 hover:text-white p-1 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form method="POST" action="{{ route('usulan.store-basic') }}" class="p-5 space-y-4">
+                @csrf
+                <input type="hidden" name="kategori_usulan" value="{{ $kat }}">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">No Urut (Opsional)</label>
+                        <input type="number" name="no_urut" placeholder="Otomatis"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Semester</label>
+                        <input type="text" name="semester" value="2024 2025 Genap" required placeholder="Contoh: 2024 2025 Genap"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Judul {{ $labelBidang }}</label>
+                    <textarea name="judul_usulan" rows="3" required placeholder="Masukkan judul lengkap..."
+                              class="w-full p-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Ketua</label>
+                        <input type="text" name="nama_ketua" required placeholder="Nama lengkap Ketua beserta gelar"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">NIDN / NUPN</label>
+                        <input type="text" name="nidn_ketua" placeholder="Contoh: 0612079602 atau -"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Anggota</label>
+                    <input type="text" name="nama_anggota" placeholder="Nama dosen/mahasiswa anggota (pisahkan dengan titik koma ;)"
+                           class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Program Studi (Prodi)</label>
+                        <input type="text" name="nama_prodi" required placeholder="Contoh: DIII Farmasi / Sarjana Terapan Teknik Informatika"
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 mb-1">Nominal (Rp)</label>
+                        <input type="number" step="1" min="0" name="total_rab" value="0" required
+                               class="w-full h-9 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                    <button type="button" @click="createModalOpen = false"
+                            class="h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            style="background-color: #681727 !important; color: #ffffff !important;"
+                            class="h-9 px-5 rounded-xl text-white font-extrabold text-xs shadow-xs transition hover:opacity-90 cursor-pointer">
+                        Simpan Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit 8 Kolom Standar (Alpine.js x-show + x-cloak) -->
     <div x-show="editModalOpen"
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
@@ -356,8 +480,8 @@
              class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden">
             <div class="px-5 py-4 bg-[#681727] text-white flex items-center justify-between">
                 <div>
-                    <h3 class="font-extrabold text-sm sm:text-base">Edit Data Penelitian Dosen</h3>
-                    <p class="text-[11px] text-rose-100 font-medium">Perbarui 8 kolom standar penelitian dosen UHN</p>
+                    <h3 class="font-extrabold text-sm sm:text-base">Edit Data {{ $labelBidang }}</h3>
+                    <p class="text-[11px] text-rose-100 font-medium">Perbarui 8 kolom standar {{ strtolower($labelBidang) }} UHN</p>
                 </div>
                 <button type="button" @click="editModalOpen = false" class="text-white/80 hover:text-white p-1 cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -382,7 +506,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Judul Penelitian</label>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1">Judul {{ $labelBidang }}</label>
                     <textarea name="judul_usulan" x-model="editData.judul_usulan" rows="3" required
                               class="w-full p-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-600 focus:outline-hidden"></textarea>
                 </div>

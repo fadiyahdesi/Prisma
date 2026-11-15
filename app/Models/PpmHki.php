@@ -29,6 +29,8 @@ class PpmHki extends Model
         'file_surat_pengalihan',
         'tautan_eksternal',
         'status_hki',
+        'template_status',
+        'similarity_score',
         'verified_by_user_id',
         'verified_at',
         'catatan_verifikasi',

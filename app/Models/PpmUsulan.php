@@ -16,6 +16,7 @@ class PpmUsulan extends Model
     protected $fillable = [
         'no_urut',
         'semester',
+        'kategori_usulan',
         'id_pengusul',
         'id_skema_bima',
         'id_periode_hibah',
@@ -43,6 +44,9 @@ class PpmUsulan extends Model
         'total_honorarium',
         'status',
         'verification_notes',
+        'template_status',
+        'similarity_score',
+        'similarity_status',
         'verified_by',
         'verified_at',
         'kaprodi_alignment_status',

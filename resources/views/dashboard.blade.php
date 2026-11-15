@@ -640,16 +640,85 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-amber-50 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Manajemen Data Penelitian & Dosen P3M</span>
-                            <h4 class="text-lg font-extrabold text-amber-950 mt-1">{{ $stats['total_proposals'] }} Penelitian Dosen &bull; {{ $stats['total_users'] }} Dosen Tetap UHN</h4>
-                            <p class="text-xs text-slate-700 mt-1">Kelola basis data resmi penelitian dosen (Semester, No, Judul, Ketua, NIDN/NUPN, Anggota, Prodi, Nominal) & verifikasi P3M.</p>
+                            <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Admin P3M (General &amp; Master Data)</span>
+                            <h4 class="text-lg font-extrabold text-amber-950 mt-1">{{ $stats['total_users'] }} Dosen Tetap UHN &bull; Pengelolaan Master Sistem</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola fitur general P3M: Database Dosen Tetap (146), Master Skema BIMA, Periode Call for Proposals, Laporan Akreditasi, dan Integrasi API.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-amber-700 text-white font-extrabold text-xs sm:text-sm hover:bg-amber-800 shadow-md whitespace-nowrap">
-                                Data Penelitian ({{ $stats['total_proposals'] }}) &rarr;
+                            <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-amber-700 text-white font-extrabold text-xs sm:text-sm hover:bg-amber-800 shadow-md whitespace-nowrap">
+                                Data Dosen ({{ $stats['total_users'] }}) &rarr;
                             </a>
-                            <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-white text-amber-900 border border-amber-300 font-extrabold text-xs sm:text-sm hover:bg-amber-100 whitespace-nowrap">
-                                Data Dosen ({{ $stats['total_users'] }})
+                            <a href="{{ route('admin.skema-bima.index') }}" class="px-5 py-3 rounded-2xl bg-white text-amber-900 border border-amber-300 font-extrabold text-xs sm:text-sm hover:bg-amber-100 whitespace-nowrap">
+                                Master Skema BIMA
+                            </a>
+                            <a href="{{ route('admin.periode-hibah.index') }}" class="px-5 py-3 rounded-2xl bg-white text-amber-900 border border-amber-300 font-extrabold text-xs sm:text-sm hover:bg-amber-100 whitespace-nowrap">
+                                Periode Usulan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            @elseif($activeRole === 'Divisi Penelitian')
+                <div class="space-y-6">
+                    <div class="p-6 rounded-3xl bg-blue-50 border border-blue-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider">Divisi Penelitian P3M UHN</span>
+                            <h4 class="text-lg font-extrabold text-blue-950 mt-1">{{ \App\Models\PpmUsulan::where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan'))->count() }} Data Penelitian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola basis data penelitian dosen, pengecekan kesesuaian template &amp; similarity (&le; 20%), plotting reviewer penelitian, serta Semhas.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" class="px-5 py-3 rounded-2xl bg-blue-700 text-white font-extrabold text-xs sm:text-sm hover:bg-blue-800 shadow-md whitespace-nowrap">
+                                Data Penelitian &rarr;
+                            </a>
+                            <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'penelitian']) }}" class="px-5 py-3 rounded-2xl bg-white text-blue-900 border border-blue-300 font-extrabold text-xs sm:text-sm hover:bg-blue-100 whitespace-nowrap">
+                                Verifikasi Template &amp; Similarity
+                            </a>
+                            <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'penelitian']) }}" class="px-5 py-3 rounded-2xl bg-white text-blue-900 border border-blue-300 font-extrabold text-xs sm:text-sm hover:bg-blue-100 whitespace-nowrap">
+                                Plotting Reviewer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            @elseif($activeRole === 'Divisi Pengabdian')
+                <div class="space-y-6">
+                    <div class="p-6 rounded-3xl bg-purple-50 border border-purple-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider">Divisi Pengabdian kepada Masyarakat P3M UHN</span>
+                            <h4 class="text-lg font-extrabold text-purple-950 mt-1">{{ \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->count() }} Data Pengabdian Dosen &bull; Verifikasi Dokumen (Template &amp; Similarity)</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola basis data pengabdian masyarakat, pengecekan kesesuaian template, similarity (&le; 20%) &amp; surat mitra, plotting reviewer, serta Semhas.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('pengabdian.index') }}" class="px-5 py-3 rounded-2xl bg-purple-700 text-white font-extrabold text-xs sm:text-sm hover:bg-purple-800 shadow-md whitespace-nowrap">
+                                Data Pengabdian &rarr;
+                            </a>
+                            <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'pengabdian']) }}" class="px-5 py-3 rounded-2xl bg-white text-purple-900 border border-purple-300 font-extrabold text-xs sm:text-sm hover:bg-purple-100 whitespace-nowrap">
+                                Verifikasi Template &amp; Similarity
+                            </a>
+                            <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'pengabdian']) }}" class="px-5 py-3 rounded-2xl bg-white text-purple-900 border border-purple-300 font-extrabold text-xs sm:text-sm hover:bg-purple-100 whitespace-nowrap">
+                                Plotting Reviewer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            @elseif($activeRole === 'Divisi Publikasi')
+                <div class="space-y-6">
+                    <div class="p-6 rounded-3xl bg-teal-50 border border-teal-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-teal-900 uppercase tracking-wider">Divisi Publikasi &amp; Sentra HKI P3M UHN</span>
+                            <h4 class="text-lg font-extrabold text-teal-950 mt-1">{{ $stats['scopus_articles'] }} Publikasi Jurnal &bull; {{ $stats['hki_granted'] }} HKI / Paten Terdaftar</h4>
+                            <p class="text-xs text-slate-700 mt-1">Kelola Bank Publikasi Jurnal, pengecekan template &amp; similarity artikel, verifikasi Sentra HKI / Paten DJKI, serta klaim insentif reward.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('publikasi.index') }}" class="px-5 py-3 rounded-2xl bg-teal-700 text-white font-extrabold text-xs sm:text-sm hover:bg-teal-800 shadow-md whitespace-nowrap">
+                                Data &amp; Verifikasi Publikasi &rarr;
+                            </a>
+                            <a href="{{ route('admin.hki.index') }}" class="px-5 py-3 rounded-2xl bg-white text-teal-900 border border-teal-300 font-extrabold text-xs sm:text-sm hover:bg-teal-100 whitespace-nowrap">
+                                Verifikasi Sentra HKI
+                            </a>
+                            <a href="{{ route('admin.reward.index') }}" class="px-5 py-3 rounded-2xl bg-white text-teal-900 border border-teal-300 font-extrabold text-xs sm:text-sm hover:bg-teal-100 whitespace-nowrap">
+                                Verifikasi Klaim Reward
                             </a>
                         </div>
                     </div>

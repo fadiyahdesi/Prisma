@@ -19,7 +19,7 @@ class SentraHkiController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
 
         $query = PpmHki::with(['user', 'verifier']);
 
@@ -142,7 +142,7 @@ class SentraHkiController extends Controller
     public function downloadFile(PpmHki $hki, string $type)
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
 
         if (!$isStaff && $hki->user_id !== $user->id) {
             abort(403, 'Akses ditolak ke berkas HKI ini.');
@@ -169,7 +169,7 @@ class SentraHkiController extends Controller
     public function show(PpmHki $hki): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
 
         if (!$isStaff && $hki->user_id !== $user->id) {
             abort(403, 'Akses ditolak ke dokumen HKI ini.');
@@ -186,7 +186,7 @@ class SentraHkiController extends Controller
     public function adminIndex(Request $request): View
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $status = $request->query('status', 'Pending_verification');
         $search = $request->query('search');
@@ -223,7 +223,7 @@ class SentraHkiController extends Controller
     public function verify(Request $request, PpmHki $hki): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $validated = $request->validate([
             'action' => 'required|in:approve,reject',
@@ -338,7 +338,7 @@ class SentraHkiController extends Controller
     public function exportSintaJson()
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $hkiList = PpmHki::with('user')->where('status_hki', 'Terverifikasi HKI')->latest()->get();
 
@@ -378,7 +378,7 @@ class SentraHkiController extends Controller
     public function import(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $request->validate([
             'hki_file' => 'required|file|max:20480',
@@ -566,7 +566,7 @@ class SentraHkiController extends Controller
     public function quickSyncDemo(): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI.');
+        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $sharfina = User::where('nidn_nim', '0617029201')->first() ?? $user;
         $ginanjar = User::where('nidn_nim', '0613028601')->first() ?? $user;

@@ -19,7 +19,7 @@ class PublikasiController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
 
         $query = PpmPublikasiJurnal::with('user');
 
@@ -133,7 +133,7 @@ class PublikasiController extends Controller
     public function show(PpmPublikasiJurnal $publikasi): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']);
+        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']);
 
         if (!$isStaff && $publikasi->user_id !== $user->id) {
             abort(403, 'Akses ditolak ke artikel ini.');
@@ -142,6 +142,48 @@ class PublikasiController extends Controller
         $publikasi->load(['user', 'klaimReward.distribusi']);
 
         return view('publikasi.show', compact('publikasi', 'isStaff'));
+    }
+
+    /**
+     * Divisi Publikasi: Verifikasi Dokumen Publikasi (Cek Template & Similarity).
+     */
+    public function verify(Request $request, PpmPublikasiJurnal $publikasi): RedirectResponse
+    {
+        $user = Auth::user();
+        abort_unless($user->hasRole(['Divisi Publikasi', 'Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Khusus Divisi Publikasi / P3M.');
+
+        $validated = $request->validate([
+            'template_status' => 'required|in:sesuai,revisi,tidak_sesuai',
+            'similarity_score' => 'required|numeric|min:0|max:100',
+            'status_verifikasi' => 'required|in:Terverifikasi,Revisi,Ditolak',
+            'catatan_verifikasi' => 'nullable|string|max:1000',
+        ]);
+
+        $publikasi->update([
+            'template_status' => $validated['template_status'],
+            'similarity_score' => (float) $validated['similarity_score'],
+            'status_verifikasi' => $validated['status_verifikasi'],
+            'catatan_verifikasi' => $validated['catatan_verifikasi'] ?? null,
+            'verified_by' => $user->id,
+            'verified_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', "Verifikasi Dokumen Publikasi '{$publikasi->judul_artikel}' berhasil disimpan (Template: " . strtoupper($validated['template_status']) . ", Similarity: {$validated['similarity_score']}%, Status: {$validated['status_verifikasi']}).");
+    }
+
+    /**
+     * Hapus data publikasi.
+     */
+    public function destroy(PpmPublikasiJurnal $publikasi): RedirectResponse
+    {
+        $user = Auth::user();
+        $isStaff = $user->hasRole(['Divisi Publikasi', 'Admin P3M', 'Kepala P3M', 'Superadmin']);
+        abort_unless($isStaff || $publikasi->user_id === $user->id, 403, 'Akses ditolak.');
+
+        $judul = $publikasi->judul_artikel;
+        $publikasi->delete();
+
+        return redirect()->route('publikasi.index')->with('success', "Data publikasi '{$judul}' berhasil dihapus.");
     }
 }
 

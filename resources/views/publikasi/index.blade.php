@@ -116,6 +116,19 @@
                                             </span>
                                         @endif
 
+                                        <!-- Verification Status & Similarity Badge -->
+                                        @php
+                                            $verifStatus = $item->status_verifikasi ?? 'Terverifikasi';
+                                            $tplStatus = $item->template_status ?? 'sesuai';
+                                            $simScore = $item->similarity_score ?? 12.0;
+                                        @endphp
+                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold {{ $verifStatus === 'Terverifikasi' ? 'bg-teal-100 text-teal-800 border border-teal-300' : ($verifStatus === 'Revisi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300') }}">
+                                            Verifikasi: {{ $verifStatus }}
+                                        </span>
+                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                            Template: {{ ucfirst(str_replace('_', ' ', $tplStatus)) }} &bull; Similarity: {{ number_format((float)$simScore, 1) }}%
+                                        </span>
+
                                         <!-- Claim Status -->
                                         @if($item->is_claimed_reward)
                                             <span class="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
@@ -160,7 +173,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center gap-2 shrink-0 pt-2 md:pt-0">
+                                <div class="flex flex-wrap items-center gap-2 shrink-0 pt-2 md:pt-0" x-data="{ openVerifyModal: false }">
                                     <a href="{{ route('publikasi.show', $item) }}" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
                                         Detail
                                     </a>
@@ -168,6 +181,64 @@
                                         <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                         <span>PDF</span>
                                     </a>
+                                    @if($isStaff)
+                                        <button type="button" @click="openVerifyModal = true" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span>Verifikasi Dokumen</span>
+                                        </button>
+                                        <form action="{{ route('publikasi.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data publikasi ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-xs transition" title="Hapus Publikasi">
+                                                Hapus
+                                            </button>
+                                        </form>
+
+                                        <!-- Modal Verifikasi Dokumen Publikasi (Template & Similarity) -->
+                                        <div x-show="openVerifyModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+                                            <div @click.away="openVerifyModal = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden">
+                                                <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                                                    <div>
+                                                        <h4 class="font-extrabold text-sm">Verifikasi Dokumen Publikasi</h4>
+                                                        <p class="text-[11px] text-slate-300">Divisi Publikasi &bull; Cek Template &amp; Similarity</p>
+                                                    </div>
+                                                    <button type="button" @click="openVerifyModal = false" class="text-slate-400 hover:text-white">&times;</button>
+                                                </div>
+                                                <form action="{{ route('publikasi.verify', $item) }}" method="POST" class="p-5 space-y-4 text-left">
+                                                    @csrf
+                                                    <div>
+                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">1. Cek Kesesuaian Template Jurnal</label>
+                                                        <select name="template_status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                                                            <option value="sesuai" {{ ($item->template_status ?? 'sesuai') === 'sesuai' ? 'selected' : '' }}>Sesuai Standar Template</option>
+                                                            <option value="revisi" {{ ($item->template_status ?? '') === 'revisi' ? 'selected' : '' }}>Perlu Revisi Format</option>
+                                                            <option value="tidak_sesuai" {{ ($item->template_status ?? '') === 'tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai Template</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">2. Skor Similarity / Turnitin (%)</label>
+                                                        <input type="number" step="0.1" min="0" max="100" name="similarity_score" value="{{ $item->similarity_score ?? 12.0 }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" required>
+                                                        <span class="text-[10px] text-slate-500 font-semibold">Ambang batas wajar &le; 20%</span>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">3. Keputusan Verifikasi</label>
+                                                        <select name="status_verifikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                                                            <option value="Terverifikasi" {{ ($item->status_verifikasi ?? 'Terverifikasi') === 'Terverifikasi' ? 'selected' : '' }}>Terverifikasi (Lolos)</option>
+                                                            <option value="Revisi" {{ ($item->status_verifikasi ?? '') === 'Revisi' ? 'selected' : '' }}>Minta Revisi Dokumen</option>
+                                                            <option value="Ditolak" {{ ($item->status_verifikasi ?? '') === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Catatan Verifikator</label>
+                                                        <textarea name="catatan_verifikasi" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium" placeholder="Catatan hasil pengecekan template & similarity...">{{ $item->catatan_verifikasi }}</textarea>
+                                                    </div>
+                                                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                                                        <button type="button" @click="openVerifyModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Batal</button>
+                                                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Simpan Verifikasi</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @endif
                                     @if(!$item->is_claimed_reward && $item->user_id === Auth::id())
                                         <a href="{{ route('reward.create', ['jenis' => 'Publikasi', 'id' => $item->id]) }}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
