@@ -53,7 +53,8 @@ Route::get('/system/migrate-and-seed', function () {
         (new \Database\Seeders\RealLecturerCsvSeeder())->run();
         (new \Database\Seeders\RealPenelitianCsvSeeder())->run();
         (new \Database\Seeders\RealPengabdianCsvSeeder())->run();
-        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi, 146 Dosen Tetap UHN, 438 Data Penelitian Dosen UHN, dan 420 Data Pengabdian Dosen UHN.';
+        (new \Database\Seeders\RealPublikasiCsvSeeder())->run();
+        $seedOutput = 'Berhasil menyinkronkan 23 Program Studi, 146 Dosen Tetap UHN, 438 Data Penelitian Dosen UHN, 420 Data Pengabdian Dosen UHN, dan 589 Data Publikasi Dosen UHN.';
     } catch (\Throwable $e) {
         $seedOutput = $e->getMessage();
     }
@@ -62,10 +63,11 @@ Route::get('/system/migrate-and-seed', function () {
 
     return response()->json([
         'status' => 'success',
-        'message' => 'Migrasi dan Sinkronisasi 146 Dosen Tetap + 438 Data Penelitian Dosen UHN berhasil dijalankan!',
+        'message' => 'Migrasi dan Sinkronisasi 146 Dosen Tetap + 438 Penelitian + 420 Pengabdian + 589 Publikasi Dosen UHN berhasil dijalankan!',
         'total_dosen_tetap' => \App\Models\User::whereNotNull('no_urut')->count(),
         'total_semua_akun' => \App\Models\User::count(),
-        'total_penelitian_dosen' => \App\Models\PpmUsulan::count(),
+        'total_penelitian_pengabdian' => \App\Models\PpmUsulan::count(),
+        'total_publikasi_dosen' => \App\Models\PpmPublikasiJurnal::count(),
         'migrate_output' => trim($migrateOutput),
         'seed_output' => trim($seedOutput),
     ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -317,8 +319,11 @@ Route::middleware(['auth'])->group(function () {
         // EPIC 11: Bank Publikasi Jurnal Kampus & Verifikasi Divisi Publikasi (US-11.1)
         Route::get('/publikasi/fetch-doi', [\App\Http\Controllers\PublikasiController::class, 'fetchDoi'])->name('publikasi.fetch-doi');
         Route::get('/publikasi', [\App\Http\Controllers\PublikasiController::class, 'index'])->name('publikasi.index');
+        Route::post('/publikasi/sync', [\App\Http\Controllers\PublikasiController::class, 'syncPublikasi'])->name('publikasi.sync');
+        Route::post('/publikasi/basic', [\App\Http\Controllers\PublikasiController::class, 'storeBasic'])->name('publikasi.store-basic');
         Route::get('/publikasi/create', [\App\Http\Controllers\PublikasiController::class, 'create'])->name('publikasi.create');
         Route::post('/publikasi', [\App\Http\Controllers\PublikasiController::class, 'store'])->name('publikasi.store');
+        Route::put('/publikasi/{publikasi}/basic', [\App\Http\Controllers\PublikasiController::class, 'updateBasic'])->name('publikasi.update-basic');
         Route::get('/publikasi/{publikasi}', [\App\Http\Controllers\PublikasiController::class, 'show'])->name('publikasi.show');
         Route::post('/publikasi/{publikasi}/verify', [\App\Http\Controllers\PublikasiController::class, 'verify'])->name('publikasi.verify');
         Route::delete('/publikasi/{publikasi}', [\App\Http\Controllers\PublikasiController::class, 'destroy'])->name('publikasi.destroy');

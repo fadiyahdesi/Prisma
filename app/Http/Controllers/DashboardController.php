@@ -49,6 +49,14 @@ class DashboardController extends Controller
             }
         }
 
+        if (\App\Models\PpmPublikasiJurnal::whereNotNull('jenis_publikasi')->count() === 0) {
+            try {
+                app(\Database\Seeders\RealPublikasiCsvSeeder::class)->run();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         $availableRoles = Role::all();
         $totalNominal = (float) \App\Models\PpmUsulan::sum('total_rab');
         $stats = [

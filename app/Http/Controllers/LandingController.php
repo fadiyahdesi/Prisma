@@ -292,7 +292,7 @@ class LandingController extends Controller
 
         try {
             $recentPublications = \Illuminate\Support\Facades\Schema::hasTable('ppm_publikasi_jurnal')
-                ? \App\Models\PpmPublikasiJurnal::with('user')->latest()->take(6)->get()
+                ? \App\Models\PpmPublikasiJurnal::with('user')->where('judul_artikel', '!=', '-')->orderBy('no_urut', 'asc')->take(6)->get()
                 : collect();
         } catch (\Throwable $e) {
             $recentPublications = collect();
@@ -321,11 +321,14 @@ class LandingController extends Controller
         $query = \App\Models\PpmPublikasiJurnal::with('user');
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('judul_artikel', 'ilike', "%{$search}%")
-                    ->orWhere('nama_jurnal', 'ilike', "%{$search}%")
-                    ->orWhere('doi', 'ilike', "%{$search}%")
-                    ->orWhereHas('user', fn($uq) => $uq->where('name', 'ilike', "%{$search}%"));
+            $like = \Illuminate\Support\Facades\DB::getDriverName() === 'pgsql' ? 'ilike' : 'like';
+            $query->where(function ($q) use ($search, $like) {
+                $q->where('judul_artikel', $like, "%{$search}%")
+                    ->orWhere('nama_jurnal', $like, "%{$search}%")
+                    ->orWhere('issn', $like, "%{$search}%")
+                    ->orWhere('penulis', $like, "%{$search}%")
+                    ->orWhere('jenis_publikasi', $like, "%{$search}%")
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', $like, "%{$search}%"));
             });
         }
 
@@ -333,7 +336,7 @@ class LandingController extends Controller
             $query->where('kategori_peringkat', $kategori);
         }
 
-        $publikasiList = $query->latest()->paginate(12)->withQueryString();
+        $publikasiList = $query->orderBy('no_urut', 'asc')->paginate(12)->withQueryString();
 
         return view('publikasi.katalog-publik', compact('publikasiList', 'search', 'kategori'));
     }

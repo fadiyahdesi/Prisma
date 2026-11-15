@@ -101,8 +101,16 @@ class AnalyticsService
             $pctIku2 = round(($realisasiIku2 / max(1, $targetIku2)) * 100, 1);
 
             // IKU-5: Karya Dosen yang Mendapat Rekognisi Internasional / Diterapkan (Publikasi Scopus/SINTA & HKI)
-            $pubScopus = PpmPublikasiJurnal::where('kategori_peringkat', 'like', 'Scopus%')->count();
-            $pubSinta = PpmPublikasiJurnal::where('kategori_peringkat', 'like', 'SINTA%')->count();
+            $pubScopus = PpmPublikasiJurnal::where(function ($q) {
+                $q->where('kategori_peringkat', 'like', 'Scopus%')
+                    ->orWhere('kategori_peringkat', 'Internasional')
+                    ->orWhere('jenis_publikasi', 'internasional');
+            })->count();
+            $pubSinta = PpmPublikasiJurnal::where(function ($q) {
+                $q->where('kategori_peringkat', 'like', 'SINTA%')
+                    ->orWhere('kategori_peringkat', 'Nasional Terakreditasi')
+                    ->orWhere('jenis_publikasi', 'nasional terakreditasi');
+            })->count();
             $hkiGranted = PpmHki::where('status_hki', 'Terverifikasi HKI')->count();
             $realisasiIku5 = $pubScopus + $pubSinta + $hkiGranted;
             $targetIku5 = 50; // SK Target Rektor

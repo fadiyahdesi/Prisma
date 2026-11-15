@@ -17,6 +17,7 @@ class PpmPublikasiJurnal extends Model
     protected $fillable = [
         'no_urut',
         'semester',
+        'jenis_publikasi',
         'user_id',
         'judul_artikel',
         'nama_jurnal',
@@ -25,6 +26,7 @@ class PpmPublikasiJurnal extends Model
         'kategori_peringkat',
         'tahun_terbit',
         'volume_nomor',
+        'penulis',
         'url_artikel',
         'file_naskah',
         'jumlah_penulis',

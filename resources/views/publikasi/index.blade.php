@@ -1,33 +1,101 @@
 @extends('layouts.app')
 
-@section('title', 'Bank Publikasi Jurnal Kampus - PRISMA UHN')
+@section('title', 'Data Publikasi Dosen UHN - PRISMA UHN')
 
 @section('content')
-<div x-data="{ sidebarOpen: false }" class="min-h-screen bg-slate-100 text-slate-800 flex">
+<div x-data="{
+    sidebarOpen: false,
+    openCreateModal: false,
+    editModalOpen: false,
+    editData: {
+        id: null,
+        action: '',
+        no_urut: '',
+        jenis_publikasi: 'nasional terakreditasi',
+        judul_artikel: '',
+        nama_jurnal: '',
+        issn: '',
+        volume_nomor: '',
+        penulis: ''
+    },
+    verifyModalOpen: false,
+    verifyData: {
+        id: null,
+        action: '',
+        no_urut: '',
+        judul_artikel: '',
+        template_status: 'sesuai',
+        similarity_score: 12.0,
+        status_verifikasi: 'Terverifikasi',
+        catatan_verifikasi: ''
+    },
+    openEdit(item) {
+        this.editData = {
+            id: item.id,
+            action: item.update_url,
+            no_urut: item.no_urut,
+            jenis_publikasi: item.jenis_publikasi,
+            judul_artikel: item.judul_artikel,
+            nama_jurnal: item.nama_jurnal,
+            issn: item.issn,
+            volume_nomor: item.volume_nomor,
+            penulis: item.penulis
+        };
+        this.editModalOpen = true;
+    },
+    openVerify(item) {
+        this.verifyData = {
+            id: item.id,
+            action: item.verify_url,
+            no_urut: item.no_urut,
+            judul_artikel: item.judul_artikel,
+            template_status: item.template_status || 'sesuai',
+            similarity_score: item.similarity_score ?? 12.0,
+            status_verifikasi: item.status_verifikasi || 'Terverifikasi',
+            catatan_verifikasi: item.catatan_verifikasi || ''
+        };
+        this.verifyModalOpen = true;
+    }
+}" class="min-h-screen bg-slate-100 text-slate-800 flex">
     <x-sidebar />
 
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
+        <!-- Top Header -->
         <header class="bg-white border-b border-slate-200 py-4 sticky top-0 z-30 shadow-xs">
-            <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div class="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     </button>
                     <div>
-                        <h1 class="font-extrabold text-xl text-slate-900 leading-tight">Bank Publikasi Jurnal Kampus</h1>
-                        <p class="text-xs font-semibold text-slate-500">Penyimpanan Naskah Terbit, Validasi Keunikan DOI &amp; Integrasi Metadata Crossref / SINTA (US-11.1)</p>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                Divisi Publikasi &bull; Database Resmi UHN
+                            </span>
+                        </div>
+                        <h1 class="font-extrabold text-xl text-slate-900 leading-tight mt-0.5">Data Publikasi Ilmiah Dosen UHN</h1>
+                        <p class="text-xs font-semibold text-slate-500">
+                            Kolom Standar Sistem: Jenis Publikasi &bull; Judul &bull; Nama Jurnal &bull; ISSN &bull; Vol. No. hal. &bull; Penulis
+                        </p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('publikasi.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition">
+                <div class="flex flex-wrap items-center gap-2">
+                    <form action="{{ route('publikasi.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan ulang 589 data Publikasi Dosen UHN dari file CSV resmi?');">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-xs shadow-xs transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Sinkronkan CSV (589 Data)</span>
+                        </button>
+                    </form>
+                    <button type="button" @click="openCreateModal = true" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Daftarkan Artikel</span>
-                    </a>
+                        <span>Tambah Data Publikasi</span>
+                    </button>
                 </div>
             </div>
         </header>
 
-        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <main class="flex-grow w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
             @if(session('success'))
                 <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-sm font-bold flex items-center gap-3 shadow-xs">
                     <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -42,34 +110,93 @@
                 </div>
             @endif
 
-            <!-- Search & Filters -->
-            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
-                <form method="GET" action="{{ route('publikasi.index') }}" class="flex flex-col md:flex-row gap-3">
-                    <div class="flex-1 relative">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul artikel, nama jurnal, DOI, atau penulis..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50/50">
+            <!-- Summary Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Publikasi Dosen</p>
+                        <p class="text-2xl font-black text-slate-900 mt-1">{{ number_format($totalAllCount) }}</p>
+                        <p class="text-[11px] font-semibold text-emerald-600 mt-0.5">{{ number_format($countTerverifikasi) }} Terverifikasi Divisi Publikasi</p>
                     </div>
-                    <div class="w-full md:w-56">
-                        <select name="kategori_peringkat" onchange="this.form.submit()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white">
-                            <option value="">Semua Peringkat Jurnal</option>
-                            <option value="Scopus Q1" {{ request('kategori_peringkat') == 'Scopus Q1' ? 'selected' : '' }}>Scopus Q1</option>
-                            <option value="Scopus Q2" {{ request('kategori_peringkat') == 'Scopus Q2' ? 'selected' : '' }}>Scopus Q2</option>
-                            <option value="Scopus Q3" {{ request('kategori_peringkat') == 'Scopus Q3' ? 'selected' : '' }}>Scopus Q3</option>
-                            <option value="Scopus Q4" {{ request('kategori_peringkat') == 'Scopus Q4' ? 'selected' : '' }}>Scopus Q4</option>
-                            <option value="SINTA 1" {{ request('kategori_peringkat') == 'SINTA 1' ? 'selected' : '' }}>SINTA 1</option>
-                            <option value="SINTA 2" {{ request('kategori_peringkat') == 'SINTA 2' ? 'selected' : '' }}>SINTA 2</option>
-                            <option value="SINTA 3" {{ request('kategori_peringkat') == 'SINTA 3' ? 'selected' : '' }}>SINTA 3</option>
-                            <option value="SINTA 4" {{ request('kategori_peringkat') == 'SINTA 4' ? 'selected' : '' }}>SINTA 4</option>
-                            <option value="Internasional Terindeks Lainnya" {{ request('kategori_peringkat') == 'Internasional Terindeks Lainnya' ? 'selected' : '' }}>Internasional Lainnya</option>
-                            <option value="Nasional Terakreditasi" {{ request('kategori_peringkat') == 'Nasional Terakreditasi' ? 'selected' : '' }}>Nasional Terakreditasi</option>
+                    <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Nasional Terakreditasi</p>
+                        <p class="text-2xl font-black text-blue-700 mt-1">{{ number_format($countNasionalTerakreditasi) }}</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-0.5">Jurnal SINTA 1 - SINTA 6</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Internasional</p>
+                        <p class="text-2xl font-black text-amber-600 mt-1">{{ number_format($countInternasional) }}</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-0.5">Jurnal &amp; Prosiding Internasional</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Nasional Tidak Terakreditasi</p>
+                        <p class="text-2xl font-black text-teal-700 mt-1">{{ number_format($countNasionalTidakTerakreditasi) }}</p>
+                        <p class="text-[11px] font-semibold text-slate-500 mt-0.5">Jurnal Nasional Ber-ISSN</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
+                <form method="GET" action="{{ route('publikasi.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                    <div class="md:col-span-4 relative">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, nama jurnal, ISSN, vol/hal, atau penulis..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                    </div>
+
+                    <div class="md:col-span-3">
+                        <select name="jenis_publikasi" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white">
+                            <option value="">Semua Jenis Publikasi ({{ $totalAllCount }})</option>
+                            <option value="nasional terakreditasi" {{ request('jenis_publikasi') === 'nasional terakreditasi' ? 'selected' : '' }}>nasional terakreditasi ({{ $countNasionalTerakreditasi }})</option>
+                            <option value="internasional" {{ request('jenis_publikasi') === 'internasional' ? 'selected' : '' }}>internasional ({{ $countInternasional }})</option>
+                            <option value="nasional tidak terakreditasi" {{ request('jenis_publikasi') === 'nasional tidak terakreditasi' ? 'selected' : '' }}>nasional tidak terakreditasi ({{ $countNasionalTidakTerakreditasi }})</option>
+                            <option value="-" {{ request('jenis_publikasi') === '-' ? 'selected' : '' }}>Belum Ditentukan (-)</option>
                         </select>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition">
-                            Filter
+
+                    <div class="md:col-span-2">
+                        <select name="scope" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white">
+                            <option value="all" {{ ($scope ?? 'all') === 'all' ? 'selected' : '' }}>Semua Dosen UHN</option>
+                            <option value="mine" {{ ($scope ?? 'all') === 'mine' ? 'selected' : '' }}>Publikasi Saya</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <select name="per_page" onchange="this.form.submit()" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-indigo-500 bg-white">
+                            <option value="1000" {{ ($perPage ?? 1000) == 1000 ? 'selected' : '' }}>Semua</option>
+                            <option value="250" {{ ($perPage ?? 1000) == 250 ? 'selected' : '' }}>250</option>
+                            <option value="100" {{ ($perPage ?? 1000) == 100 ? 'selected' : '' }}>100</option>
+                            <option value="50" {{ ($perPage ?? 1000) == 50 ? 'selected' : '' }}>50</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2 flex items-center gap-2">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition">
+                            Cari
                         </button>
-                        @if(request('search') || request('kategori_peringkat'))
-                            <a href="{{ route('publikasi.index') }}" class="px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-200 transition">
+                        @if(request('search') || request('jenis_publikasi') || request('scope') === 'mine')
+                            <a href="{{ route('publikasi.index') }}" class="px-3 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-200 transition">
                                 Reset
                             </a>
                         @endif
@@ -77,186 +204,354 @@
                 </form>
             </div>
 
-            <!-- Publications List -->
+            <!-- Main Table Card -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/60">
                     <div>
-                        <h2 class="font-bold text-sm text-slate-800">Daftar Publikasi Artikel Ilmiah</h2>
-                        <p class="text-xs text-slate-500">Menampilkan {{ $publikasiList->total() }} artikel terdaftar</p>
+                        <h2 class="font-extrabold text-sm text-slate-900">Tabel Data Publikasi Dosen Universitas Harkat Negeri</h2>
+                        <p class="text-xs text-slate-500 font-semibold">
+                            Menampilkan <strong class="text-slate-800">{{ $publikasiList->count() }}</strong> dari total <strong class="text-slate-800">{{ $publikasiList->total() }}</strong> data publikasi resmi
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px] font-bold text-slate-500">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+                            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                            Cek Template &amp; Similarity Aktif
+                        </span>
                     </div>
                 </div>
 
                 @if($publikasiList->isEmpty())
                     <div class="p-12 text-center">
-                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                        </div>
-                        <h3 class="font-extrabold text-slate-800 text-base mb-1">Belum Ada Publikasi Terdaftar</h3>
-                        <p class="text-xs text-slate-500 max-w-sm mx-auto mb-5">Daftarkan artikel publikasi jurnal Anda dengan memasukkan DOI untuk penarikan metadata otomatis dan pengajuan klaim insentif reward.</p>
-                        <a href="{{ route('publikasi.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span>Daftarkan Artikel Pertama</span>
-                        </a>
+                        <p class="font-bold text-slate-700 text-sm">Tidak ada data publikasi yang sesuai dengan pencarian.</p>
+                        <a href="{{ route('publikasi.index') }}" class="inline-block mt-3 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold">Tampilkan Semua Data</a>
                     </div>
                 @else
-                    <div class="divide-y divide-slate-100">
-                        @foreach($publikasiList as $item)
-                            <div class="p-5 sm:p-6 hover:bg-slate-50/70 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div class="space-y-2 flex-1 min-w-0">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <!-- Category badge -->
-                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-extrabold {{ str_contains($item->kategori_peringkat, 'Scopus') ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-blue-100 text-blue-800 border border-blue-300' }}">
-                                            {{ $item->kategori_peringkat }}
-                                        </span>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-white text-[11px] font-extrabold uppercase tracking-wider">
+                                    <th class="py-3.5 px-3 text-center w-12 border-r border-slate-800">No</th>
+                                    <th class="py-3.5 px-3.5 w-40 border-r border-slate-800">Jenis Publikasi</th>
+                                    <th class="py-3.5 px-4 min-w-[260px] border-r border-slate-800">Judul</th>
+                                    <th class="py-3.5 px-3.5 w-52 border-r border-slate-800">Nama Jurnal</th>
+                                    <th class="py-3.5 px-3 w-36 border-r border-slate-800">ISSN</th>
+                                    <th class="py-3.5 px-3 w-40 border-r border-slate-800">Vol. No. hal.</th>
+                                    <th class="py-3.5 px-4 min-w-[230px] border-r border-slate-800">Penulis</th>
+                                    <th class="py-3.5 px-3 w-40 text-center border-r border-slate-800">Verifikasi</th>
+                                    <th class="py-3.5 px-3 w-36 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-xs">
+                                @foreach($publikasiList as $index => $item)
+                                    @php
+                                        $no = $item->no_urut ?? ($publikasiList->firstItem() + $index);
+                                        $jenis = $item->jenis_publikasi ?? '-';
+                                        $jenisLower = strtolower($jenis);
+                                        $verifStatus = $item->status_verifikasi ?? 'Terverifikasi';
+                                        $tplStatus = $item->template_status ?? 'sesuai';
+                                        $simScore = $item->similarity_score ?? 12.0;
 
-                                        <!-- Metadata source -->
-                                        @if($item->metadata_source === 'crossref')
-                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200">
-                                                Crossref API
-                                            </span>
-                                        @endif
+                                        $rowPayload = [
+                                            'id' => $item->id,
+                                            'no_urut' => $no,
+                                            'jenis_publikasi' => $jenis,
+                                            'judul_artikel' => $item->judul_artikel ?? '-',
+                                            'nama_jurnal' => $item->nama_jurnal ?? '-',
+                                            'issn' => $item->issn ?? '-',
+                                            'volume_nomor' => $item->volume_nomor ?? '-',
+                                            'penulis' => $item->penulis ?? ($item->user->name ?? '-'),
+                                            'template_status' => $tplStatus,
+                                            'similarity_score' => (float) $simScore,
+                                            'status_verifikasi' => $verifStatus,
+                                            'catatan_verifikasi' => $item->catatan_verifikasi ?? '',
+                                            'update_url' => route('publikasi.update-basic', $item),
+                                            'verify_url' => route('publikasi.verify', $item),
+                                        ];
+                                    @endphp
+                                    <tr class="hover:bg-indigo-50/40 transition align-top odd:bg-white even:bg-slate-50/40">
+                                        <!-- No -->
+                                        <td class="py-3 px-3 text-center font-extrabold text-slate-700 border-r border-slate-100">
+                                            {{ $no }}
+                                        </td>
 
-                                        <!-- Verification Status & Similarity Badge -->
-                                        @php
-                                            $verifStatus = $item->status_verifikasi ?? 'Terverifikasi';
-                                            $tplStatus = $item->template_status ?? 'sesuai';
-                                            $simScore = $item->similarity_score ?? 12.0;
-                                        @endphp
-                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold {{ $verifStatus === 'Terverifikasi' ? 'bg-teal-100 text-teal-800 border border-teal-300' : ($verifStatus === 'Revisi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300') }}">
-                                            Verifikasi: {{ $verifStatus }}
-                                        </span>
-                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                            Template: {{ ucfirst(str_replace('_', ' ', $tplStatus)) }} &bull; Similarity: {{ number_format((float)$simScore, 1) }}%
-                                        </span>
+                                        <!-- Jenis Publikasi -->
+                                        <td class="py-3 px-3.5 border-r border-slate-100">
+                                            @if($jenisLower === 'internasional')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">
+                                                    {{ $jenis }}
+                                                </span>
+                                            @elseif($jenisLower === 'nasional terakreditasi')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300">
+                                                    {{ $jenis }}
+                                                </span>
+                                            @elseif($jenisLower === 'nasional tidak terakreditasi')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-teal-100 text-teal-800 border border-teal-300">
+                                                    {{ $jenis }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                                                    {{ $jenis }}
+                                                </span>
+                                            @endif
+                                        </td>
 
-                                        <!-- Claim Status -->
-                                        @if($item->is_claimed_reward)
-                                            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                                Sudah Diklaim Reward
-                                            </span>
-                                        @else
-                                            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                Tersedia untuk Klaim
-                                            </span>
-                                        @endif
-                                    </div>
+                                        <!-- Judul -->
+                                        <td class="py-3 px-4 border-r border-slate-100">
+                                            <div class="font-bold text-slate-900 leading-snug">
+                                                {{ $item->judul_artikel ?: '-' }}
+                                            </div>
+                                        </td>
 
-                                    <h3 class="font-extrabold text-slate-900 text-sm leading-snug">
-                                        <a href="{{ route('publikasi.show', $item) }}" class="hover:text-blue-600 transition">
-                                            {{ $item->judul_artikel }}
-                                        </a>
-                                    </h3>
+                                        <!-- Nama Jurnal -->
+                                        <td class="py-3 px-3.5 border-r border-slate-100 font-semibold text-slate-700 leading-snug">
+                                            {{ $item->nama_jurnal ?: '-' }}
+                                        </td>
 
-                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-semibold">
-                                        <span class="text-slate-700 font-bold">{{ $item->nama_jurnal }}</span>
-                                        <span>&bull;</span>
-                                        <span>Tahun: <strong class="text-slate-800">{{ $item->tahun_terbit }}</strong></span>
-                                        @if($item->volume_nomor)
-                                            <span>&bull;</span>
-                                            <span>{{ $item->volume_nomor }}</span>
-                                        @endif
-                                        <span>&bull;</span>
-                                        <span>Penulis: <strong class="text-slate-800">{{ $item->jumlah_penulis }} Orang</strong></span>
-                                        @if($isStaff)
-                                            <span>&bull;</span>
-                                            <span>Pengusul: <strong class="text-slate-900">{{ $item->user->name }}</strong></span>
-                                        @endif
-                                    </div>
+                                        <!-- ISSN -->
+                                        <td class="py-3 px-3 border-r border-slate-100 font-mono text-[11px] font-bold text-slate-700">
+                                            {{ $item->issn ?: '-' }}
+                                        </td>
 
-                                    <div class="text-xs text-slate-400 flex items-center gap-2">
-                                        <span>DOI:</span>
-                                        <a href="https://doi.org/{{ $item->doi }}" target="_blank" class="text-blue-600 hover:underline font-bold">
-                                            {{ $item->doi }}
-                                        </a>
-                                    </div>
-                                </div>
+                                        <!-- Vol. No. hal. -->
+                                        <td class="py-3 px-3 border-r border-slate-100 font-semibold text-slate-700">
+                                            {{ $item->volume_nomor ?: '-' }}
+                                        </td>
 
-                                <div class="flex flex-wrap items-center gap-2 shrink-0 pt-2 md:pt-0" x-data="{ openVerifyModal: false }">
-                                    <a href="{{ route('publikasi.show', $item) }}" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-                                        Detail
-                                    </a>
-                                    <a href="{{ asset('storage/' . $item->file_naskah) }}" target="_blank" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                        <span>PDF</span>
-                                    </a>
-                                    @if($isStaff)
-                                        <button type="button" @click="openVerifyModal = true" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            <span>Verifikasi Dokumen</span>
-                                        </button>
-                                        <form action="{{ route('publikasi.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus data publikasi ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-xs transition" title="Hapus Publikasi">
-                                                Hapus
-                                            </button>
-                                        </form>
+                                        <!-- Penulis -->
+                                        <td class="py-3 px-4 border-r border-slate-100 text-slate-700 font-medium leading-relaxed">
+                                            {{ $item->penulis ?: ($item->user->name ?? '-') }}
+                                        </td>
 
-                                        <!-- Modal Verifikasi Dokumen Publikasi (Template & Similarity) -->
-                                        <div x-show="openVerifyModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-                                            <div @click.away="openVerifyModal = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden">
-                                                <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
-                                                    <div>
-                                                        <h4 class="font-extrabold text-sm">Verifikasi Dokumen Publikasi</h4>
-                                                        <p class="text-[11px] text-slate-300">Divisi Publikasi &bull; Cek Template &amp; Similarity</p>
-                                                    </div>
-                                                    <button type="button" @click="openVerifyModal = false" class="text-slate-400 hover:text-white">&times;</button>
-                                                </div>
-                                                <form action="{{ route('publikasi.verify', $item) }}" method="POST" class="p-5 space-y-4 text-left">
+                                        <!-- Verifikasi (Template & Similarity) -->
+                                        <td class="py-3 px-3 border-r border-slate-100 text-center">
+                                            <div class="inline-flex flex-col items-center gap-1">
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold {{ $verifStatus === 'Terverifikasi' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : ($verifStatus === 'Revisi' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300') }}">
+                                                    {{ $verifStatus }}
+                                                </span>
+                                                <span class="text-[10px] font-bold text-slate-500">
+                                                    Tpl: {{ ucfirst($tplStatus) }} &bull; {{ number_format((float)$simScore, 0) }}%
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <!-- Aksi -->
+                                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                                            <div class="inline-flex items-center justify-center gap-1">
+                                                <button type="button"
+                                                    @click="openEdit(@js($rowPayload))"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-200 font-bold text-[11px] transition shadow-2xs"
+                                                    title="Edit Data Publikasi">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                    <span>Edit</span>
+                                                </button>
+
+                                                @if($isStaff)
+                                                    <button type="button"
+                                                        @click="openVerify(@js($rowPayload))"
+                                                        class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-bold text-[11px] transition shadow-2xs"
+                                                        title="Verifikasi Template & Similarity">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                    </button>
+                                                @endif
+
+                                                <form action="{{ route('publikasi.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data publikasi No. {{ $no }} ini?');">
                                                     @csrf
-                                                    <div>
-                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">1. Cek Kesesuaian Template Jurnal</label>
-                                                        <select name="template_status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-                                                            <option value="sesuai" {{ ($item->template_status ?? 'sesuai') === 'sesuai' ? 'selected' : '' }}>Sesuai Standar Template</option>
-                                                            <option value="revisi" {{ ($item->template_status ?? '') === 'revisi' ? 'selected' : '' }}>Perlu Revisi Format</option>
-                                                            <option value="tidak_sesuai" {{ ($item->template_status ?? '') === 'tidak_sesuai' ? 'selected' : '' }}>Tidak Sesuai Template</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">2. Skor Similarity / Turnitin (%)</label>
-                                                        <input type="number" step="0.1" min="0" max="100" name="similarity_score" value="{{ $item->similarity_score ?? 12.0 }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" required>
-                                                        <span class="text-[10px] text-slate-500 font-semibold">Ambang batas wajar &le; 20%</span>
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">3. Keputusan Verifikasi</label>
-                                                        <select name="status_verifikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
-                                                            <option value="Terverifikasi" {{ ($item->status_verifikasi ?? 'Terverifikasi') === 'Terverifikasi' ? 'selected' : '' }}>Terverifikasi (Lolos)</option>
-                                                            <option value="Revisi" {{ ($item->status_verifikasi ?? '') === 'Revisi' ? 'selected' : '' }}>Minta Revisi Dokumen</option>
-                                                            <option value="Ditolak" {{ ($item->status_verifikasi ?? '') === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Catatan Verifikator</label>
-                                                        <textarea name="catatan_verifikasi" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium" placeholder="Catatan hasil pengecekan template & similarity...">{{ $item->catatan_verifikasi }}</textarea>
-                                                    </div>
-                                                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                                                        <button type="button" @click="openVerifyModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Batal</button>
-                                                        <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Simpan Verifikasi</button>
-                                                    </div>
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 font-bold text-[11px] transition shadow-2xs"
+                                                        title="Hapus Data Publikasi">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        <span>Hapus</span>
+                                                    </button>
                                                 </form>
                                             </div>
-                                        </div>
-                                    @endif
-                                    @if(!$item->is_claimed_reward && $item->user_id === Auth::id())
-                                        <a href="{{ route('reward.create', ['jenis' => 'Publikasi', 'id' => $item->id]) }}" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            <span>Klaim Reward</span>
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
 
-                    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                        {{ $publikasiList->links() }}
-                    </div>
+                    @if($publikasiList->hasPages())
+                        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                            {{ $publikasiList->links() }}
+                        </div>
+                    @endif
                 @endif
             </div>
         </main>
     </div>
+
+    <!-- Modal Tambah Data Publikasi (6 Kolom CSV) -->
+    <div x-show="openCreateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div @click.away="openCreateModal = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm">Tambah Data Publikasi Dosen</h3>
+                    <p class="text-[11px] text-slate-300">Sesuai Format Kolom Standar Publikasi UHN</p>
+                </div>
+                <button type="button" @click="openCreateModal = false" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+            </div>
+            <form action="{{ route('publikasi.store-basic') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">No Urut</label>
+                        <input type="number" name="no_urut" value="{{ $totalAllCount + 1 }}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Jenis Publikasi</label>
+                        <select name="jenis_publikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                            <option value="nasional terakreditasi">nasional terakreditasi</option>
+                            <option value="internasional">internasional</option>
+                            <option value="nasional tidak terakreditasi">nasional tidak terakreditasi</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Judul</label>
+                    <textarea name="judul_artikel" rows="2" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold" placeholder="Judul artikel publikasi..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Nama Jurnal</label>
+                    <input type="text" name="nama_jurnal" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold" placeholder="Contoh: Jurnal Masyarakat Mandiri">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">ISSN</label>
+                        <input type="text" name="issn" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold" placeholder="Contoh: 2614-5758">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Vol. No. hal.</label>
+                        <input type="text" name="volume_nomor" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold" placeholder="Contoh: Vol. 9 No. 2 hal. 1-10">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Penulis</label>
+                    <textarea name="penulis" rows="2" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold" placeholder="Nama Penulis (NIPY), Anggota Penulis..."></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" @click="openCreateModal = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Simpan Publikasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Edit Data Publikasi -->
+    <div x-show="editModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div @click.away="editModalOpen = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h3 class="font-extrabold text-sm">Edit Data Publikasi Dosen</h3>
+                    <p class="text-[11px] text-slate-300">No. Urut <span x-text="editData.no_urut"></span></p>
+                </div>
+                <button type="button" @click="editModalOpen = false" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+            </div>
+            <form :action="editData.action" method="POST" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">No Urut</label>
+                        <input type="number" name="no_urut" x-model="editData.no_urut" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Jenis Publikasi</label>
+                        <select name="jenis_publikasi" x-model="editData.jenis_publikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                            <option value="nasional terakreditasi">nasional terakreditasi</option>
+                            <option value="internasional">internasional</option>
+                            <option value="nasional tidak terakreditasi">nasional tidak terakreditasi</option>
+                            <option value="-">-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Judul</label>
+                    <textarea name="judul_artikel" rows="2" x-model="editData.judul_artikel" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Nama Jurnal</label>
+                    <input type="text" name="nama_jurnal" x-model="editData.nama_jurnal" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">ISSN</label>
+                        <input type="text" name="issn" x-model="editData.issn" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Vol. No. hal.</label>
+                        <input type="text" name="volume_nomor" x-model="editData.volume_nomor" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Penulis</label>
+                    <textarea name="penulis" rows="2" x-model="editData.penulis" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" @click="editModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Verifikasi Dokumen Publikasi (Template & Similarity) -->
+    <div x-show="verifyModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+        <div @click.away="verifyModalOpen = false" class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <h4 class="font-extrabold text-sm">Verifikasi Dokumen Publikasi</h4>
+                    <p class="text-[11px] text-slate-300">Divisi Publikasi &bull; Cek Template &amp; Similarity</p>
+                </div>
+                <button type="button" @click="verifyModalOpen = false" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+            </div>
+            <form :action="verifyData.action" method="POST" class="p-5 space-y-4 text-left">
+                @csrf
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800" x-text="verifyData.judul_artikel"></div>
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">1. Cek Kesesuaian Template Jurnal</label>
+                    <select name="template_status" x-model="verifyData.template_status" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                        <option value="sesuai">Sesuai Standar Template</option>
+                        <option value="revisi">Perlu Revisi Format</option>
+                        <option value="tidak_sesuai">Tidak Sesuai Template</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">2. Skor Similarity / Turnitin (%)</label>
+                    <input type="number" step="0.1" min="0" max="100" name="similarity_score" x-model="verifyData.similarity_score" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold" required>
+                    <span class="text-[10px] text-slate-500 font-semibold">Ambang batas wajar &le; 20%</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">3. Keputusan Verifikasi</label>
+                    <select name="status_verifikasi" x-model="verifyData.status_verifikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold">
+                        <option value="Terverifikasi">Terverifikasi (Lolos)</option>
+                        <option value="Revisi">Minta Revisi Dokumen</option>
+                        <option value="Ditolak">Ditolak</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-extrabold uppercase text-slate-600 mb-1">Catatan Verifikator</label>
+                    <textarea name="catatan_verifikasi" rows="2" x-model="verifyData.catatan_verifikasi" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium" placeholder="Catatan hasil pengecekan template & similarity..."></textarea>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="verifyModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">Simpan Verifikasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
-
