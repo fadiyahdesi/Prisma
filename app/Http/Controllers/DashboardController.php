@@ -59,10 +59,10 @@ class DashboardController extends Controller
         }
 
         $availableRoles = Role::all();
-        $penelitianBase = \App\Models\PpmUsulan::where(function ($q) {
+        $penelitianBase = \App\Models\PpmUsulan::whereNotNull('no_urut')->where(function ($q) {
             $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
         });
-        $pengabdianBase = \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian');
+        $pengabdianBase = \App\Models\PpmUsulan::whereNotNull('no_urut')->where('kategori_usulan', 'pengabdian');
 
         $myPenelitian = (clone $penelitianBase)->ownedByUser($user)->count();
         $myPengabdian = (clone $pengabdianBase)->ownedByUser($user)->count();

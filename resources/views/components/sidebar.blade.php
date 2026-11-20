@@ -26,16 +26,16 @@
 
     // Count Penelitian, Pengabdian & Publikasi berdasarkan izin manage_all (otomatis penuh untuk Superadmin)
     $penelitianCount = $canManagePenelitian
-        ? \App\Models\PpmUsulan::where(function ($q) {
+        ? \App\Models\PpmUsulan::whereNotNull('no_urut')->where(function ($q) {
             $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
         })->count()
-        : ($user ? \App\Models\PpmUsulan::where(function ($q) {
+        : ($user ? \App\Models\PpmUsulan::whereNotNull('no_urut')->where(function ($q) {
             $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
         })->ownedByUser($user)->count() : 0);
 
     $pengabdianCount = $canManagePengabdian
-        ? \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->count()
-        : ($user ? \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->ownedByUser($user)->count() : 0);
+        ? \App\Models\PpmUsulan::whereNotNull('no_urut')->where('kategori_usulan', 'pengabdian')->count()
+        : ($user ? \App\Models\PpmUsulan::whereNotNull('no_urut')->where('kategori_usulan', 'pengabdian')->ownedByUser($user)->count() : 0);
 
     $publikasiCount = $canManagePublikasi
         ? \App\Models\PpmPublikasiJurnal::count()

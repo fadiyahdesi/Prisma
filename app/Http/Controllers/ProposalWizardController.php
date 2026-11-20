@@ -80,7 +80,7 @@ class ProposalWizardController extends Controller
             $scope = $canViewAll ? 'all' : 'mine';
         }
 
-        $baseKategoriQuery = PpmUsulan::where(function ($q) use ($kategori) {
+        $baseKategoriQuery = PpmUsulan::whereNotNull('no_urut')->where(function ($q) use ($kategori) {
             $q->where('kategori_usulan', $kategori)
               ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', $kategori));
         });
@@ -123,16 +123,15 @@ class ProposalWizardController extends Controller
         }
 
         $proposals = $query
-            ->orderByRaw('CASE WHEN no_urut IS NULL THEN 0 ELSE 1 END ASC')
             ->orderBy('no_urut', 'asc')
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
         $totalMineCount = (clone $baseKategoriQuery)->ownedByUser($user)->count();
         $totalAllCount = $canViewAll ? (clone $baseKategoriQuery)->count() : $totalMineCount;
 
-        $penelitianStatQuery = PpmUsulan::where(function ($q) {
+        $penelitianStatQuery = PpmUsulan::whereNotNull('no_urut')->where(function ($q) {
             $q->where('kategori_usulan', 'penelitian')
               ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', 'penelitian'));
         });
@@ -141,7 +140,7 @@ class ProposalWizardController extends Controller
         }
         $totalPenelitianCount = $penelitianStatQuery->count();
 
-        $pengabdianStatQuery = PpmUsulan::where(function ($q) {
+        $pengabdianStatQuery = PpmUsulan::whereNotNull('no_urut')->where(function ($q) {
             $q->where('kategori_usulan', 'pengabdian')
               ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', 'pengabdian'));
         });
@@ -184,8 +183,19 @@ class ProposalWizardController extends Controller
         $activePeriod = $periodService->getActiveOpenPeriod() ?? $periodService->getLatestActivePeriod();
         $activeSchemes = PpmSkemaBima::where('is_active', true)->orderBy('kategori')->orderBy('nama_skema')->get();
 
+        $activeWizardProposals = PpmUsulan::with(['skema', 'periode'])
+            ->whereNull('no_urut')
+            ->where('id_pengusul', $user->id)
+            ->where(function ($q) use ($kategori) {
+                $q->where('kategori_usulan', $kategori)
+                  ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', $kategori));
+            })
+            ->latest('updated_at')
+            ->get();
+
         return view('proposal.index', compact(
             'proposals',
+            'activeWizardProposals',
             'activePeriod',
             'activeSchemes',
             'kategori',
