@@ -152,7 +152,12 @@
                                             <span>Rubrik 1-7</span>
                                         </a>
 
-                                        <form action="{{ route('admin.skema-bima.destroy', $scheme) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus skema ini?')">
+                                        <form action="{{ route('admin.skema-bima.destroy', $scheme) }}" method="POST" class="inline"
+                                              data-confirm="Apakah Anda yakin ingin menghapus skema hibah BIMA ini?"
+                                              data-confirm-title="Konfirmasi Hapus Skema Hibah"
+                                              data-confirm-detail="{{ $scheme->kode_skema }} - {{ $scheme->nama_skema }}"
+                                              data-confirm-variant="danger"
+                                              data-confirm-label="Ya, Hapus Skema">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-950 text-xs font-extrabold border border-rose-300 transition-all">

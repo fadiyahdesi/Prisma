@@ -170,7 +170,12 @@
                                 </div>
 
                                 @if(!$kontrak->signed_by_pengusul)
-                                    <form action="{{ route('pengusul.kontrak.sign', $kontrak) }}" method="POST" onsubmit="return confirm('Dengan menandatangani Surat Perjanjian Kontrak (SPK) ini secara digital, Anda menyetujui seluruh ketentuan pelaksanaan hibah, pencapaian target luaran, serta pelaporan keuangan standar BIMA Kemdiktisaintek. Lanjutkan penandatanganan?');">
+                                    <form action="{{ route('pengusul.kontrak.sign', $kontrak) }}" method="POST"
+                                          data-confirm="Dengan menandatangani Surat Perjanjian Kontrak (SPK) ini secara digital, Anda menyetujui seluruh ketentuan pelaksanaan hibah, pencapaian target luaran, serta pelaporan keuangan standar BIMA Kemdiktisaintek. Lanjutkan penandatanganan?"
+                                          data-confirm-title="Konfirmasi Tanda Tangan SPK Digital"
+                                          data-confirm-detail="No. Kontrak: {{ $kontrak->nomor_kontrak }}"
+                                          data-confirm-variant="success"
+                                          data-confirm-label="Ya, Tanda Tangani SPK">
                                         @csrf
                                         <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.5-5.5A9 9 0 1112 3a9 9 0 014.5 1.2z"/></svg>

@@ -260,7 +260,13 @@
                                         <form method="POST" action="{{ route('admin.semhas.kepala-approval', $u) }}" class="inline">
                                             @csrf
                                             <input type="hidden" name="status" value="acc">
-                                            <button type="submit" onclick="return confirm('ACC dan Luluskan Seminar Hasil usulan ini?')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5" title="Persetujuan Langsung Kepala LPPM">
+                                            <button type="submit"
+                                                    data-confirm="ACC dan Luluskan Seminar Hasil untuk usulan ini?"
+                                                    data-confirm-title="Konfirmasi ACC Seminar Hasil"
+                                                    data-confirm-detail="{{ $u->kode_usulan }} - {{ $u->judul_usulan }}"
+                                                    data-confirm-variant="success"
+                                                    data-confirm-label="Ya, ACC Semhas"
+                                                    class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm transition flex items-center gap-1.5" title="Persetujuan Langsung Kepala LPPM">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                 <span>ACC Semhas</span>
                                             </button>
@@ -274,7 +280,13 @@
                                             <form method="POST" action="{{ route('admin.semhas.kepala-approval', $u) }}" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="revisi">
-                                                <button type="submit" onclick="return confirm('Batalkan status ACC dan minta revisi naskah?')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition">
+                                                <button type="submit"
+                                                        data-confirm="Batalkan status ACC dan minta revisi naskah Seminar Hasil ini?"
+                                                        data-confirm-title="Konfirmasi Permintaan Revisi Semhas"
+                                                        data-confirm-detail="{{ $u->kode_usulan }} - {{ $u->judul_usulan }}"
+                                                        data-confirm-variant="danger"
+                                                        data-confirm-label="Ya, Minta Revisi"
+                                                        class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition">
                                                     Minta Revisi
                                                 </button>
                                             </form>

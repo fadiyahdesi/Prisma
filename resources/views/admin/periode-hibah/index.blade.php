@@ -133,7 +133,12 @@
                                         </button>
                                     </form>
 
-                                    <form action="{{ route('admin.periode-hibah.destroy', $period) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode ini?')">
+                                    <form action="{{ route('admin.periode-hibah.destroy', $period) }}" method="POST" class="inline"
+                                          data-confirm="Apakah Anda yakin ingin menghapus periode hibah ini dari daftar jadwal?"
+                                          data-confirm-title="Konfirmasi Hapus Periode Hibah"
+                                          data-confirm-detail="{{ $period->nama_periode ?? ($period->tahun_akademik . ' ' . $period->semester) }}"
+                                          data-confirm-variant="danger"
+                                          data-confirm-label="Ya, Hapus Periode">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-950 text-xs font-extrabold border border-rose-300 transition-all">

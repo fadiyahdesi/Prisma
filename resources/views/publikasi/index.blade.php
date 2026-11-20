@@ -81,7 +81,11 @@
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     @if($isStaff)
-                        <form action="{{ route('publikasi.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan ulang 589 data Publikasi Dosen UHN dari file CSV resmi?');">
+                        <form action="{{ route('publikasi.sync') }}" method="POST"
+                              data-confirm="Sinkronkan ulang 589 data Publikasi Dosen UHN dari file CSV resmi?"
+                              data-confirm-title="Konfirmasi Sinkronisasi Data Publikasi"
+                              data-confirm-variant="warning"
+                              data-confirm-label="Ya, Sinkronkan Data">
                             @csrf
                             <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-bold text-xs shadow-xs transition">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -373,7 +377,12 @@
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                     </button>
 
-                                                    <form action="{{ route('publikasi.destroy', $item) }}" method="POST" class="inline" onsubmit="return confirm('Hapus data publikasi No. {{ $no }} ini?');">
+                                                    <form action="{{ route('publikasi.destroy', $item) }}" method="POST" class="inline"
+                                                          data-confirm="Apakah Anda yakin ingin menghapus data publikasi ilmiah No. {{ $no }} ini dari sistem?"
+                                                          data-confirm-title="Konfirmasi Hapus Data Publikasi"
+                                                          data-confirm-detail="No. {{ $no }} • {{ $item->judul_publikasi }}"
+                                                          data-confirm-variant="danger"
+                                                          data-confirm-label="Ya, Hapus Publikasi">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"

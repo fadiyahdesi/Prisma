@@ -36,7 +36,11 @@
                             <span>Uji Coba Dry-Run</span>
                         </button>
                     </form>
-                    <form action="{{ route('admin.migrasi.run') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin mengeksekusi migrasi data live ke basis data PostgreSQL?');">
+                    <form action="{{ route('admin.migrasi.run') }}" method="POST" class="inline"
+                          data-confirm="Apakah Anda yakin ingin mengeksekusi migrasi data live ke basis data PostgreSQL?"
+                          data-confirm-title="Konfirmasi Eksekusi Migrasi Live"
+                          data-confirm-variant="warning"
+                          data-confirm-label="Ya, Eksekusi Migrasi">
                         @csrf
                         <input type="hidden" name="dry_run" value="0">
                         <button type="submit" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-xs flex items-center gap-2">

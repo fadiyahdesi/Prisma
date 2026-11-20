@@ -17,6 +17,7 @@
     createModalOpen: false,
     editModalOpen: false,
     detailModalOpen: false,
+    deleteModalOpen: false,
     detailData: {
         no_urut: '',
         semester: '',
@@ -38,6 +39,15 @@
         nama_prodi: '',
         total_rab: 0
     },
+    deleteData: {
+        destroy_url: '',
+        no_urut: '',
+        semester: '',
+        judul_usulan: '',
+        nama_ketua: '',
+        nama_prodi: '',
+        nominal_formatted: ''
+    },
     openDetailModal(payload) {
         this.detailData = payload;
         this.detailModalOpen = true;
@@ -45,6 +55,10 @@
     openEditModal(payload) {
         this.editData = payload;
         this.editModalOpen = true;
+    },
+    openDeleteModal(payload) {
+        this.deleteData = payload;
+        this.deleteModalOpen = true;
     }
 }" class="min-h-screen bg-slate-100 text-slate-800 flex">
     <x-sidebar />
@@ -737,16 +751,19 @@
                                                     Edit
                                                 </button>
 
-                                                <form method="POST" action="{{ route('usulan.destroy', $p->id) }}"
-                                                      onsubmit="return confirm('Hapus data No. {{ $noUrutVal }} ini?');"
-                                                      class="inline-flex m-0 p-0">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                            class="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-bold text-[11px] transition inline-flex items-center justify-center cursor-pointer">
-                                                        Hapus
-                                                    </button>
-                                                </form>
+                                                <button type="button"
+                                                        @click="openDeleteModal({{ json_encode([
+                                                            'destroy_url' => route('usulan.destroy', $p->id),
+                                                            'no_urut' => $noUrutVal,
+                                                            'semester' => $semesterVal,
+                                                            'judul_usulan' => $p->judul_usulan ?: '(Judul Belum Diisi)',
+                                                            'nama_ketua' => $ketuaVal,
+                                                            'nama_prodi' => $prodiVal,
+                                                            'nominal_formatted' => $nominalFormatted,
+                                                        ]) }})"
+                                                        class="h-7 px-2.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-bold text-[11px] transition inline-flex items-center justify-center cursor-pointer">
+                                                    Hapus
+                                                </button>
                                             </div>
                                         @else
                                             <button type="button"
@@ -1101,6 +1118,76 @@
                         Simpan Perubahan
                     </button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Konfirmasi Hapus Data (Pop-Up UI Resmi) --}}
+    <div x-show="deleteModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         @keydown.escape.window="deleteModalOpen = false">
+        <div @click.away="deleteModalOpen = false"
+             class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden">
+            {{-- Header Modal Hapus --}}
+            <div class="px-5 py-4 bg-rose-600 text-white flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-sm sm:text-base leading-tight">
+                            Konfirmasi Hapus Data {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}
+                        </h3>
+                        <p class="text-[11px] text-rose-100 font-medium">
+                            Data No. <span x-text="deleteData.no_urut"></span> &bull; Semester <span x-text="deleteData.semester"></span>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" @click="deleteModalOpen = false" class="text-white/80 hover:text-white p-1 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Isi Konfirmasi & Rincian Data --}}
+            <div class="p-5 space-y-3.5 text-xs">
+                <p class="text-xs sm:text-sm font-semibold text-slate-700 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus data {{ strtolower($labelBidang) }} berikut dari sistem?
+                </p>
+
+                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-200 text-slate-800" x-text="'No. Urut ' + deleteData.no_urut"></span>
+                        <span class="text-[11px] font-extrabold text-emerald-700 tabular-nums" x-text="deleteData.nominal_formatted"></span>
+                    </div>
+                    <p class="font-extrabold text-slate-900 text-xs leading-snug break-words" x-text="deleteData.judul_usulan"></p>
+                    <div class="pt-1.5 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-600">
+                        <span class="font-bold text-slate-800" x-text="'Ketua: ' + deleteData.nama_ketua"></span>
+                        <span class="font-semibold text-slate-500" x-text="deleteData.nama_prodi"></span>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-semibold leading-relaxed">
+                    Perhatian: Data yang dihapus tidak akan tampil lagi pada daftar resmi {{ strtolower($labelBidang) }} maupun perhitungan grafik statistik.
+                </div>
+            </div>
+
+            {{-- Footer Tombol Batal & Hapus --}}
+            <form method="POST" :action="deleteData.destroy_url" class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                @csrf
+                @method('DELETE')
+                <button type="button"
+                        @click="deleteModalOpen = false"
+                        class="h-9 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="h-9 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Ya, Hapus Data</span>
+                </button>
             </form>
         </div>
     </div>

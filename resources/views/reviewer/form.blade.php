@@ -148,8 +148,24 @@
                     return Math.round(total * 100) / 100;
                 },
                 confirmSubmit(e) {
-                    if (!confirm('PERHATIAN: Setelah Anda menekan tombol Kirim, borang penilaian ini akan DIKUNCI PERMANEN dan tidak dapat diubah lagi demi menjaga integritas Double-Blind review. Lanjutkan pengiriman?')) {
-                        e.preventDefault();
+                    const form = e.target;
+                    if (form.dataset.confirmed === 'true') {
+                        form.dataset.confirmed = '';
+                        return;
+                    }
+                    e.preventDefault();
+                    if (window.PrismaConfirm) {
+                        window.PrismaConfirm.open({
+                            title: 'Konfirmasi Kunci Permanen Penilaian Reviewer',
+                            detail: 'Skor Akhir: ' + this.totalScore,
+                            message: 'PERHATIAN: Setelah Anda menekan tombol Kirim, borang penilaian ini akan DIKUNCI PERMANEN dan tidak dapat diubah lagi demi menjaga integritas Double-Blind review. Lanjutkan pengiriman?',
+                            variant: 'warning',
+                            label: 'Ya, Kunci & Kirim Penilaian',
+                            onConfirm: function () {
+                                form.dataset.confirmed = 'true';
+                                form.submit();
+                            }
+                        });
                     }
                 }
             }" class="space-y-6">

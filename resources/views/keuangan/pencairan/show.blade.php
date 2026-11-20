@@ -271,7 +271,12 @@
                             <a href="{{ route('keuangan.pencairan.index') }}" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
                                 Kembali ke Daftar
                             </a>
-                            <button type="submit" {{ $isReadyToDisburse ? '' : 'disabled' }} onclick="return confirm('Apakah Anda yakin ingin mengonfirmasi pencairan dana Termin I sebesar 70%? Tindakan ini akan resmi mengalihkan status usulan menjadi Pelaksanaan (Ongoing).');" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+                            <button type="submit" {{ $isReadyToDisburse ? '' : 'disabled' }}
+                                    data-confirm="Apakah Anda yakin ingin mengonfirmasi pencairan dana Termin I sebesar 70%? Tindakan ini akan resmi mengalihkan status usulan menjadi Pelaksanaan (Ongoing)."
+                                    data-confirm-title="Konfirmasi Pencairan Dana Termin I (70%)"
+                                    data-confirm-variant="success"
+                                    data-confirm-label="Ya, Cairkan Termin I"
+                                    class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                 <span>Konfirmasi Pencairan Termin I & Mulai Pelaksanaan</span>
                             </button>
@@ -435,7 +440,13 @@
                                 </div>
 
                                 <div class="pt-2 flex justify-end">
-                                    <button type="submit" onclick="return confirm('Konfirmasi pencairan Termin II (30%) sebesar Rp {{ number_format($kontrak->dana_termin_2, 0, ',', '.') }}? Status usulan akan resmi berubah menjadi Completed (Selesai).');" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
+                                    <button type="submit"
+                                            data-confirm="Konfirmasi pencairan Termin II (30%) sebesar Rp {{ number_format($kontrak->dana_termin_2, 0, ',', '.') }}? Status usulan akan resmi berubah menjadi Completed (Selesai)."
+                                            data-confirm-title="Konfirmasi Pelunasan Termin II (30%)"
+                                            data-confirm-detail="Nominal Termin II: Rp {{ number_format($kontrak->dana_termin_2, 0, ',', '.') }}"
+                                            data-confirm-variant="success"
+                                            data-confirm-label="Ya, Lunasi Termin II"
+                                            class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         <span>Konfirmasi Pelunasan Termin II & Selesaikan Hibah (Completed)</span>
                                     </button>

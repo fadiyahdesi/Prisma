@@ -141,7 +141,11 @@
                             </a>
 
                             <div class="flex flex-col sm:flex-row items-center gap-3">
-                                <form method="POST" action="{{ route('member-consent.respond', $member) }}" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK undangan keikutsertaan dalam proposal ini?');">
+                                <form method="POST" action="{{ route('member-consent.respond', $member) }}"
+                                      data-confirm="Apakah Anda yakin ingin MENOLAK undangan keikutsertaan dalam proposal ini?"
+                                      data-confirm-title="Konfirmasi Penolakan Undangan"
+                                      data-confirm-variant="danger"
+                                      data-confirm-label="Ya, Tolak Undangan">
                                     @csrf
                                     <input type="hidden" name="decision" value="rejected">
                                     <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 hover:text-rose-900 text-xs font-extrabold border border-rose-300 transition-colors flex items-center justify-center gap-1.5">
@@ -150,7 +154,11 @@
                                     </button>
                                 </form>
 
-                                <form method="POST" action="{{ route('member-consent.respond', $member) }}" onsubmit="return confirm('Apakah Anda menyatakan BERSEDIA menjadi anggota tim dalam usulan ini?');">
+                                <form method="POST" action="{{ route('member-consent.respond', $member) }}"
+                                      data-confirm="Apakah Anda menyatakan BERSEDIA menjadi anggota tim dalam usulan ini?"
+                                      data-confirm-title="Konfirmasi Kesediaan Anggota Tim"
+                                      data-confirm-variant="success"
+                                      data-confirm-label="Ya, Saya Bersedia">
                                     @csrf
                                     <input type="hidden" name="decision" value="approved">
                                     <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-md transition-colors flex items-center justify-center gap-2">

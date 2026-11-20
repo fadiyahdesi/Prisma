@@ -177,7 +177,11 @@
 
                                 @if(!$isCore && $roleItem->users_count === 0)
                                     <form method="POST" action="{{ route('admin.role-permissions.roles.destroy', $roleItem) }}"
-                                          onsubmit="return confirm('Hapus role kustom {{ $roleItem->display_name }}?');">
+                                          data-confirm="Apakah Anda yakin ingin menghapus role kustom {{ $roleItem->display_name }} dari matriks hak akses?"
+                                          data-confirm-title="Konfirmasi Hapus Role Kustom"
+                                          data-confirm-detail="{{ $roleItem->display_name }} ({{ $roleItem->name }})"
+                                          data-confirm-variant="danger"
+                                          data-confirm-label="Ya, Hapus Role">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Hapus Role Kustom">
@@ -211,7 +215,11 @@
                                     </div>
                                     @if(!$isSelectedSuperadmin && in_array($selectedRole->name, $coreRoleNames, true))
                                         <form method="POST" action="{{ route('admin.role-permissions.reset', $selectedRole) }}"
-                                              onsubmit="return confirm('Kembalikan seluruh izin role {{ $selectedRole->display_name }} ke standar default UHN?');">
+                                              data-confirm="Kembalikan seluruh izin role {{ $selectedRole->display_name }} ke standar default UHN?"
+                                              data-confirm-title="Konfirmasi Reset Hak Akses Default"
+                                              data-confirm-detail="Role: {{ $selectedRole->display_name }}"
+                                              data-confirm-variant="warning"
+                                              data-confirm-label="Ya, Reset ke Default">
                                             @csrf
                                             <button type="submit" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-50 text-amber-700 border border-amber-200 text-xs font-extrabold transition">
                                                 Reset Default

@@ -76,7 +76,11 @@
                     </a>
 
                     <!-- Fast Sync Real UHN Lecturers Demo Guarantee -->
-                    <form method="POST" action="{{ route('admin.hki.quick-sync-real') }}" onsubmit="return confirm('Jalankan Sinkronisasi Kilat data HKI resmi dosen UHN (Sharfina Febbi Handayani, Ginanjar Wiro Sasmito, Slamet Wiyono, Ida Farida)?')">
+                    <form method="POST" action="{{ route('admin.hki.quick-sync-real') }}"
+                          data-confirm="Jalankan Sinkronisasi Kilat data HKI resmi dosen UHN (Sharfina Febbi Handayani, Ginanjar Wiro Sasmito, Slamet Wiyono, Ida Farida)?"
+                          data-confirm-title="Konfirmasi Sinkronisasi Kilat HKI"
+                          data-confirm-variant="warning"
+                          data-confirm-label="Ya, Jalankan Sinkronisasi">
                         @csrf
                         <button type="submit"
                                 class="px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs border border-amber-500/40 transition flex items-center gap-1.5"

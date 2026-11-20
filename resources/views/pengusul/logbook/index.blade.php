@@ -231,7 +231,12 @@
                                                             </span>
                                                         </div>
 
-                                                        <form action="{{ route('pengusul.logbook.destroy', $entry) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus catatan logbook tanggal {{ $entry->tanggal->format('d/m/Y') }}?');">
+                                                        <form action="{{ route('pengusul.logbook.destroy', $entry) }}" method="POST"
+                                                              data-confirm="Apakah Anda yakin ingin menghapus catatan logbook kegiatan tanggal {{ $entry->tanggal->format('d/m/Y') }} ini?"
+                                                              data-confirm-title="Konfirmasi Hapus Catatan Logbook"
+                                                              data-confirm-detail="Tanggal: {{ $entry->tanggal->format('d/m/Y') }} • Capaian {{ number_format($entry->persentase_capaian, 1) }}%"
+                                                              data-confirm-variant="danger"
+                                                              data-confirm-label="Ya, Hapus Catatan">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Hapus Catatan">

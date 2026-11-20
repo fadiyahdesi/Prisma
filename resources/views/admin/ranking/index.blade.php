@@ -201,7 +201,10 @@
                                     :disabled="selected.length === 0" 
                                     :class="selected.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 text-slate-500' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20'"
                                     class="px-4 py-2 rounded-xl font-extrabold text-xs transition flex items-center gap-2"
-                                    onclick="return confirm('Tetapkan usulan terpilih sebagai Pemenang Hibah dan terbitkan SK Digital P3M?')">
+                                    data-confirm="Tetapkan usulan terpilih sebagai Pemenang Hibah dan terbitkan SK Digital P3M?"
+                                    data-confirm-title="Konfirmasi Penetapan Pemenang Hibah"
+                                    data-confirm-variant="success"
+                                    data-confirm-label="Ya, Tetapkan & Terbitkan SK">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                                 <span>Tetapkan Pemenang Hibah & Terbitkan SK (<span x-text="selected.length">0</span>)</span>
                             </button>

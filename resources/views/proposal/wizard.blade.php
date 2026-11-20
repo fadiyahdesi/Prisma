@@ -258,7 +258,12 @@
                                                         <button type="submit" class="text-blue-700 hover:text-blue-900 font-bold text-xs">Kirim Ulang</button>
                                                     </form>
                                                 @endif
-                                                <form action="{{ route('usulan.save-step2', $usulan) }}" method="POST" onsubmit="return confirm('Hapus anggota ini?')">
+                                                <form action="{{ route('usulan.save-step2', $usulan) }}" method="POST"
+                                                      data-confirm="Apakah Anda yakin ingin menghapus anggota tim ini dari daftar pengusul proposal?"
+                                                      data-confirm-title="Konfirmasi Hapus Anggota Tim"
+                                                      data-confirm-detail="{{ $anggota->nama }} ({{ $anggota->peran ?? 'Anggota' }})"
+                                                      data-confirm-variant="danger"
+                                                      data-confirm-label="Ya, Hapus Anggota">
                                                     @csrf
                                                     <input type="hidden" name="delete_anggota_id" value="{{ $anggota->id }}">
                                                     <button type="submit" class="text-rose-600 hover:text-rose-800 font-bold text-xs">Hapus</button>
@@ -649,7 +654,13 @@
                             @endif
                         </div>
                     @else
-                        <form action="{{ route('usulan.submit-final', $usulan) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin mengirim proposal ini? Draf akan dikunci.')" class="pt-4 border-t border-slate-200 flex justify-end">
+                        <form action="{{ route('usulan.submit-final', $usulan) }}" method="POST"
+                              data-confirm="Apakah Anda yakin ingin mengirim proposal ini secara final? Setelah dikirim, draf akan dikunci dan masuk ke tahap verifikasi."
+                              data-confirm-title="Konfirmasi Pengiriman Final Proposal"
+                              data-confirm-detail="{{ $usulan->kode_usulan }} - {{ $usulan->judul_usulan }}"
+                              data-confirm-variant="success"
+                              data-confirm-label="Ya, Kirim Proposal Final"
+                              class="pt-4 border-t border-slate-200 flex justify-end">
                             @csrf
                             <button type="submit" class="px-8 py-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm shadow-xl transition-all">
                                 Submit Final Proposal & Penguncian Draf &rarr;

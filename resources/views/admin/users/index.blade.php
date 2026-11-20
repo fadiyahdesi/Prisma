@@ -267,7 +267,11 @@
                                             </a>
                                             @if($u->id !== Auth::id())
                                                 <form method="POST" action="{{ route('admin.users.destroy', $u) }}" class="inline-flex items-center m-0 p-0"
-                                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun {{ addslashes($u->name) }}?')">
+                                                      data-confirm="Apakah Anda yakin ingin menghapus akun pengguna ini dari sistem PRISMA UHN?"
+                                                      data-confirm-title="Konfirmasi Hapus Akun Pengguna"
+                                                      data-confirm-detail="{{ $u->name }} ({{ $u->email }})"
+                                                      data-confirm-variant="danger"
+                                                      data-confirm-label="Ya, Hapus Akun">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
