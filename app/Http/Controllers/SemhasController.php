@@ -30,10 +30,12 @@ class SemhasController extends Controller
         };
         $divisi = $forcedDivisi ?? $request->query('divisi');
 
-        $baseQuery = PpmUsulan::whereIn('status', ['Ongoing', 'Completed', 'Approved']);
-        if ($activeRole === 'Kepala P3M') {
-            $baseQuery->whereNull('no_urut');
-        }
+        $baseQuery = PpmUsulan::whereIn('status', ['Contracted', 'Ongoing', 'Completed'])
+            ->where(function ($q) {
+                $q->whereNull('no_urut')
+                  ->orWhereHas('seminarHasil')
+                  ->orWhereHas('laporanAkhir');
+            });
         if (in_array($divisi, ['penelitian', 'pengabdian'])) {
             $baseQuery->where(function ($q) use ($divisi) {
                 $q->where('kategori_usulan', $divisi)
@@ -64,11 +66,12 @@ class SemhasController extends Controller
             'seminarHasil.penguji2',
             'laporanAkhir',
         ])
-        ->whereIn('status', ['Ongoing', 'Completed', 'Approved']);
-
-        if ($activeRole === 'Kepala P3M') {
-            $query->whereNull('no_urut');
-        }
+        ->whereIn('status', ['Contracted', 'Ongoing', 'Completed'])
+        ->where(function ($q) {
+            $q->whereNull('no_urut')
+              ->orWhereHas('seminarHasil')
+              ->orWhereHas('laporanAkhir');
+        });
 
         if (in_array($divisi, ['penelitian', 'pengabdian'])) {
             $query->where(function ($q) use ($divisi) {

@@ -29,7 +29,7 @@ class SyncSintaMetricsCommand extends Command
     public function handle(SintaService $sintaService): int
     {
         $force = $this->option('force');
-        $this->info("🚀 Memulai Midnight Worker Job: Sinkronisasi Skor SINTA (Force: " . ($force ? 'YA' : 'TIDAK') . ")");
+        $this->info("Memulai Midnight Worker Job: Sinkronisasi Skor SINTA (Force: " . ($force ? 'YA' : 'TIDAK') . ")");
 
         $users = User::all();
         $total = $users->count();
@@ -54,7 +54,7 @@ class SyncSintaMetricsCommand extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->info("✅ Worker Selesai: {$successCount}/{$total} dosen berhasil disinkronkan. ({$fallbackCount} memerlukan fallback mode)");
+        $this->info("Worker Selesai: {$successCount}/{$total} dosen berhasil disinkronkan. ({$fallbackCount} memerlukan fallback mode)");
 
         AuditLogService::log('MIDNIGHT_WORKER_SINTA_SYNC_COMPLETED', null, [
             'total_users' => $total,

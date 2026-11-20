@@ -81,7 +81,8 @@ class UatController extends Controller
     public function index()
     {
         $modules = $this->getModules();
-        $faculties = RefFakultas::with('programStudi')->get();
+        $faculties = RefFakultas::with('programStudi')->orderBy('id_fakultas')->get();
+        $fakultas = $faculties;
         $prodis = RefProgramStudi::with('fakultas')->orderBy('id_fakultas')->get();
 
         // Sign-off status from cache or persistent default
@@ -90,11 +91,17 @@ class UatController extends Controller
             'approved_at' => now()->format('d F Y'),
             'token' => 'UAT-UHN-2026-GO-LIVE-VERIFIED-' . strtoupper(Str::random(12)),
             'kepala_p3m_signed' => true,
-            'dekanat_signed_count' => 4,
-            'kaprodi_signed_count' => 22,
+            'dekanat_signed_count' => $faculties->count(),
+            'kaprodi_signed_count' => $prodis->count(),
         ]);
 
-        return view('uat.index', compact('modules', 'faculties', 'prodis', 'uatSignState'));
+        $signatures = collect(array_merge(
+            [['role' => 'Kepala Unit P3M UHN', 'signed_at' => $uatSignState['approved_at'] ?? now()->format('d F Y')]],
+            $faculties->map(fn($f) => ['role' => 'Dekanat ' . $f->kode_fakultas, 'signed_at' => $uatSignState['approved_at'] ?? now()->format('d F Y')])->all(),
+            $prodis->map(fn($p) => ['role' => 'Kaprodi ' . $p->nama_prodi, 'signed_at' => $uatSignState['approved_at'] ?? now()->format('d F Y')])->all()
+        ));
+
+        return view('uat.index', compact('modules', 'faculties', 'fakultas', 'prodis', 'uatSignState', 'signatures'));
     }
 
     public function sign(Request $request)

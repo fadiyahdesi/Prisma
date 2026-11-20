@@ -75,8 +75,8 @@
                     
                     <form action="{{ route('sinta.sync') }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs">
-                            ⚡ Sinkronkan SINTA Mandiri
+                        <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer">
+                            Sinkronkan SINTA Mandiri
                         </button>
                     </form>
                 </div>
@@ -128,8 +128,8 @@
                         @csrf
                         <input type="hidden" name="doc_type" value="proposal">
                         <input type="file" name="file_document" accept="application/pdf" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer" required>
-                        <button type="submit" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-xs">
-                            📤 Uji Unggah Berkas PDF Safe-Scan
+                        <button type="submit" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer">
+                            Uji Unggah Berkas PDF Safe-Scan
                         </button>
                     </form>
                 </div>

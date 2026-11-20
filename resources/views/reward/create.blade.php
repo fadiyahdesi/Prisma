@@ -37,7 +37,7 @@
                   distribusi: [
                       {
                           nama_penulis: '{{ addslashes($user->name) }}',
-                          nidn_nim: '{{ $user->nidn ?? '' }}',
+                          nidn_nim: '{{ $user->nidn_nim ?? '' }}',
                           email: '{{ $user->email }}',
                           peran_penulis: 'Penulis Pertama & Korespondensi',
                           persentase: 100,
@@ -77,7 +77,15 @@
                       }
                   },
                   lookupTarif(kategori, sub) {
-                      const match = this.tarifMatrix.find(t => t.kategori === kategori && t.sub_kategori === sub);
+                      let match = this.tarifMatrix.find(t => t.kategori === kategori && t.sub_kategori === sub);
+                      if (!match && sub) {
+                          const s = String(sub).trim().toLowerCase();
+                          if (s === 'internasional') {
+                              match = this.tarifMatrix.find(t => t.kategori === kategori && t.sub_kategori === 'Internasional Terindeks Lainnya');
+                          } else if (s === 'nasional tidak terakreditasi') {
+                              match = this.tarifMatrix.find(t => t.kategori === kategori && t.sub_kategori === 'Nasional Terakreditasi');
+                          }
+                      }
                       if (match) {
                           this.tarifNominal = parseFloat(match.nominal_insentif);
                           this.nomorSkRektor = match.nomor_sk_rektor || 'SK-REKTOR/UHN/2026/015';

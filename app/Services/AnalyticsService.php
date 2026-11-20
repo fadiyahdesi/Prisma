@@ -122,8 +122,16 @@ class AnalyticsService
 
             foreach ($fakultasRecords as $fak) {
                 $fakUserIds = User::where('id_fakultas', $fak->id_fakultas)->pluck('id');
+                $fakProdiIds = RefProgramStudi::where('id_fakultas', $fak->id_fakultas)->pluck('id_prodi');
 
-                $fakUsulanQuery = PpmUsulan::whereIn('id_pengusul', $fakUserIds);
+                $fakUsulanQuery = PpmUsulan::where(function ($q) use ($fakUserIds, $fakProdiIds) {
+                    $q->whereIn('id_prodi', $fakProdiIds);
+                    if ($fakUserIds->isNotEmpty()) {
+                        $q->orWhere(function ($sub) use ($fakUserIds) {
+                            $sub->whereNull('id_prodi')->whereIn('id_pengusul', $fakUserIds);
+                        });
+                    }
+                });
                 if ($periodeId) {
                     $fakUsulanQuery->where('id_periode_hibah', $periodeId);
                 }
@@ -132,8 +140,13 @@ class AnalyticsService
                 $fUsulanLolos = (clone $fakUsulanQuery)->whereIn('status', $approvedStatuses)->count();
 
                 // Pagu & Serapan
-                $fPagu = (float) PpmKontrak::whereHas('usulan', function ($uq) use ($fakUserIds, $periodeId) {
-                    $uq->whereIn('id_pengusul', $fakUserIds);
+                $fPagu = (float) PpmKontrak::whereHas('usulan', function ($uq) use ($fakUserIds, $fakProdiIds, $periodeId) {
+                    $uq->where(function ($sub) use ($fakUserIds, $fakProdiIds) {
+                        $sub->whereIn('id_prodi', $fakProdiIds);
+                        if ($fakUserIds->isNotEmpty()) {
+                            $sub->orWhereIn('id_pengusul', $fakUserIds);
+                        }
+                    });
                     if ($periodeId) {
                         $uq->where('id_periode_hibah', $periodeId);
                     }
@@ -144,8 +157,13 @@ class AnalyticsService
                 }
 
                 $fSerapan = (float) PpmPencairanDana::where('status_pencairan', 'transferred')
-                    ->whereHas('kontrak.usulan', function ($uq) use ($fakUserIds, $periodeId) {
-                        $uq->whereIn('id_pengusul', $fakUserIds);
+                    ->whereHas('kontrak.usulan', function ($uq) use ($fakUserIds, $fakProdiIds, $periodeId) {
+                        $uq->where(function ($sub) use ($fakUserIds, $fakProdiIds) {
+                            $sub->whereIn('id_prodi', $fakProdiIds);
+                            if ($fakUserIds->isNotEmpty()) {
+                                $sub->orWhereIn('id_pengusul', $fakUserIds);
+                            }
+                        });
                         if ($periodeId) {
                             $uq->where('id_periode_hibah', $periodeId);
                         }
@@ -246,7 +264,14 @@ class AnalyticsService
             $prodiUserIds = User::where('id_prodi', $prodi->id_prodi)->pluck('id');
             $dosenCount = $prodiUserIds->count();
 
-            $pQuery = PpmUsulan::whereIn('id_pengusul', $prodiUserIds);
+            $pQuery = PpmUsulan::where(function ($q) use ($prodi, $prodiUserIds) {
+                $q->where('id_prodi', $prodi->id_prodi);
+                if ($prodiUserIds->isNotEmpty()) {
+                    $q->orWhere(function ($sub) use ($prodiUserIds) {
+                        $sub->whereNull('id_prodi')->whereIn('id_pengusul', $prodiUserIds);
+                    });
+                }
+            });
             if ($periodeId) {
                 $pQuery->where('id_periode_hibah', $periodeId);
             }
@@ -255,8 +280,13 @@ class AnalyticsService
             $pLolosCount = (clone $pQuery)->whereIn('status', $approvedStatuses)->count();
 
             // Pagu & Serapan
-            $pPagu = (float) PpmKontrak::whereHas('usulan', function ($uq) use ($prodiUserIds, $periodeId) {
-                $uq->whereIn('id_pengusul', $prodiUserIds);
+            $pPagu = (float) PpmKontrak::whereHas('usulan', function ($uq) use ($prodi, $prodiUserIds, $periodeId) {
+                $uq->where(function ($sub) use ($prodi, $prodiUserIds) {
+                    $sub->where('id_prodi', $prodi->id_prodi);
+                    if ($prodiUserIds->isNotEmpty()) {
+                        $sub->orWhereIn('id_pengusul', $prodiUserIds);
+                    }
+                });
                 if ($periodeId) {
                     $uq->where('id_periode_hibah', $periodeId);
                 }
@@ -267,8 +297,13 @@ class AnalyticsService
             }
 
             $pSerapan = (float) PpmPencairanDana::where('status_pencairan', 'transferred')
-                ->whereHas('kontrak.usulan', function ($uq) use ($prodiUserIds, $periodeId) {
-                    $uq->whereIn('id_pengusul', $prodiUserIds);
+                ->whereHas('kontrak.usulan', function ($uq) use ($prodi, $prodiUserIds, $periodeId) {
+                    $uq->where(function ($sub) use ($prodi, $prodiUserIds) {
+                        $sub->where('id_prodi', $prodi->id_prodi);
+                        if ($prodiUserIds->isNotEmpty()) {
+                            $sub->orWhereIn('id_pengusul', $prodiUserIds);
+                        }
+                    });
                     if ($periodeId) {
                         $uq->where('id_periode_hibah', $periodeId);
                     }

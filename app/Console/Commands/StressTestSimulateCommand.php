@@ -37,7 +37,7 @@ class StressTestSimulateCommand extends Command
         $this->info('╚══════════════════════════════════════════════════════════════════════╝');
         $this->newLine();
 
-        $this->info("⏳ Menjalankan pengujian beban konkurensi {$users} pengguna bersamaan pada target endpoint: '{$endpoint}'...");
+        $this->info("Menjalankan pengujian beban konkurensi {$users} pengguna bersamaan pada target endpoint: '{$endpoint}'...");
 
         $bar = $this->output->createProgressBar(100);
         $bar->start();
@@ -67,10 +67,10 @@ class StressTestSimulateCommand extends Command
         );
 
         if ($result['success']) {
-            $this->info('✔ PENGUJIAN BEBAN PUNCAK BERHASIL: Sistem teruji stabil melayani beban 500 pengguna konkuren tanpa degradasi performa.');
+            $this->info('PENGUJIAN BEBAN PUNCAK BERHASIL: Sistem teruji stabil melayani beban 500 pengguna konkuren tanpa degradasi performa.');
             return Command::SUCCESS;
         } else {
-            $this->error('❌ PENGUJIAN BEBAN PUNCAK GAGAL: Terjadi degradasi performa atau lonjakan error.');
+            $this->error('PENGUJIAN BEBAN PUNCAK GAGAL: Terjadi degradasi performa atau lonjakan error.');
             return Command::FAILURE;
         }
     }

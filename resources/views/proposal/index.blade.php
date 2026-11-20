@@ -131,14 +131,14 @@
                         <div class="inline-flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl">
                             <a href="{{ route('usulan.index', ['kategori' => 'penelitian', 'scope' => $scope ?? 'all']) }}"
                                class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ !$isPengabdian ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                                <span>🔬 Penelitian Dosen</span>
+                                <span>Penelitian Dosen</span>
                                 <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ !$isPengabdian ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
                                     {{ $totalPenelitianCount ?? 438 }}
                                 </span>
                             </a>
                             <a href="{{ route('pengabdian.index', ['scope' => $scope ?? 'all']) }}"
                                class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $isPengabdian ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                                <span>🤝 Pengabdian Masyarakat</span>
+                                <span>Pengabdian Masyarakat</span>
                                 <span class="px-1.5 py-0.5 rounded-md text-[10px] {{ $isPengabdian ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">
                                     {{ $totalPengabdianCount ?? 0 }}
                                 </span>

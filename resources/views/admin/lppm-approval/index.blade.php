@@ -65,11 +65,11 @@
                         <div class="inline-flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
                             <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'penelitian'])) }}"
                                class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'penelitian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                                <span>🔬 Divisi Penelitian</span>
+                                <span>Divisi Penelitian</span>
                             </a>
                             <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'pengabdian'])) }}"
                                class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'pengabdian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                                <span>🤝 Divisi Pengabdian</span>
+                                <span>Divisi Pengabdian</span>
                             </a>
                             <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'all'])) }}"
                                class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'all' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
@@ -78,7 +78,7 @@
                         </div>
                     @else
                         <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-extrabold {{ $div === 'pengabdian' ? 'bg-purple-100 text-purple-900 border border-purple-200' : 'bg-blue-100 text-blue-900 border border-blue-200' }}">
-                            <span>{{ $div === 'pengabdian' ? '🤝 Antrean Khusus Divisi Pengabdian Masyarakat' : '🔬 Antrean Khusus Divisi Penelitian' }}</span>
+                            <span>{{ $div === 'pengabdian' ? 'Antrean Khusus Divisi Pengabdian Masyarakat' : 'Antrean Khusus Divisi Penelitian' }}</span>
                         </div>
                     @endif
 
@@ -128,7 +128,7 @@
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono text-xs font-black">{{ $proposal->kode_usulan }}</span>
                                     <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold {{ $katProposal === 'pengabdian' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200' }}">
-                                        {{ $katProposal === 'pengabdian' ? '🤝 Divisi Pengabdian' : '🔬 Divisi Penelitian' }}
+                                        {{ $katProposal === 'pengabdian' ? 'Divisi Pengabdian' : 'Divisi Penelitian' }}
                                     </span>
                                     <span class="px-2.5 py-1 rounded-lg text-xs font-black {{ $proposal->status === 'In_review' ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900' }}">
                                         {{ $proposal->status === 'In_review' ? 'Lolos Dokumen (In Review)' : 'Menunggu Verifikasi Dokumen' }}
@@ -163,7 +163,7 @@
                                 <div class="flex justify-between gap-2">
                                     <span class="text-slate-500">Cek Template</span>
                                     <span class="font-extrabold" :class="templateStatus === 'sesuai' ? 'text-emerald-700' : 'text-amber-700'"
-                                          x-text="templateStatus === 'sesuai' ? '✓ Sesuai Template' : (templateStatus === 'revisi' ? '⚠ Perlu Revisi' : '✕ Tidak Sesuai')"></span>
+                                          x-text="templateStatus === 'sesuai' ? 'Sesuai Template' : (templateStatus === 'revisi' ? 'Perlu Revisi' : 'Tidak Sesuai')"></span>
                                 </div>
                                 <div class="flex justify-between gap-2">
                                     <span class="text-slate-500">Similarity</span>
@@ -182,9 +182,9 @@
                                     <div>
                                         <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">1. Pengecekan Template Dokumen</label>
                                         <select name="template_status" x-model="templateStatus" class="w-full h-9 px-3 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800">
-                                            <option value="sesuai">✓ Sesuai Template Standar P3M</option>
-                                            <option value="revisi">⚠ Perlu Revisi Format / Template</option>
-                                            <option value="tidak_sesuai">✕ Tidak Sesuai Template</option>
+                                            <option value="sesuai">Sesuai Template Standar P3M</option>
+                                            <option value="revisi">Perlu Revisi Format / Template</option>
+                                            <option value="tidak_sesuai">Tidak Sesuai Template</option>
                                         </select>
                                     </div>
 
@@ -211,11 +211,11 @@
                                 <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
                                     <button type="submit" name="decision" value="in_review"
                                             class="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition cursor-pointer">
-                                        ✓ Lolos Dokumen &amp; Lanjut Plotting Reviewer
+                                        Lolos Dokumen &amp; Lanjut Plotting Reviewer
                                     </button>
                                     <button type="submit" name="decision" value="approved"
                                             class="h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition cursor-pointer">
-                                        ✓ Setujui Usulan (Approved)
+                                        Setujui Usulan (Approved)
                                     </button>
                                     <button type="submit" name="decision" value="draft"
                                             class="h-9 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold transition cursor-pointer">

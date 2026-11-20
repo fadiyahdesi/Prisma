@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             RealPenelitianCsvSeeder::class,
             RealPengabdianCsvSeeder::class,
             RealPublikasiCsvSeeder::class,
+            RealWorkflowSyncSeeder::class,
         ]);
     }
 }

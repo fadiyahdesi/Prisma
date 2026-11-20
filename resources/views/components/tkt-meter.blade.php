@@ -133,8 +133,9 @@
                 <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                     <button type="button"
                             @click="markAllCurrentLevel()"
-                            class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-extrabold transition cursor-pointer">
-                        ✓ Tandai Semua Indikator Level <span x-text="activeLevel"></span> Terpenuhi
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-extrabold transition cursor-pointer">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Tandai Semua Indikator Level <span x-text="activeLevel"></span> Terpenuhi</span>
                     </button>
 
                     <div class="flex items-center gap-2">

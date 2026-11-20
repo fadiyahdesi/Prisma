@@ -68,7 +68,7 @@
                         </p>
                     </div>
                     <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 text-center shrink-0">
-                        <div class="text-3xl font-black text-emerald-300">26 / 26</div>
+                        <div class="text-3xl font-black text-emerald-300">{{ $fakultas->count() + $prodis->count() }} / {{ $fakultas->count() + $prodis->count() }}</div>
                         <div class="text-[11px] font-semibold text-emerald-100 uppercase tracking-wider mt-1">Fakultas &amp; Prodi Setuju</div>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs">
                     <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Stakeholder</div>
-                    <div class="text-2xl font-black text-slate-900">28 Pimpinan</div>
+                    <div class="text-2xl font-black text-slate-900">{{ $signatures->count() }} Pimpinan</div>
                     <div class="text-[11px] text-slate-400 mt-1">Rektorat, Dekanat, Kaprodi &amp; P3M</div>
                 </div>
                 <div class="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs">
@@ -131,8 +131,8 @@
 
                     @foreach($epics as $e)
                     <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 flex items-start gap-3 hover:bg-slate-50 transition-colors">
-                        <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-                            ✓
+                        <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2 mb-0.5">
@@ -180,15 +180,15 @@
                     </div>
                 </div>
 
-                {{-- 22 Program Studi Acceptance Matrix --}}
+                {{-- 23 Program Studi Acceptance Matrix --}}
                 <div class="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs">
                     <div class="flex items-center justify-between mb-4">
                         <div>
-                            <h3 class="font-extrabold text-sm text-slate-900">22 Program Studi UHN</h3>
+                            <h3 class="font-extrabold text-sm text-slate-900">{{ $prodis->count() }} Program Studi UHN</h3>
                             <p class="text-xs text-slate-500 font-medium">Keselarasan roadmap dan penerimaan sistem</p>
                         </div>
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            22 / 22 Terverifikasi
+                            {{ $prodis->count() }} / {{ $prodis->count() }} Terverifikasi
                         </span>
                     </div>
                     <div class="max-h-[380px] overflow-y-auto divide-y divide-slate-100">

@@ -40,19 +40,19 @@ class MigrateLegacySimpendiCommand extends Command
         $customFile = $this->option('file');
 
         // 1. Audit and Verify Integrity
-        $this->info('🔍 Memeriksa integritas data & pemetaan 22 Program Studi...');
+        $this->info('Memeriksa integritas data & pemetaan 22 Program Studi...');
         $validation = $migrationService->validateIntegrity($customFile);
 
         if (!$validation['valid']) {
-            $this->error('❌ Validasi integritas data gagal:');
+            $this->error('Validasi integritas data gagal:');
             foreach ($validation['errors'] as $err) {
                 $this->line("   - <fg=red>{$err}</>");
             }
             return Command::FAILURE;
         }
 
-        $this->info("✔ Integritas data valid. Total Usulan: {$validation['total_proposals']}, HKI: {$validation['total_hki']}, Publikasi: {$validation['total_publications']}");
-        $this->info("✔ Verifikasi Checksum SHA-256 Berkas: " . ($validation['checksums_verified'] ? '100% VALID' : 'GAGAL'));
+        $this->info("Integritas data valid. Total Usulan: {$validation['total_proposals']}, HKI: {$validation['total_hki']}, Publikasi: {$validation['total_publications']}");
+        $this->info("Verifikasi Checksum SHA-256 Berkas: " . ($validation['checksums_verified'] ? '100% VALID' : 'GAGAL'));
 
         if ($verifyOnly) {
             $this->newLine();
@@ -67,21 +67,21 @@ class MigrateLegacySimpendiCommand extends Command
                     ['Potensi Kehilangan Data', 'Nihil (0% Data Loss)'],
                 ]
             );
-            $this->info('✅ Audit verifikasi selesai.');
+            $this->info('Audit verifikasi selesai.');
             return Command::SUCCESS;
         }
 
         // 2. Execute Migration (Dry-Run or Live)
         if ($dryRun) {
-            $this->warn('⚠ Menjalankan simulasi DRY-RUN (tidak ada data yang ditulis ke database)...');
+            $this->warn('Menjalankan simulasi DRY-RUN (tidak ada data yang ditulis ke database)...');
         } else {
-            $this->warn('🚀 Memulai migrasi langsung ke basis data PostgreSQL 3NF...');
+            $this->warn('Memulai migrasi langsung ke basis data PostgreSQL 3NF...');
         }
 
         $result = $migrationService->migrate($dryRun, $customFile);
 
         if (!$result['success']) {
-            $this->error('❌ Migrasi gagal: ' . $result['message']);
+            $this->error('Migrasi gagal: ' . $result['message']);
             return Command::FAILURE;
         }
 
@@ -97,7 +97,7 @@ class MigrateLegacySimpendiCommand extends Command
                     ['Jaminan Zero Data Loss', '100% Terpetakan ke 22 Prodi Baru'],
                 ]
             );
-            $this->info('✔ Simulasi Dry-Run sukses: ' . $result['message']);
+            $this->info('Simulasi Dry-Run sukses: ' . $result['message']);
         } else {
             $stats = $result['stats'];
             $this->table(
@@ -111,7 +111,7 @@ class MigrateLegacySimpendiCommand extends Command
                     ['Integritas Data', '100% Lengkap (Zero Data Loss)'],
                 ]
             );
-            $this->info('🎉 ' . $result['message']);
+            $this->info($result['message']);
         }
 
         $this->newLine();

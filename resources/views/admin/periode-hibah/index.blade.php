@@ -109,16 +109,19 @@
                                 </td>
                                 <td class="py-4 px-4 text-center whitespace-nowrap">
                                     @if($isOpen)
-                                        <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-950 border border-emerald-400">
-                                            ● DIBUKA (AKTIF)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-950 border border-emerald-400">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                                            <span>DIBUKA (AKTIF)</span>
                                         </span>
                                     @elseif($isUpcoming)
-                                        <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-950 border border-amber-400">
-                                            ⏳ AKAN DIBUKA
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-950 border border-amber-400">
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                            <span>AKAN DIBUKA</span>
                                         </span>
                                     @else
-                                        <span class="px-3 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-950 border border-rose-400">
-                                            🔒 TERKUNCI / DITUTUP
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-950 border border-rose-400">
+                                            <span class="w-2 h-2 rounded-full bg-rose-600"></span>
+                                            <span>TERKUNCI / DITUTUP</span>
                                         </span>
                                     @endif
                                 </td>

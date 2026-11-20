@@ -105,8 +105,33 @@ class User extends Authenticatable
 
     public function primaryRoleName(): string
     {
-        $role = $this->roles()->first();
-        return $role ? $role->name : 'Dosen / Pengusul';
+        $roleNames = $this->roles->pluck('name')->all();
+        if (empty($roleNames)) {
+            $roleNames = $this->roles()->pluck('name')->all();
+        }
+
+        $priority = [
+            'Superadmin',
+            'Kepala P3M',
+            'Admin P3M',
+            'Divisi Penelitian',
+            'Divisi Pengabdian',
+            'Divisi Publikasi',
+            'Keuangan',
+            'Dekanat',
+            'Kaprodi',
+            'Dosen / Pengusul',
+            'Reviewer',
+            'Dosen / Mahasiswa Anggota',
+        ];
+
+        foreach ($priority as $candidate) {
+            if (in_array($candidate, $roleNames, true)) {
+                return $candidate;
+            }
+        }
+
+        return $roleNames[0] ?? 'Dosen / Pengusul';
     }
 
     /**

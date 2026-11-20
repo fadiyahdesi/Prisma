@@ -865,7 +865,7 @@ class ProposalWizardController extends Controller
         $isProdiKaprodi = $user->hasRole('Kaprodi') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
 
         abort_unless(
-            $usulan->isOwnedBy($user) || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi,
+            $usulan->isOwnedBy($user) || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi || $user->hasRole(['Kepala P3M', 'Admin P3M', 'Superadmin']),
             403,
             'Anda tidak memiliki akses ke dokumen proposal ini.'
         );

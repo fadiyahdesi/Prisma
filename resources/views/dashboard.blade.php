@@ -138,10 +138,10 @@
                     <span class="font-bold text-blue-300">Akses Pengelola P3M (EPIC 04):</span>
                     <div class="flex items-center gap-2">
                         <a href="{{ route('admin.skema-bima.index') }}" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold transition-all border border-blue-400">
-                            ⚙️ Kelola Skema BIMA & Rubrik 1-7 (US-04.1)
+                            Kelola Skema BIMA &amp; Rubrik 1-7 (US-04.1)
                         </a>
                         <a href="{{ route('admin.periode-hibah.index') }}" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold transition-all border border-purple-400">
-                            📅 Kelola Periode Usulan (US-04.2)
+                            Kelola Periode Usulan (US-04.2)
                         </a>
                     </div>
                 </div>
@@ -387,7 +387,9 @@
 
                     {{-- Info Undang Anggota Tim --}}
                     <div class="p-5 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col md:flex-row md:items-start gap-4">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black text-lg">👥</div>
+                        <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
                         <div class="space-y-1">
                             <h5 class="text-xs font-extrabold text-teal-900 uppercase tracking-wider">Cara Menambahkan Anggota Tim (Dosen / Mahasiswa)</h5>
                             <p class="text-xs text-teal-800 font-semibold">Sebagai Ketua Pengusul, Anda dapat mengundang <strong>Dosen Anggota</strong> dan <strong>Mahasiswa</strong> ke dalam tim riset/pengabdian:</p>
@@ -516,7 +518,7 @@
 
                     {{-- Undangan Keanggotaan --}}
                     <div class="space-y-3">
-                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">📬 Undangan Keanggotaan Tim:</h4>
+                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Undangan Keanggotaan Tim:</h4>
                         @forelse($pendingMemberInvitations as $invitation)
                         <div class="p-6 rounded-3xl bg-amber-50 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
@@ -530,7 +532,7 @@
                         </div>
                         @empty
                         <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-500">
-                            ✅ Tidak ada undangan keanggotaan yang menunggu persetujuan.
+                            Tidak ada undangan keanggotaan yang menunggu persetujuan.
                         </div>
                         @endforelse
                     </div>
@@ -546,7 +548,7 @@
                     @endphp
                     @if($myMemberships->count() > 0)
                     <div class="space-y-3 pt-4 border-t border-slate-200">
-                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">📋 Proposal yang Anda Ikuti:</h4>
+                        <h4 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">Proposal yang Anda Ikuti:</h4>
                         <div class="space-y-3">
                             @foreach($myMemberships as $membership)
                             <div class="p-5 rounded-2xl bg-white border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
@@ -577,7 +579,7 @@
 
                     {{-- Info cara diundang --}}
                     <div class="p-5 rounded-2xl bg-blue-50 border border-blue-200 space-y-2">
-                        <h5 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider">ℹ️ Cara Bergabung sebagai Anggota Tim</h5>
+                        <h5 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider">Cara Bergabung sebagai Anggota Tim</h5>
                         <p class="text-xs text-blue-800 font-semibold">Anda akan secara otomatis diundang oleh <strong>Ketua Dosen Pengusul</strong> saat mengisi Langkah 2 (Tim Peneliti) pada Form Wizard Proposal mereka. Masukkan NIDN/NIM Anda sebagai anggota dosen/mahasiswa.</p>
                         <p class="text-xs text-blue-700">Setelah diundang, undangan akan muncul di atas halaman ini dan perlu Anda setujui.</p>
                     </div>

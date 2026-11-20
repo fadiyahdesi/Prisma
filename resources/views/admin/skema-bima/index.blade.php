@@ -139,7 +139,7 @@
                                     <form action="{{ route('admin.skema-bima.toggle', $scheme) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="px-3.5 py-1.5 rounded-full text-xs font-black transition-all border shadow-sm inline-flex items-center gap-1.5 {{ $scheme->is_active ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700' : 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-400' }}">
-                                            <span>{{ $scheme->is_active ? '✓ AKTIF' : '✕ NON-AKTIF' }}</span>
+                                            <span>{{ $scheme->is_active ? 'AKTIF' : 'NON-AKTIF' }}</span>
                                         </button>
                                     </form>
                                 </td>

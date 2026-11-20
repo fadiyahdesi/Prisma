@@ -139,13 +139,13 @@
                     <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                         <div class="flex justify-between">
                             <span class="text-slate-500">Pihak Pertama (Kepala LPPM):</span>
-                            <strong class="text-emerald-700 flex items-center gap-1">✓ Ditandatangani</strong>
+                            <strong class="text-emerald-700">Ditandatangani</strong>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-slate-500">Pihak Kedua (Ketua Peneliti):</span>
                             @if($kontrak->signed_by_pengusul)
-                                <strong class="text-emerald-700 flex items-center gap-1">
-                                    ✓ Ditandatangani ({{ $kontrak->signed_by_pengusul_at ? $kontrak->signed_by_pengusul_at->isoFormat('D MMM Y, HH:mm') : '-' }} WIB)
+                                <strong class="text-emerald-700">
+                                    Ditandatangani ({{ $kontrak->signed_by_pengusul_at ? $kontrak->signed_by_pengusul_at->isoFormat('D MMM Y, HH:mm') : '-' }} WIB)
                                 </strong>
                             @else
                                 <strong class="text-rose-600">Belum Ditandatangani</strong>
@@ -383,13 +383,13 @@
                             <h4 class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">Pemeriksaan Prasyarat Termin II (30%):</h4>
                             <div class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200">
                                 <span>1. Penyaluran Dana Termin I (70%) Selesai:</span>
-                                <strong class="text-emerald-700 flex items-center gap-1">✓ Selesai</strong>
+                                <strong class="text-emerald-700">Selesai</strong>
                             </div>
                             <div class="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200">
                                 <span>2. Pengunggahan Laporan Akhir 100% & SPTB 100%:</span>
                                 @if($hasLaporanAkhir)
                                     <div class="flex items-center gap-2">
-                                        <strong class="text-emerald-700 flex items-center gap-1">✓ Terunggah & Diverifikasi P3M</strong>
+                                        <strong class="text-emerald-700">Terunggah &amp; Diverifikasi P3M</strong>
                                         <a href="{{ asset('storage/' . $u->laporanAkhir->file_laporan_akhir) }}" target="_blank" class="text-blue-600 underline font-bold text-[11px]">Lihat Naskah</a>
                                     </div>
                                 @else

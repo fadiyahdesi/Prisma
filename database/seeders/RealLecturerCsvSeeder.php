@@ -182,11 +182,20 @@ class RealLecturerCsvSeeder extends Seeder
                     })
                     ->first();
             }
+            $systemProtectedEmails = [
+                'superadmin@harkatnegeri.ac.id',
+                'adminp3m@harkatnegeri.ac.id',
+                'divisipenelitian@harkatnegeri.ac.id',
+                'divisipengabdian@harkatnegeri.ac.id',
+                'divisipublikasi@harkatnegeri.ac.id',
+                'keuangan@harkatnegeri.ac.id',
+                'dekan@harkatnegeri.ac.id',
+            ];
             if (!$user) {
                 $candidates = User::whereNotIn('id', $keptUserIds)
-                    ->where(function ($q) {
+                    ->where(function ($q) use ($systemProtectedEmails) {
                         $q->whereNull('email')
-                          ->orWhereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id']);
+                          ->orWhereNotIn('email', $systemProtectedEmails);
                     })
                     ->get();
                 foreach ($candidates as $cand) {
@@ -247,11 +256,20 @@ class RealLecturerCsvSeeder extends Seeder
 
         fclose($handle);
 
-        // 4. Delete any lecturer users not in the 146 official list (keep superadmin@ and adminp3m@)
+        // 4. Delete any lecturer users not in the 146 official list (keep system operator accounts)
+        $protectedEmails = [
+            'superadmin@harkatnegeri.ac.id',
+            'adminp3m@harkatnegeri.ac.id',
+            'divisipenelitian@harkatnegeri.ac.id',
+            'divisipengabdian@harkatnegeri.ac.id',
+            'divisipublikasi@harkatnegeri.ac.id',
+            'keuangan@harkatnegeri.ac.id',
+            'dekan@harkatnegeri.ac.id',
+        ];
         $extraIds = User::whereNotIn('id', $keptUserIds)
-            ->where(function ($q) {
+            ->where(function ($q) use ($protectedEmails) {
                 $q->whereNull('email')
-                  ->orWhereNotIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id']);
+                  ->orWhereNotIn('email', $protectedEmails);
             })
             ->pluck('id')
             ->all();
@@ -271,7 +289,7 @@ class RealLecturerCsvSeeder extends Seeder
         }
 
         // Ensure system accounts have no_urut = null
-        User::whereIn('email', ['superadmin@harkatnegeri.ac.id', 'adminp3m@harkatnegeri.ac.id'])
+        User::whereIn('email', $protectedEmails)
             ->update(['no_urut' => null]);
 
         if ($this->command) {

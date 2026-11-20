@@ -238,15 +238,15 @@
                                             <td class="p-3">
                                                 @if($anggota->status_persetujuan === 'approved')
                                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                                                        ✅ Approved
+                                                        Disetujui
                                                     </span>
                                                 @elseif($anggota->status_persetujuan === 'rejected')
                                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border border-rose-300">
-                                                        ✕ Rejected - Kirim Ulang
+                                                        Ditolak - Kirim Ulang
                                                     </span>
                                                 @else
                                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
-                                                        ⏳ Pending
+                                                        Menunggu Persetujuan
                                                     </span>
                                                 @endif
                                             </td>
@@ -304,7 +304,7 @@
                                 <label class="text-xs font-extrabold uppercase text-slate-800 block mb-1">Unggah Surat Kesediaan Bermeterai (PDF/DOC, Max 5MB):</label>
                                 <input type="file" name="mitra_surat" accept=".pdf,.doc,.docx" class="w-full px-4 py-2 rounded-xl bg-white border border-slate-300 font-semibold text-xs text-slate-700">
                                 @if($usulan->mitra_surat_kesediaan_path)
-                                    <span class="text-xs text-emerald-700 font-bold block mt-1">✓ File Surat Kesediaan Telah Diunggah.</span>
+                                    <span class="text-xs text-emerald-700 font-bold block mt-1">File Surat Kesediaan Telah Diunggah.</span>
                                 @endif
                             </div>
 
@@ -347,7 +347,7 @@
                             </div>
                             <textarea name="ringkasan_substansi" x-model="text" rows="8" required placeholder="Tuliskan latar belakang, tujuan, dan metode ringkas proposal Anda di sini..."
                                       class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-300 font-semibold text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"></textarea>
-                            <p x-show="wordCount > 500" class="text-xs font-bold text-rose-600 mt-1">⚠️ Ringkasan melebihi batas 500 kata! Silakan ringkas teks Anda.</p>
+                            <p x-show="wordCount > 500" class="text-xs font-bold text-rose-600 mt-1">Peringatan: Ringkasan melebihi batas 500 kata. Silakan ringkas teks Anda.</p>
                         </div>
 
                         <div class="space-y-4">
@@ -538,16 +538,16 @@
                             <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/60">
                                 <span class="text-[10px] font-black uppercase text-slate-400">Pilihan Cepat KI &amp; Paten:</span>
                                 <button type="button" @click="kategoriVal = 'Paten & Paten Sederhana (KI)'" class="px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-[10px] font-extrabold transition">
-                                    💡 Paten (KI)
+                                    Paten (KI)
                                 </button>
                                 <button type="button" @click="kategoriVal = 'Hak Cipta (HKI)'" class="px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-[10px] font-extrabold transition">
-                                    📜 Hak Cipta (HKI)
+                                    Hak Cipta (HKI)
                                 </button>
                                 <button type="button" @click="kategoriVal = 'Desain Industri (KI)'" class="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[10px] font-extrabold transition">
-                                    🎨 Desain Industri (KI)
+                                    Desain Industri (KI)
                                 </button>
                                 <button type="button" @click="kategoriVal = 'Jurnal Internasional Terindeks Scopus'" class="px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 text-[10px] font-extrabold transition">
-                                    📚 Scopus
+                                    Scopus
                                 </button>
                             </div>
                         </form>
@@ -633,7 +633,7 @@
                         <div class="flex justify-between">
                             <span class="text-slate-500 font-bold">Status Berkas PDF/A:</span>
                             <span class="font-bold {{ $usulan->file_proposal_path ? 'text-emerald-700' : 'text-rose-600' }}">
-                                {{ $usulan->file_proposal_path ? '✓ Terunggah' : '❌ Belum Diunggah' }}
+                                {{ $usulan->file_proposal_path ? 'Sudah Terunggah' : 'Belum Diunggah' }}
                             </span>
                         </div>
                     </div>

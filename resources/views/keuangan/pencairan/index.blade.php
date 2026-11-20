@@ -197,8 +197,8 @@
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     @if($search)
-                        <a href="{{ route('keuangan.pencairan.index', ['tab' => $tab]) }}" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold" title="Reset pencarian">
-                            ✕
+                        <a href="{{ route('keuangan.pencairan.index', ['tab' => $tab]) }}" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 inline-flex items-center justify-center" title="Reset pencarian">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                         </a>
                     @endif
                 </form>
@@ -372,17 +372,17 @@
                                                 <div class="flex items-center justify-between text-[11px]">
                                                     <span class="text-slate-500">SPK Digital:</span>
                                                     @if($kontrak->signed_by_pengusul)
-                                                        <span class="font-bold text-emerald-700">✓ Ditandatangani</span>
+                                                        <span class="font-bold text-emerald-700">Ditandatangani</span>
                                                     @else
-                                                        <span class="font-bold text-amber-600">⏳ Menunggu TTD</span>
+                                                        <span class="font-bold text-amber-600">Menunggu TTD</span>
                                                     @endif
                                                 </div>
                                                 <div class="flex items-center justify-between text-[11px]">
                                                     <span class="text-slate-500">Buku Tabungan:</span>
                                                     @if($kontrak->rekening_verified_at)
-                                                        <span class="font-bold text-emerald-700">✓ Terverifikasi</span>
+                                                        <span class="font-bold text-emerald-700">Terverifikasi</span>
                                                     @elseif($kontrak->nomor_rekening)
-                                                        <span class="font-bold text-amber-600">⚠️ Belum Verifikasi</span>
+                                                        <span class="font-bold text-amber-600">Belum Verifikasi</span>
                                                     @else
                                                         <span class="text-slate-400 italic">Belum Diunggah</span>
                                                     @endif
@@ -391,7 +391,7 @@
                                         </div>
                                         <div class="pt-2 border-t {{ ($kontrak->isFullySigned() && $kontrak->hasVerifiedRekening()) ? 'border-emerald-200/60 text-emerald-800 font-semibold' : 'border-slate-200 text-slate-500' }} text-[11px]">
                                             @if($kontrak->isFullySigned() && $kontrak->hasVerifiedRekening())
-                                                <span>✓ Siap Pencairan Dana Awal</span>
+                                                <span>Siap Pencairan Dana Awal</span>
                                             @elseif($needsRekeningVerification)
                                                 <span class="text-amber-800 font-bold">Buku tabungan siap divalidasi</span>
                                             @else
@@ -470,7 +470,7 @@
                                                 <div class="flex items-center justify-between text-[11px]">
                                                     <span class="text-slate-500">Lap. Akhir 100%:</span>
                                                     @if($hasLaporanAkhir)
-                                                        <span class="font-bold text-emerald-700">✓ Siap Terunggah</span>
+                                                        <span class="font-bold text-emerald-700">Sudah Terunggah</span>
                                                     @else
                                                         <span class="font-bold text-amber-600">Belum Diunggah</span>
                                                     @endif
@@ -528,7 +528,7 @@
                                 </div>
                                 <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
                                     <span>Terserap {{ $pct }}%</span>
-                                    <span>{{ $pct == 100 ? '✓ Pelunasan Selesai' : ($pct == 70 ? 'Termin I Tersalurkan' : 'Belum Ada Penyaluran') }}</span>
+                                    <span>{{ $pct == 100 ? 'Pelunasan Selesai' : ($pct == 70 ? 'Termin I Tersalurkan' : 'Belum Ada Penyaluran') }}</span>
                                 </div>
                             </div>
 

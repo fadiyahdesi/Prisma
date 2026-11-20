@@ -65,8 +65,9 @@
     // 9. EPIC 07: Keselarasan Usulan dengan Roadmap Keilmuan Prodi
     $canReviewRoadmap = in_array($currentRole, ['Kaprodi', 'Superadmin'], true);
 
-    // 10. EPIC 08: Penilaian Proposal Substantif (Reviewer)
-    $canReviewSubstance = in_array($currentRole, ['Reviewer', 'Superadmin'], true);
+    // 10. EPIC 08: Penilaian Proposal Substantif (Reviewer + dual-role Dosen yang ditugaskan Reviewer)
+    $isDualReviewer = ($user && empty(session('active_role')) && $currentRole === 'Dosen / Pengusul' && $user->hasRole('Reviewer'));
+    $canReviewSubstance = in_array($currentRole, ['Reviewer', 'Superadmin'], true) || $isDualReviewer;
     $pendingReviewCount = $user ? \App\Models\PpmPenugasanReviewer::where('id_reviewer', $user->id)
         ->where('status_penugasan', 'assigned')
         ->count() : 0;
@@ -109,11 +110,17 @@
     $canAccessPelaksanaan = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
 
     // 15. EPIC 10: Evaluasi Monev Lapangan 70% (Reviewer)
-    $canReviewMonev = in_array($currentRole, ['Reviewer', 'Superadmin'], true);
+    $canReviewMonev = in_array($currentRole, ['Reviewer', 'Superadmin'], true) || $isDualReviewer;
     $pendingMonevCount = ($user && $canReviewMonev) ? \App\Models\PpmMonevKemajuan::where('status', 'submitted')->count() : 0;
 
-    // 16. EPIC 10: Seminar Hasil (Semhas) & Laporan Akhir (Kepala P3M, Superadmin)
+    // 16. EPIC 10: Seminar Hasil (Semhas) & Laporan Akhir (Kepala P3M, Divisi, Superadmin)
     $canManageSemhas = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
+    $pendingSemhasPenelitianCount = ($isDivisiPenelitian || $isSuperadmin)
+        ? \App\Models\PpmUsulan::whereNull('no_urut')->whereIn('status', ['Contracted', 'Ongoing', 'Completed'])->where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'penelitian')))->whereDoesntHave('seminarHasil', fn($q) => $q->whereNotNull('skor_seminar'))->count()
+        : 0;
+    $pendingSemhasPengabdianCount = ($isDivisiPengabdian || $isSuperadmin)
+        ? \App\Models\PpmUsulan::whereNull('no_urut')->whereIn('status', ['Contracted', 'Ongoing', 'Completed'])->where(fn($q) => $q->where('kategori_usulan', 'pengabdian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'pengabdian')))->whereDoesntHave('seminarHasil', fn($q) => $q->whereNotNull('skor_seminar'))->count()
+        : 0;
 
     // 17. EPIC 09 & 10: Pencairan Dana Hibah Termin 1 & 2 (Divisi Keuangan)
     $canManageDisbursement = in_array($currentRole, ['Keuangan', 'Superadmin'], true);
@@ -430,6 +437,9 @@
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Semhas &amp; Laporan Akhir</span>
                     </span>
+                    @if($pendingSemhasPenelitianCount > 0)
+                        <span class="min-w-4 h-4 px-1 rounded-full bg-indigo-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingSemhasPenelitianCount }}</span>
+                    @endif
                 </a>
             </div>
         @endif
@@ -475,6 +485,9 @@
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Semhas &amp; Laporan Akhir</span>
                     </span>
+                    @if($pendingSemhasPengabdianCount > 0)
+                        <span class="min-w-4 h-4 px-1 rounded-full bg-indigo-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingSemhasPengabdianCount }}</span>
+                    @endif
                 </a>
             </div>
         @endif

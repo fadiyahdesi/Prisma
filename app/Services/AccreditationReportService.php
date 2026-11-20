@@ -17,6 +17,13 @@ class AccreditationReportService
     public function getPenelitianDtps(?int $fakultasId = null, ?int $prodiId = null, ?int $tahun = null, ?string $semester = null): array
     {
         $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi.fakultas', 'skema', 'kontrak', 'periode', 'anggota'])
+            ->where(function ($q) {
+                $q->where('kategori_usulan', 'penelitian')
+                  ->orWhere(function ($sub) {
+                      $sub->whereNull('kategori_usulan')
+                          ->whereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', ['penelitian']));
+                  });
+            })
             ->whereIn('status', ['Approved', 'Ongoing', 'Completed']);
 
         if ($fakultasId) {
@@ -85,16 +92,25 @@ class AccreditationReportService
      */
     public function getPkpDtps(?int $fakultasId = null, ?int $prodiId = null, ?int $tahun = null): array
     {
-        $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi.fakultas', 'skema', 'kontrak', 'periode'])
-            ->whereHas('skema', fn ($sq) => $sq->where('kategori', 'pengabdian'))
+        $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi.fakultas', 'skema', 'kontrak', 'periode', 'anggota'])
+            ->where(function ($q) {
+                $q->where('kategori_usulan', 'pengabdian')
+                  ->orWhereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', ['pengabdian']));
+            })
             ->whereIn('status', ['Approved', 'Ongoing', 'Completed']);
 
         if ($fakultasId) {
-            $query->whereHas('pengusul', fn($q) => $q->where('id_fakultas', $fakultasId));
+            $query->where(function ($q) use ($fakultasId) {
+                $q->whereHas('prodi', fn ($pq) => $pq->where('id_fakultas', $fakultasId))
+                  ->orWhereHas('pengusul', fn ($uq) => $uq->where('id_fakultas', $fakultasId));
+            });
         }
 
         if ($prodiId) {
-            $query->whereHas('pengusul', fn($q) => $q->where('id_prodi', $prodiId));
+            $query->where(function ($q) use ($prodiId) {
+                $q->where('id_prodi', $prodiId)
+                  ->orWhereHas('pengusul', fn ($uq) => $uq->where('id_prodi', $prodiId));
+            });
         }
 
         if ($tahun) {
@@ -104,20 +120,25 @@ class AccreditationReportService
             });
         }
 
-        return $query->latest()->get()->map(function ($u, $idx) {
-            return [
-                'no' => $idx + 1,
-                'tahun' => $u->periode?->tahun_anggaran ?? $u->created_at->format('Y'),
-                'judul' => $u->judul_usulan,
-                'nama_dosen' => $u->nama_ketua ?: $u->pengusul->name,
-                'nidn' => $u->nidn_ketua ?: ($u->pengusul->nidn_nim ?: '-'),
-                'fakultas' => $u->pengusul->fakultas?->nama_fakultas ?: '-',
-                'prodi' => $u->nama_prodi ?: ($u->pengusul->prodi?->nama_prodi ?: '-'),
-                'mitra' => $u->nama_mitra ?: '-',
-                'pagu' => (float) ($u->kontrak?->pagu_disetujui ?? $u->total_rab),
-                'sumber_dana' => 'Internal UHN',
-            ];
-        })->toArray();
+        return $query
+            ->orderByRaw('CASE WHEN no_urut IS NULL THEN 1 ELSE 0 END ASC')
+            ->orderBy('no_urut', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->map(function ($u, $idx) {
+                return [
+                    'no' => $u->no_urut ?? ($idx + 1),
+                    'tahun' => $u->periode?->tahun_anggaran ?? $u->created_at?->format('Y') ?? '-',
+                    'judul' => $u->judul_usulan,
+                    'nama_dosen' => $u->nama_ketua ?: ($u->pengusul?->name ?: '-'),
+                    'nidn' => $u->nidn_ketua ?: ($u->pengusul?->nidn_nim ?: '-'),
+                    'fakultas' => $u->prodi?->fakultas?->nama_fakultas ?? ($u->pengusul?->fakultas?->nama_fakultas ?: '-'),
+                    'prodi' => $u->nama_prodi ?: ($u->prodi?->nama_prodi ?? ($u->pengusul?->prodi?->nama_prodi ?: '-')),
+                    'mitra' => $u->nama_mitra ?: '-',
+                    'pagu' => (float) ($u->kontrak?->pagu_disetujui ?? $u->total_rab ?? 0),
+                    'sumber_dana' => 'Internal UHN',
+                ];
+            })->toArray();
     }
 
     /**
@@ -139,23 +160,28 @@ class AccreditationReportService
             $query->where('tahun_terbit', $tahun);
         }
 
-        return $query->latest()->get()->map(function ($p, $idx) {
-            return [
-                'no' => $idx + 1,
-                'tahun' => $p->tahun_terbit,
-                'judul' => $p->judul_artikel,
-                'nama_dosen' => $p->user->name,
-                'nidn' => $p->user->nidn_nim ?: '-',
-                'fakultas' => $p->user->fakultas?->nama_fakultas ?: '-',
-                'prodi' => $p->user->prodi?->nama_prodi ?: '-',
-                'nama_jurnal' => $p->nama_jurnal,
-                'issn' => $p->issn ?: '-',
-                'peringkat' => $p->kategori_peringkat,
-                'volume_nomor' => $p->volume_nomor ?: '-',
-                'doi' => $p->doi,
-                'sitasi' => rand(1, 15),
-            ];
-        })->toArray();
+        return $query
+            ->orderByRaw('CASE WHEN no_urut IS NULL THEN 1 ELSE 0 END ASC')
+            ->orderBy('no_urut', 'asc')
+            ->latest('id')
+            ->get()
+            ->map(function ($p, $idx) {
+                return [
+                    'no' => $p->no_urut ?? ($idx + 1),
+                    'tahun' => $p->tahun_terbit ?: '-',
+                    'judul' => $p->judul_artikel,
+                    'nama_dosen' => $p->user?->name ?: ($p->penulis ?: '-'),
+                    'nidn' => $p->user?->nidn_nim ?: '-',
+                    'fakultas' => $p->user?->fakultas?->nama_fakultas ?: '-',
+                    'prodi' => $p->user?->prodi?->nama_prodi ?: '-',
+                    'nama_jurnal' => $p->nama_jurnal,
+                    'issn' => $p->issn ?: '-',
+                    'peringkat' => $p->kategori_peringkat,
+                    'volume_nomor' => $p->volume_nomor ?: '-',
+                    'doi' => $p->doi,
+                    'sitasi' => 0,
+                ];
+            })->toArray();
     }
 
     /**

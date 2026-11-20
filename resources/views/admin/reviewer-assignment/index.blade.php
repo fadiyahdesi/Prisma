@@ -91,7 +91,9 @@
                             {{ $stats['total_in_review'] }} <span class="text-[11px] font-semibold text-slate-400">Usulan</span>
                         </div>
                     </div>
-                    <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xs shrink-0">⏳</span>
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </span>
                 </div>
 
                 <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 shadow-xs flex items-center justify-between">
@@ -101,7 +103,9 @@
                             {{ $stats['total_adjudication'] }} <span class="text-[11px] font-semibold text-amber-600/80">Usulan</span>
                         </div>
                     </div>
-                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xs shrink-0">⚠️</span>
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </span>
                 </div>
 
                 <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 shadow-xs flex items-center justify-between">
@@ -111,7 +115,9 @@
                             {{ $stats['total_reviewed'] }} <span class="text-[11px] font-semibold text-emerald-600/80">Usulan</span>
                         </div>
                     </div>
-                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs shrink-0">✅</span>
+                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    </span>
                 </div>
 
                 @if(($canSwitchDivisi ?? true) || $kategoriFilter === 'penelitian')
@@ -119,7 +125,7 @@
                     <a href="{{ ($canSwitchDivisi ?? true) ? route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'penelitian' ? [] : ['divisi' => 'penelitian'])) : route('admin.reviewer-assignment.index') }}"
                        class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-blue-50/60 hover:bg-blue-100/70 border-blue-200 text-slate-800' }}">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-900' }}">🔬 Penelitian</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-900' }}">Penelitian</span>
                             <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'penelitian' ? 'text-white' : 'text-blue-700' }}">
                                 {{ $stats['total_penelitian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-600' }}">Usulan</span>
                             </div>
@@ -135,7 +141,7 @@
                     <a href="{{ ($canSwitchDivisi ?? true) ? route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'pengabdian' ? [] : ['divisi' => 'pengabdian'])) : route('admin.reviewer-assignment.index') }}"
                        class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between col-span-2 md:col-span-1 {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-purple-50/60 hover:bg-purple-100/70 border-purple-200 text-slate-800' }}">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-900' }}">🤝 Pengabdian</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-900' }}">Pengabdian</span>
                             <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'pengabdian' ? 'text-white' : 'text-purple-700' }}">
                                 {{ $stats['total_pengabdian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-600' }}">Usulan</span>
                             </div>
@@ -168,7 +174,7 @@
                                     <form method="POST" action="{{ route('admin.reviewer-assignment.approve-applicant', $calon) }}">
                                         @csrf
                                         <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] cursor-pointer">
-                                            ✓ Setujui Reviewer
+                                            Setujui Reviewer
                                         </button>
                                     </form>
                                     <form method="POST" action="{{ route('admin.reviewer-assignment.reject-applicant', $calon) }}">
@@ -195,15 +201,15 @@
                         </a>
                         <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'penelitian'])) }}"
                            class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            🔬 Penelitian
+                            Penelitian
                         </a>
                         <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'pengabdian'])) }}"
                            class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                            🤝 Pengabdian
+                            Pengabdian
                         </a>
                     @else
                         <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white' }}">
-                            {{ $kategoriFilter === 'pengabdian' ? '🤝 Khusus Divisi Pengabdian' : '🔬 Khusus Divisi Penelitian' }}
+                            {{ $kategoriFilter === 'pengabdian' ? 'Khusus Divisi Pengabdian' : 'Khusus Divisi Penelitian' }}
                         </span>
                     @endif
                 </div>
@@ -503,7 +509,7 @@
                         <select name="reviewer_1_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 1 (Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>
@@ -515,7 +521,7 @@
                         <select name="reviewer_2_id" :required="reviewerCount == 2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 2 (Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>
@@ -573,7 +579,7 @@
                         <select name="adjudicator_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 3 --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>

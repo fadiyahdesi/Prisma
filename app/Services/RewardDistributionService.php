@@ -19,10 +19,26 @@ class RewardDistributionService
      */
     public function getTarif(string $kategori, string $subKategori): ?RefTarifRewardSk
     {
-        return RefTarifRewardSk::where('kategori', $kategori)
+        $exact = RefTarifRewardSk::where('kategori', $kategori)
             ->where('sub_kategori', $subKategori)
             ->where('is_active', true)
             ->first();
+
+        if ($exact) {
+            return $exact;
+        }
+
+        $normalized = strtolower(trim($subKategori));
+        $alias = match ($normalized) {
+            'internasional', 'jurnal internasional' => 'Internasional Terindeks Lainnya',
+            'nasional tidak terakreditasi', 'jurnal nasional' => 'Nasional Terakreditasi',
+            default => null,
+        };
+
+        return $alias ? RefTarifRewardSk::where('kategori', $kategori)
+            ->where('sub_kategori', $alias)
+            ->where('is_active', true)
+            ->first() : null;
     }
 
     /**

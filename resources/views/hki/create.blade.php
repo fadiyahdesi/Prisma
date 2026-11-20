@@ -73,7 +73,9 @@
                                  class="cursor-pointer p-3.5 rounded-2xl border-2 transition text-left flex flex-col justify-between">
                                 <div class="flex items-center justify-between mb-1.5">
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-indigo-200 text-indigo-900">PATEN</span>
-                                    <span :class="kategoriPilihan === 'paten' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'" class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px]">✓</span>
+                                    <span :class="kategoriPilihan === 'paten' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 text-transparent'" class="w-4 h-4 rounded-full border flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </span>
                                 </div>
                                 <h4 class="font-extrabold text-xs text-slate-900">Paten &amp; Paten Sederhana</h4>
                                 <p class="text-[11px] text-slate-500 mt-1">Invensi teknologi, metode, alat, atau formulasi baru yang memiliki kebaruan ilmiah.</p>
@@ -84,7 +86,9 @@
                                  class="cursor-pointer p-3.5 rounded-2xl border-2 transition text-left flex flex-col justify-between">
                                 <div class="flex items-center justify-between mb-1.5">
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-200 text-blue-900">HKI</span>
-                                    <span :class="kategoriPilihan === 'hki' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'" class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px]">✓</span>
+                                    <span :class="kategoriPilihan === 'hki' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 text-transparent'" class="w-4 h-4 rounded-full border flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </span>
                                 </div>
                                 <h4 class="font-extrabold text-xs text-slate-900">Hak Cipta (HKI)</h4>
                                 <p class="text-[11px] text-slate-500 mt-1">Karya tulis, monograf, buku ajar, aplikasi perangkat lunak (source code), dan modul.</p>
@@ -95,7 +99,9 @@
                                  class="cursor-pointer p-3.5 rounded-2xl border-2 transition text-left flex flex-col justify-between">
                                 <div class="flex items-center justify-between mb-1.5">
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-200 text-emerald-900">KI LAINNYA</span>
-                                    <span :class="kategoriPilihan === 'ki' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'" class="w-4 h-4 rounded-full border flex items-center justify-center text-[10px]">✓</span>
+                                    <span :class="kategoriPilihan === 'ki' ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 text-transparent'" class="w-4 h-4 rounded-full border flex items-center justify-center">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    </span>
                                 </div>
                                 <h4 class="font-extrabold text-xs text-slate-900">Desain Industri &amp; Merk</h4>
                                 <p class="text-[11px] text-slate-500 mt-1">Kreasi bentuk, konfigurasi 3 dimensi, rancangan grafis kemasan produk, dan merk dagang.</p>
@@ -185,11 +191,11 @@
                         <p class="text-xs font-semibold text-slate-500">Unggah berkas karya cipta, surat pernyataan, dan surat pengalihan hak sesuai format standar Sentra HKI UHN</p>
                     </div>
 
-                    {{-- ✅ TAUTAN EKSTERNAL (RECOMMENDED) --}}
+                    {{-- TAUTAN EKSTERNAL (RECOMMENDED) --}}
                     <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
                         <label class="block text-xs font-bold text-amber-800 mb-1">
-                            🔗 Tautan Eksternal DJKI / Repository
-                            <span class="text-amber-600 font-normal ml-1">(Disarankan — lebih efisien)</span>
+                            Tautan Eksternal DJKI / Repository
+                            <span class="text-amber-600 font-normal ml-1">(Disarankan &mdash; lebih efisien)</span>
                         </label>
                         <input type="url" name="tautan_eksternal"
                                value="{{ old('tautan_eksternal') }}"
@@ -199,7 +205,7 @@
                             <p class="text-xs text-red-500 font-semibold">{{ $message }}</p>
                         @enderror
                         <p class="text-[11px] text-amber-700 font-semibold">
-                            💡 <strong>Direkomendasikan:</strong> Masukkan tautan ke PDKI Online (pdki-indonesia.dgip.go.id), Google Drive, atau repositori institusi daripada mengunggah PDF — lebih hemat penyimpanan dan mudah diakses reviewer.
+                            <strong>Direkomendasikan:</strong> Masukkan tautan ke PDKI Online (pdki-indonesia.dgip.go.id), Google Drive, atau repositori institusi daripada mengunggah PDF agar lebih hemat penyimpanan dan mudah diakses reviewer.
                         </p>
                     </div>
 
