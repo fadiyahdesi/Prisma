@@ -60,7 +60,7 @@ class ProposalWizardController extends Controller
         }
 
         $user = Auth::user();
-        $activeRole = session('active_role') ?? $user->primaryRoleName();
+        $activeRole = $user->effectiveRoleName();
 
         $defaultKategori = request()->routeIs('pengabdian.index')
             ? 'pengabdian'
@@ -117,9 +117,9 @@ class ProposalWizardController extends Controller
             });
         }
 
-        $perPage = (int) $request->input('per_page', 500);
+        $perPage = (int) $request->input('per_page', 25);
         if (!in_array($perPage, [25, 50, 100, 250, 500], true)) {
-            $perPage = 500;
+            $perPage = 25;
         }
 
         $proposals = $query
