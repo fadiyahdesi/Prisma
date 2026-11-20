@@ -65,12 +65,12 @@
                             <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight">
                                 {{ $isAdmin ? 'Data ' . $labelBidang . ' UHN' : $labelBidang . ' Saya' }}
                             </h1>
-                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-800 border border-slate-200 tabular-nums">
+                            <!-- <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-800 border border-slate-200 tabular-nums">
                                 {{ number_format($totalAllCount) }} Data
-                            </span>
+                            </span> -->
                         </div>
                         <p class="text-xs font-medium text-slate-500 mt-0.5">
-                            {{ $isAdmin ? 'Basis Data Resmi ' . $labelBidang . ' • Universitas Harkat Negeri' : 'Daftar karya ' . strtolower($labelBidang) . ' yang Anda hasilkan' }}
+                            <!-- {{ $isAdmin ? 'Basis Data Resmi ' . $labelBidang . ' • Universitas Harkat Negeri' : 'Daftar karya ' . strtolower($labelBidang) . ' yang Anda hasilkan' }} -->
                         </p>
                     </div>
                 </div>
@@ -141,6 +141,358 @@
                                 </a>
                             </div>
                         @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- STATISTIK UTAMA & GRAFIK BAR (PRODI, DANA & SEMESTER) --}}
+            @php
+                $search = $search ?? request('search');
+                $semesterFilter = $semesterFilter ?? request('semester');
+                $prodiFilter = $prodiFilter ?? request('prodi');
+                $hasFilter = !empty($search) || !empty($semesterFilter) || !empty($prodiFilter) || (($scope ?? 'all') === 'mine' && $isAdmin);
+                $statFilteredCount = $summaryStats['filtered_count'] ?? $proposals->total();
+                $statTotalAllCount = $summaryStats['total_all_count'] ?? $totalAllCount;
+                $statAvgNominal = $summaryStats['avg_nominal'] ?? ($statFilteredCount > 0 ? ($totalNominal / $statFilteredCount) : 0);
+                $statMaxNominal = $summaryStats['max_nominal'] ?? 0;
+                $statProdiCount = $summaryStats['prodi_count'] ?? ($prodiStats ?? collect())->count();
+                $statSemesterCount = $summaryStats['semester_count'] ?? ($semesterStats ?? collect())->count();
+                $topProdiJudul = $summaryStats['top_prodi_judul'] ?? ($prodiStats ?? collect())->first();
+                $topProdiDana = $summaryStats['top_prodi_dana'] ?? ($prodiStats ?? collect())->sortByDesc('total_dana')->first();
+                $topSemester = $summaryStats['top_semester'] ?? ($semesterStats ?? collect())->sortByDesc('total_dana')->first();
+                $coveragePct = $statTotalAllCount > 0 ? round(($statFilteredCount / $statTotalAllCount) * 100, 1) : 100;
+            @endphp
+
+            {{-- 4 Kartu Ringkasan Statistik --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5">
+                {{-- Kartu 1: Total Judul --}}
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Total Judul {{ $isPengabdian ? 'Pengabdian' : 'Penelitian' }}</span>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold {{ $isPengabdian ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#681727]/10 text-[#681727] border border-[#681727]/20' }}">
+                                {{ $coveragePct }}% Data
+                            </span>
+                        </div>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">{{ number_format($statFilteredCount, 0, ',', '.') }}</span>
+                            <span class="text-xs font-bold text-slate-500">Judul</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100">
+                        <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1.5">
+                            <div class="h-full rounded-full {{ $isPengabdian ? 'bg-emerald-600' : 'bg-[#681727]' }}" style="width: {{ min(100, max(4, $coveragePct)) }}%"></div>
+                        </div>
+                        <p class="text-[11px] font-semibold text-slate-500">
+                            @if($hasFilter)
+                                Terfilter dari <strong class="text-slate-700">{{ number_format($statTotalAllCount, 0, ',', '.') }}</strong> total data resmi
+                            @else
+                                Seluruh basis data resmi terdaftar (<strong class="text-slate-700">1..{{ number_format($statTotalAllCount, 0, ',', '.') }}</strong>)
+                            @endif
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Kartu 2: Total Akumulasi Dana Hibah (Full Untruncated) --}}
+                <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Total Akumulasi Dana Hibah</span>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Realisasi Pendanaan
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-xl sm:text-2xl font-black text-emerald-800 tabular-nums break-words leading-tight">
+                                Rp {{ number_format($totalNominal, 0, ',', '.') }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <span class="font-semibold text-slate-500">
+                            Rata-rata: <strong class="text-slate-800 tabular-nums">Rp {{ number_format($statAvgNominal, 0, ',', '.') }}</strong> / judul
+                        </span>
+                        <span class="font-semibold text-slate-500">
+                            Maks: <strong class="text-emerald-700 tabular-nums">Rp {{ number_format($statMaxNominal, 0, ',', '.') }}</strong>
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Kartu 3: Cakupan Program Studi --}}
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Cakupan Program Studi</span>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                Distribusi Prodi
+                            </span>
+                        </div>
+                        <div class="mt-2 flex items-baseline gap-2">
+                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">{{ number_format($statProdiCount, 0, ',', '.') }}</span>
+                            <span class="text-xs font-bold text-slate-500">Program Studi</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] space-y-0.5">
+                        @if($topProdiJudul)
+                            <p class="font-semibold text-slate-500 truncate" title="{{ $topProdiJudul->label }} ({{ $topProdiJudul->total_judul }} Judul)">
+                                Terbanyak: <strong class="text-slate-800">{{ $topProdiJudul->label }}</strong> ({{ number_format($topProdiJudul->total_judul, 0, ',', '.') }})
+                            </p>
+                        @endif
+                        @if($topProdiDana)
+                            <p class="font-semibold text-slate-500 break-words">
+                                Dana Tertinggi: <strong class="text-emerald-700 tabular-nums">Rp {{ number_format($topProdiDana->total_dana, 0, ',', '.') }}</strong>
+                            </p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Kartu 4: Periode Semester --}}
+                <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Periode Aktif</span>
+                        </div>
+                        <div class="mt-2 flex items-baseline gap-1.5">
+                            <span class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">{{ number_format($statSemesterCount, 0, ',', '.') }}</span>
+                            <span class="text-xs font-bold text-slate-500">Semester</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] space-y-0.5">
+                        @if($topSemester)
+                            <p class="font-semibold text-slate-500">
+                                Puncak: <strong class="text-slate-800">{{ $topSemester->label }}</strong>
+                            </p>
+                            <p class="font-bold text-emerald-700 tabular-nums">
+                                {{ number_format($topSemester->total_judul, 0, ',', '.') }} Judul
+                            </p>
+                        @else
+                            <p class="font-semibold text-slate-400">Belum ada data periode</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Panel Visualisasi Bar: Program Studi, Dana & Periode Semester --}}
+            @if(($prodiStats ?? collect())->isNotEmpty() || ($semesterStats ?? collect())->isNotEmpty())
+                <div x-data="{ showStatsBar: true, prodiMode: 'judul', showAllProdi: false }" class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                    {{-- Header Panel Statistik Bar --}}
+                    <div class="px-4 sm:px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-white">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg flex items-center justify-center {{ $isPengabdian ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#681727]/10 text-[#681727] border border-[#681727]/20' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                                    Statistik & Grafik Bar Program Studi, Pendanaan, dan Semester
+                                </h2>
+                                <p class="text-[11px] font-medium text-slate-500">
+                                    Klik baris <strong class="text-slate-700">Program Studi</strong> atau <strong class="text-slate-700">Semester</strong> pada grafik bar untuk memfilter tabel di bawah secara langsung.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            @if(!empty($prodiFilter) || !empty($semesterFilter))
+                                <a href="{{ request()->fullUrlWithQuery(['prodi' => null, 'semester' => null, 'page' => null]) }}"
+                                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors">
+                                    Reset Filter Grafik
+                                </a>
+                            @endif
+                            <button type="button"
+                                    @click="showStatsBar = !showStatsBar"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer">
+                                <span x-text="showStatsBar ? 'Sembunyikan Grafik' : 'Tampilkan Grafik'">Sembunyikan Grafik</span>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="showStatsBar ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Isi Grafik Bar 2 Kolom --}}
+                    <div x-show="showStatsBar" x-transition class="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 bg-slate-50/40">
+                        {{-- KOLOM KIRI (7 COL): BAR DISTRIBUSI PROGRAM STUDI (JUDUL & DANA) --}}
+                        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+                                    <div>
+                                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                                            Distribusi per Program Studi ({{ ($prodiStats ?? collect())->count() }} Prodi)
+                                        </h3>
+                                        <p class="text-[11px] text-slate-500 font-medium">
+                                            Perbandingan jumlah judul & serapan dana hibah antar program studi
+                                        </p>
+                                    </div>
+                                    {{-- Toggle Mode Bar: Berdasarkan Judul vs Dana --}}
+                                    <div class="inline-flex rounded-lg p-0.5 bg-slate-100 border border-slate-200">
+                                        <button type="button"
+                                                @click="prodiMode = 'judul'"
+                                                :class="prodiMode === 'judul' ? 'bg-white text-slate-900 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                                                class="px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer">
+                                            Bar Jumlah Judul
+                                        </button>
+                                        <button type="button"
+                                                @click="prodiMode = 'dana'"
+                                                :class="prodiMode === 'dana' ? 'bg-white text-emerald-800 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900 font-semibold'"
+                                                class="px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer">
+                                            Bar Total Dana (Rp)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Daftar Bar Program Studi --}}
+                                <div class="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                                    @foreach(($prodiStats ?? collect()) as $idx => $pStat)
+                                        @php
+                                            $isProdiSelected = ($prodiFilter === $pStat->label);
+                                            $prodiToggleUrl = request()->fullUrlWithQuery([
+                                                'prodi' => $isProdiSelected ? null : $pStat->label,
+                                                'page' => null,
+                                            ]);
+                                        @endphp
+                                        <a href="{{ $prodiToggleUrl }}"
+                                           x-show="showAllProdi || {{ $idx }} < 8"
+                                           class="block p-2.5 rounded-xl border transition-all group {{ $isProdiSelected ? 'bg-[#681727]/5 border-[#681727] ring-1 ring-[#681727]/20' : 'bg-slate-50/60 hover:bg-slate-100/80 border-slate-200/80' }}">
+                                            <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <span class="w-5 h-5 rounded-md text-[10px] font-extrabold flex items-center justify-center shrink-0 {{ $idx < 3 ? ($isPengabdian ? 'bg-emerald-600 text-white' : 'bg-[#681727] text-white') : 'bg-slate-200 text-slate-700' }}">
+                                                        {{ $pStat->rank }}
+                                                    </span>
+                                                    <span class="text-xs font-extrabold text-slate-800 group-hover:text-[#681727] truncate">
+                                                        {{ $pStat->label }}
+                                                    </span>
+                                                    @if($isProdiSelected)
+                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#681727] text-white">
+                                                            Filter Aktif
+                                                        </span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="flex items-center gap-3 text-[11px] shrink-0">
+                                                    <span class="font-extrabold text-slate-800 tabular-nums">
+                                                        {{ number_format($pStat->total_judul, 0, ',', '.') }} Judul
+                                                        <span class="text-slate-400 font-semibold">({{ $pStat->share_judul_pct }}%)</span>
+                                                    </span>
+                                                    <span class="text-slate-300">|</span>
+                                                    <span class="font-extrabold text-emerald-700 tabular-nums">
+                                                        Rp {{ number_format($pStat->total_dana, 0, ',', '.') }}
+                                                        <span class="text-emerald-600/75 font-semibold">({{ $pStat->share_dana_pct }}%)</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {{-- Horizontal Progress Bar (Judul vs Dana) --}}
+                                            <div class="w-full h-2.5 bg-slate-200/70 rounded-full overflow-hidden">
+                                                <div x-show="prodiMode === 'judul'"
+                                                     class="h-full rounded-full transition-all duration-300 {{ $isPengabdian ? 'bg-emerald-600' : 'bg-[#681727]' }}"
+                                                     style="width: {{ max(4, $pStat->bar_judul_pct) }}%"></div>
+                                                <div x-show="prodiMode === 'dana'"
+                                                     style="display: none; width: {{ max(4, $pStat->bar_dana_pct) }}%"
+                                                     class="h-full rounded-full transition-all duration-300 bg-emerald-600"></div>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            @if(($prodiStats ?? collect())->count() > 8)
+                                <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                                    <span class="text-[11px] font-medium text-slate-500">
+                                        Menampilkan <span class="font-bold text-slate-700" x-text="showAllProdi ? '{{ ($prodiStats ?? collect())->count() }}' : '8'">8</span> dari {{ ($prodiStats ?? collect())->count() }} Program Studi
+                                    </span>
+                                    <button type="button"
+                                            @click="showAllProdi = !showAllProdi"
+                                            class="text-[11px] font-extrabold text-[#681727] hover:underline cursor-pointer">
+                                        <span x-text="showAllProdi ? 'Ringkas Top 8 Program Studi' : 'Lihat Semua Program Studi ({{ ($prodiStats ?? collect())->count() }})'">Lihat Semua Program Studi</span>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- KOLOM KANAN (5 COL): BAR DISTRIBUSI PERIODE SEMESTER & DANA --}}
+                        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+                                    <div>
+                                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                                            Tren Periode Semester & Pendanaan
+                                        </h3>
+                                        <p class="text-[11px] text-slate-500 font-medium">
+                                            Proporsi volume judul & akumulasi dana per semester
+                                        </p>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
+                                        {{ ($semesterStats ?? collect())->count() }} Periode
+                                    </span>
+                                </div>
+
+                                <div class="space-y-3 max-h-[295px] overflow-y-auto pr-1">
+                                    @foreach(($semesterStats ?? collect()) as $sStat)
+                                        @php
+                                            $isSemSelected = ($semesterFilter === $sStat->label);
+                                            $semToggleUrl = request()->fullUrlWithQuery([
+                                                'semester' => $isSemSelected ? null : $sStat->label,
+                                                'page' => null,
+                                            ]);
+                                        @endphp
+                                        <a href="{{ $semToggleUrl }}"
+                                           class="block p-3 rounded-xl border transition-all group {{ $isSemSelected ? 'bg-[#681727]/5 border-[#681727] ring-1 ring-[#681727]/20' : 'bg-slate-50/60 hover:bg-slate-100/80 border-slate-200/80' }}">
+                                            <div class="flex items-center justify-between gap-2 mb-1">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-extrabold text-slate-900 group-hover:text-[#681727]">
+                                                        Semester {{ $sStat->label }}
+                                                    </span>
+                                                    @if($isSemSelected)
+                                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-[#681727] text-white">
+                                                            Filter Aktif
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-white text-slate-800 border border-slate-200 tabular-nums">
+                                                    {{ number_format($sStat->total_judul, 0, ',', '.') }} Judul ({{ $sStat->share_judul_pct }}%)
+                                                </span>
+                                            </div>
+
+                                            <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] mb-2">
+                                                <span class="font-extrabold text-emerald-700 tabular-nums break-words">
+                                                    Rp {{ number_format($sStat->total_dana, 0, ',', '.') }}
+                                                </span>
+                                                <span class="text-[10px] font-semibold text-slate-500 tabular-nums">
+                                                    Rata-rata Rp {{ number_format($sStat->avg_dana, 0, ',', '.') }} / judul ({{ $sStat->share_dana_pct }}% dana)
+                                                </span>
+                                            </div>
+
+                                            {{-- Dual Bar: Bar 1 Volume Judul, Bar 2 Total Dana --}}
+                                            <div class="space-y-1">
+                                                <div class="w-full h-2 bg-slate-200/70 rounded-full overflow-hidden" title="Proporsi Jumlah Judul: {{ $sStat->share_judul_pct }}%">
+                                                    <div class="h-full rounded-full {{ $isPengabdian ? 'bg-emerald-600' : 'bg-[#681727]' }}" style="width: {{ max(4, $sStat->bar_judul_pct) }}%"></div>
+                                                </div>
+                                                <div class="w-full h-1.5 bg-slate-200/70 rounded-full overflow-hidden" title="Proporsi Total Dana: {{ $sStat->share_dana_pct }}%">
+                                                    <div class="h-full rounded-full bg-amber-500" style="width: {{ max(4, $sStat->bar_dana_pct) }}%"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Legenda Dual Bar Semester --}}
+                            <div class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center gap-1.5 font-semibold">
+                                        <span class="w-2.5 h-2.5 rounded-xs {{ $isPengabdian ? 'bg-emerald-600' : 'bg-[#681727]' }}"></span>
+                                        Bar Volume Judul
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 font-semibold">
+                                        <span class="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
+                                        Bar Akumulasi Dana
+                                    </span>
+                                </div>
+                                <span class="font-bold text-slate-700">Klik baris untuk filter</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif

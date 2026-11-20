@@ -150,6 +150,80 @@ class ProposalWizardController extends Controller
         $totalPengabdianCount = $pengabdianStatQuery->count();
 
         $totalNominal = (float) (clone $query)->sum('total_rab');
+        $filteredTotalCount = (int) (clone $query)->count();
+        $maxNominalSingle = (float) ((clone $query)->max('total_rab') ?? 0);
+        $avgNominalSingle = $filteredTotalCount > 0 ? ($totalNominal / $filteredTotalCount) : 0.0;
+
+        $rawProdiStats = (clone $query)
+            ->reorder()
+            ->selectRaw("COALESCE(NULLIF(TRIM(nama_prodi), ''), 'Belum Terpetakan') as label, COUNT(*) as total_judul, COALESCE(SUM(total_rab), 0) as total_dana")
+            ->groupByRaw("COALESCE(NULLIF(TRIM(nama_prodi), ''), 'Belum Terpetakan')")
+            ->orderByDesc('total_judul')
+            ->orderByDesc('total_dana')
+            ->get();
+
+        $maxProdiJudul = max(1, (int) ($rawProdiStats->max('total_judul') ?? 1));
+        $maxProdiDana = max(1.0, (float) ($rawProdiStats->max('total_dana') ?? 1));
+
+        $prodiStats = $rawProdiStats->values()->map(function ($row, $idx) use ($filteredTotalCount, $totalNominal, $maxProdiJudul, $maxProdiDana) {
+            $judul = (int) $row->total_judul;
+            $dana = (float) $row->total_dana;
+            return (object) [
+                'rank' => $idx + 1,
+                'label' => (string) $row->label,
+                'total_judul' => $judul,
+                'total_dana' => $dana,
+                'avg_dana' => $judul > 0 ? ($dana / $judul) : 0.0,
+                'share_judul_pct' => $filteredTotalCount > 0 ? round(($judul / $filteredTotalCount) * 100, 1) : 0.0,
+                'share_dana_pct' => $totalNominal > 0 ? round(($dana / $totalNominal) * 100, 1) : 0.0,
+                'bar_judul_pct' => round(($judul / $maxProdiJudul) * 100, 1),
+                'bar_dana_pct' => $maxProdiDana > 0 ? round(($dana / $maxProdiDana) * 100, 1) : 0.0,
+            ];
+        });
+
+        $rawSemesterStats = (clone $query)
+            ->reorder()
+            ->selectRaw("COALESCE(NULLIF(TRIM(semester), ''), 'Tidak Diketahui') as label, COUNT(*) as total_judul, COALESCE(SUM(total_rab), 0) as total_dana")
+            ->groupByRaw("COALESCE(NULLIF(TRIM(semester), ''), 'Tidak Diketahui')")
+            ->orderByDesc('label')
+            ->get();
+
+        $maxSemesterJudul = max(1, (int) ($rawSemesterStats->max('total_judul') ?? 1));
+        $maxSemesterDana = max(1.0, (float) ($rawSemesterStats->max('total_dana') ?? 1));
+
+        $semesterStats = $rawSemesterStats->values()->map(function ($row) use ($filteredTotalCount, $totalNominal, $maxSemesterJudul, $maxSemesterDana) {
+            $judul = (int) $row->total_judul;
+            $dana = (float) $row->total_dana;
+            return (object) [
+                'label' => (string) $row->label,
+                'total_judul' => $judul,
+                'total_dana' => $dana,
+                'avg_dana' => $judul > 0 ? ($dana / $judul) : 0.0,
+                'share_judul_pct' => $filteredTotalCount > 0 ? round(($judul / $filteredTotalCount) * 100, 1) : 0.0,
+                'share_dana_pct' => $totalNominal > 0 ? round(($dana / $totalNominal) * 100, 1) : 0.0,
+                'bar_judul_pct' => round(($judul / $maxSemesterJudul) * 100, 1),
+                'bar_dana_pct' => $maxSemesterDana > 0 ? round(($dana / $maxSemesterDana) * 100, 1) : 0.0,
+            ];
+        });
+
+        $summaryStats = [
+            'filtered_count' => $filteredTotalCount,
+            'total_all_count' => $totalAllCount,
+            'total_nominal' => $totalNominal,
+            'avg_nominal' => $avgNominalSingle,
+            'max_nominal' => $maxNominalSingle,
+            'prodi_count' => $prodiStats->count(),
+            'semester_count' => $semesterStats->count(),
+            'top_prodi_judul' => $prodiStats->first(),
+            'top_prodi_dana' => $prodiStats->sortByDesc('total_dana')->first(),
+            'top_semester' => $semesterStats->sortByDesc('total_dana')->first(),
+        ];
+
+        \Illuminate\Support\Facades\View::share([
+            'prodiStats' => $prodiStats,
+            'semesterStats' => $semesterStats,
+            'summaryStats' => $summaryStats,
+        ]);
 
         $scopedMetaQuery = clone $baseKategoriQuery;
         if (!$canViewAll) {
