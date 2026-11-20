@@ -26,7 +26,7 @@ class UserController extends Controller
     public function index(Request $request): View
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas untuk Pengelola Akun.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas untuk Pengelola Akun.');
 
         // Self-healing: ensure migrations and 146 Dosen Tetap UHN are synced if database still has old/incomplete data
         try {
@@ -107,7 +107,7 @@ class UserController extends Controller
     public function syncSdm(): RedirectResponse
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         if (!Schema::hasColumn('users', 'no_urut')) {
             Artisan::call('migrate', ['--force' => true]);
@@ -135,7 +135,7 @@ class UserController extends Controller
     public function create(): View
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         $roles = Role::orderBy('name')->get();
         $fakultas = RefFakultas::orderBy('nama_fakultas')->get();
@@ -150,7 +150,7 @@ class UserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -216,7 +216,7 @@ class UserController extends Controller
     public function edit(User $user): View
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         $roles = Role::orderBy('name')->get();
         $fakultas = RefFakultas::orderBy('nama_fakultas')->get();
@@ -232,7 +232,7 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -287,7 +287,7 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $admin = Auth::user();
-        abort_unless($admin->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas.');
+        abort_unless($admin->hasPermission('users.manage'), 403, 'Akses terbatas.');
 
         if ($user->id === $admin->id) {
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');

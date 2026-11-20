@@ -211,24 +211,38 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/integrasi/djki/verify', [\App\Http\Controllers\IntegrationsController::class, 'verifyDjki'])->name('integrasi.djki.verify');
         Route::post('/integrasi/storage/upload', [\App\Http\Controllers\IntegrationsController::class, 'uploadTestFile'])->name('integrasi.storage.upload');
 
-        // Audit Trail Logging (Restricted to Superadmin only)
+        // Audit Trail Logging
         Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs');
 
+        // Manajemen Role & Permission Dinamis (Khusus Superadmin / rbac.manage)
+        Route::middleware(['permission:rbac.manage'])->group(function () {
+            Route::get('/admin/role-permissions', [\App\Http\Controllers\Admin\RolePermissionController::class, 'index'])->name('admin.role-permissions.index');
+            Route::put('/admin/role-permissions/roles/{role}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'updateRolePermissions'])->name('admin.role-permissions.update');
+            Route::post('/admin/role-permissions/roles/{role}/reset', [\App\Http\Controllers\Admin\RolePermissionController::class, 'resetRoleDefaults'])->name('admin.role-permissions.reset');
+            Route::post('/admin/role-permissions/roles', [\App\Http\Controllers\Admin\RolePermissionController::class, 'storeRole'])->name('admin.role-permissions.roles.store');
+            Route::delete('/admin/role-permissions/roles/{role}', [\App\Http\Controllers\Admin\RolePermissionController::class, 'destroyRole'])->name('admin.role-permissions.roles.destroy');
+            Route::put('/admin/role-permissions/users/{user}/roles', [\App\Http\Controllers\Admin\RolePermissionController::class, 'updateUserRoles'])->name('admin.role-permissions.users.update');
+        });
+
         // EPIC 04: Master Skema BIMA & Rubrik Penilaian Reviewer (US-04.1, US-04.3)
-        Route::get('/admin/skema-bima', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'index'])->name('admin.skema-bima.index');
-        Route::post('/admin/skema-bima', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'store'])->name('admin.skema-bima.store');
-        Route::put('/admin/skema-bima/{skemaBima}', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'update'])->name('admin.skema-bima.update');
-        Route::post('/admin/skema-bima/{skemaBima}/toggle', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'toggleActive'])->name('admin.skema-bima.toggle');
-        Route::delete('/admin/skema-bima/{skemaBima}', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'destroy'])->name('admin.skema-bima.destroy');
-        Route::get('/admin/skema-bima/{skemaBima}/rubrik', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'showRubrik'])->name('admin.skema-bima.rubrik');
-        Route::post('/admin/skema-bima/{skemaBima}/rubrik', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'updateRubrik'])->name('admin.skema-bima.update-rubrik');
+        Route::middleware(['permission:master.skema_bima'])->group(function () {
+            Route::get('/admin/skema-bima', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'index'])->name('admin.skema-bima.index');
+            Route::post('/admin/skema-bima', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'store'])->name('admin.skema-bima.store');
+            Route::put('/admin/skema-bima/{skemaBima}', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'update'])->name('admin.skema-bima.update');
+            Route::post('/admin/skema-bima/{skemaBima}/toggle', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'toggleActive'])->name('admin.skema-bima.toggle');
+            Route::delete('/admin/skema-bima/{skemaBima}', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'destroy'])->name('admin.skema-bima.destroy');
+            Route::get('/admin/skema-bima/{skemaBima}/rubrik', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'showRubrik'])->name('admin.skema-bima.rubrik');
+            Route::post('/admin/skema-bima/{skemaBima}/rubrik', [\App\Http\Controllers\Admin\SkemaBimaController::class, 'updateRubrik'])->name('admin.skema-bima.update-rubrik');
+        });
 
         // EPIC 04: Periode Usulan Call for Proposals & Server-Time Scheduler (US-04.2)
-        Route::get('/admin/periode-hibah', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'index'])->name('admin.periode-hibah.index');
-        Route::post('/admin/periode-hibah', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'store'])->name('admin.periode-hibah.store');
-        Route::put('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'update'])->name('admin.periode-hibah.update');
-        Route::post('/admin/periode-hibah/{periodeHibah}/toggle', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'toggleActive'])->name('admin.periode-hibah.toggle');
-        Route::delete('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'destroy'])->name('admin.periode-hibah.destroy');
+        Route::middleware(['permission:master.periode_hibah'])->group(function () {
+            Route::get('/admin/periode-hibah', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'index'])->name('admin.periode-hibah.index');
+            Route::post('/admin/periode-hibah', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'store'])->name('admin.periode-hibah.store');
+            Route::put('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'update'])->name('admin.periode-hibah.update');
+            Route::post('/admin/periode-hibah/{periodeHibah}/toggle', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'toggleActive'])->name('admin.periode-hibah.toggle');
+            Route::delete('/admin/periode-hibah/{periodeHibah}', [\App\Http\Controllers\Admin\PeriodeHibahController::class, 'destroy'])->name('admin.periode-hibah.destroy');
+        });
 
         // EPIC 05: Data Penelitian Dosen UHN (438), Data Pengabdian Masyarakat & Wizard 6 Langkah Usulan Proposal BIMA
         Route::get('/usulan', [\App\Http\Controllers\ProposalWizardController::class, 'index'])->name('usulan.index');
@@ -374,9 +388,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/panduan', [\App\Http\Controllers\UserGuideController::class, 'index'])->name('panduan.index');
 
         // EPIC 13: Portal Berita Acara UAT & Go-Live (US-13.3)
-        Route::get('/uat', [\App\Http\Controllers\UatController::class, 'index'])->name('uat.index');
-        Route::post('/uat/sign', [\App\Http\Controllers\UatController::class, 'sign'])->name('uat.sign');
-        Route::get('/uat/pdf', [\App\Http\Controllers\UatController::class, 'exportPdf'])->name('uat.pdf');
+        Route::middleware(['permission:uat.access'])->group(function () {
+            Route::get('/uat', [\App\Http\Controllers\UatController::class, 'index'])->name('uat.index');
+            Route::post('/uat/sign', [\App\Http\Controllers\UatController::class, 'sign'])->name('uat.sign');
+            Route::get('/uat/pdf', [\App\Http\Controllers\UatController::class, 'exportPdf'])->name('uat.pdf');
+        });
 
         // EPIC 13: Migrasi Data Legasi SIMPENDI PHB (US-13.1)
         Route::get('/admin/migrasi-legasi', [\App\Http\Controllers\LegacyMigrationController::class, 'index'])->name('admin.migrasi.index');

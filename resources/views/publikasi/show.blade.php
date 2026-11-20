@@ -104,11 +104,11 @@
 
                 <!-- File Naskah & Action Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                    <a href="{{ asset('storage/' . $publikasi->file_naskah) }}" target="_blank"
+                    <!-- <a href="{{ asset('storage/' . $publikasi->file_naskah) }}" target="_blank"
                        class="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2">
                         <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                         <span>Unduh / Buka Naskah Lengkap (PDF)</span>
-                    </a>
+                    </a> -->
 
                     @if(!$publikasi->is_claimed_reward && $publikasi->user_id === Auth::id())
                         <a href="{{ route('reward.create', ['jenis' => 'Publikasi', 'id' => $publikasi->id]) }}"

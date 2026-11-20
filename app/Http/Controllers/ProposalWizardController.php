@@ -310,6 +310,7 @@ class ProposalWizardController extends Controller
     public function start($skema)
     {
         $user = Auth::user();
+        abort_unless($user->hasPermission('proposal.submit_wizard'), 403, 'Akses ditolak: Anda tidak memiliki izin mengajukan proposal baru.');
 
         // 1. Resolve Skema Model dynamically (PostgreSQL Safe)
         if ($skema instanceof PpmSkemaBima) {
@@ -860,12 +861,12 @@ class ProposalWizardController extends Controller
         $user = Auth::user();
         $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
         $isDivisionOwner = $user->isFullDivisionFor($kategori);
-        $isAssignedReviewer = $user->hasRole('Reviewer')
+        $isAssignedReviewer = $user->hasPermission('reviewer.evaluate')
             && $usulan->penugasanReviewer()->where('id_reviewer', $user->id)->exists();
-        $isProdiKaprodi = $user->hasRole('Kaprodi') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
+        $isProdiKaprodi = $user->hasPermission('prodi.roadmap') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
 
         abort_unless(
-            $usulan->isOwnedBy($user) || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi || $user->hasRole(['Kepala P3M', 'Admin P3M', 'Superadmin']),
+            $usulan->isOwnedBy($user) || $isDivisionOwner || $isAssignedReviewer || $isProdiKaprodi || $user->hasAnyPermission(['users.manage', 'kontrak.establish_winners', 'verifikasi.usulan_penelitian', 'verifikasi.usulan_pengabdian']),
             403,
             'Anda tidak memiliki akses ke dokumen proposal ini.'
         );
@@ -932,9 +933,9 @@ class ProposalWizardController extends Controller
         $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
         $isDivisionOwner = $user->isFullDivisionFor($kategori);
         $isOwnerOrMember = $usulan->isOwnedBy($user);
-        $isAssignedReviewer = $user->hasRole('Reviewer')
+        $isAssignedReviewer = $user->hasPermission('reviewer.evaluate')
             && $usulan->penugasanReviewer()->where('id_reviewer', $user->id)->exists();
-        $isProdiKaprodi = $user->hasRole('Kaprodi') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
+        $isProdiKaprodi = $user->hasPermission('prodi.roadmap') && $user->id_prodi && (int) $user->id_prodi === (int) $usulan->id_prodi;
 
         if (request()->isMethod('get')) {
             abort_unless(

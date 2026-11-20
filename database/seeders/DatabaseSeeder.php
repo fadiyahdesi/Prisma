@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         // Hanya data real: 146 Dosen Tetap UHN + 438 Penelitian + 420 Pengabdian + 589 Publikasi Dosen UHN + Akun Sistem.
         $this->call([
             RbacSeeder::class,
+            PermissionSeeder::class,
             RealLecturerCsvSeeder::class,
             BimaSkemaAndPeriodeSeeder::class,
             DemoRealLecturerWorkflowSeeder::class,

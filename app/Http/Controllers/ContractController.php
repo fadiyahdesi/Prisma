@@ -17,7 +17,7 @@ class ContractController extends Controller
     public function penetapanMassal(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Kepala P3M', 'Superadmin']), 403, 'Akses ditolak: Khusus Kepala P3M.');
+        abort_unless($user->hasPermission('kontrak.establish_winners'), 403, 'Akses ditolak: Anda tidak memiliki izin Penetapan Pemenang Hibah.');
 
         $validated = $request->validate([
             'usulan_ids' => 'required|array|min:1',
@@ -41,7 +41,7 @@ class ContractController extends Controller
     public function pengusulIndex()
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Dosen / Pengusul', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('kontrak.pengusul'), 403, 'Akses ditolak.');
 
         $contracts = PpmKontrak::with(['usulan.skema', 'usulan.periode', 'pencairan'])
             ->whereHas('usulan', function ($q) use ($user) {
@@ -59,7 +59,7 @@ class ContractController extends Controller
     public function pengusulSign(PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole('Superadmin') || $kontrak->usulan->id_pengusul === $user->id, 403, 'Akses ditolak.');
+        abort_unless($user->hasRole('Superadmin') || ($user->hasPermission('kontrak.pengusul') && $kontrak->usulan->id_pengusul === $user->id), 403, 'Akses ditolak.');
 
         try {
             ContractAndDisbursementService::signContractByPengusul($kontrak, $user->id);
@@ -77,7 +77,7 @@ class ContractController extends Controller
     public function pengusulUpdateRekening(Request $request, PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole('Superadmin') || $kontrak->usulan->id_pengusul === $user->id, 403, 'Akses ditolak.');
+        abort_unless($user->hasRole('Superadmin') || ($user->hasPermission('kontrak.pengusul') && $kontrak->usulan->id_pengusul === $user->id), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'nama_bank' => 'required|string|max:100',
@@ -107,7 +107,8 @@ class ContractController extends Controller
     public function downloadPdf(PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        $isAuthorized = $user->hasRole(['Kepala P3M', 'Admin P3M', 'Keuangan', 'Superadmin'])
+        $isAuthorized = $user->hasRole('Superadmin')
+            || $user->hasAnyPermission(['kontrak.establish_winners', 'keuangan.pencairan_hibah'])
             || ($kontrak->usulan && $kontrak->usulan->id_pengusul === $user->id);
 
         abort_unless($isAuthorized, 403, 'Akses ditolak.');

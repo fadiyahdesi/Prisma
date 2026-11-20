@@ -17,7 +17,7 @@ class ProposalRankingController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Kepala P3M', 'Superadmin']), 403, 'Akses ditolak: Khusus Kepala P3M.');
+        abort_unless($user->hasPermission('ranking.view'), 403, 'Akses ditolak: Anda tidak memiliki izin Pemeringkatan Usulan.');
 
         $schemes = PpmSkemaBima::where('is_active', true)->orderBy('nama_skema')->get();
         $faculties = RefFakultas::orderBy('nama_fakultas')->get();

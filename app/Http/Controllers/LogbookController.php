@@ -17,6 +17,7 @@ class LogbookController extends Controller
     public function index(Request $request, ?PpmUsulan $usulan = null)
     {
         $user = Auth::user();
+        abort_unless($user->hasPermission('logbook.manage'), 403, 'Akses ditolak: Anda tidak memiliki izin Logbook Kegiatan.');
 
         // If no usulan is specified in the route, fetch user's contracted/ongoing proposals
         if (!$usulan || !$usulan->exists) {
@@ -121,12 +122,12 @@ class LogbookController extends Controller
     {
         $user = Auth::user();
 
-        if ($usulan->id_pengusul !== $user->id && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M', 'Reviewer'])) {
+        if ($usulan->id_pengusul !== $user->id && !$user->hasAnyPermission(['users.manage', 'kontrak.establish_winners', 'reviewer.evaluate', 'monev.evaluate', 'semhas.manage'])) {
             abort(403, 'Akses ditolak.');
         }
 
         $latestProgress = (float) ($usulan->logbook()->max('persentase_capaian') ?? 0);
-        if ($latestProgress < 50.0 && !$user->hasRole(['Superadmin', 'Admin P3M', 'Kepala P3M'])) {
+        if ($latestProgress < 50.0 && !$user->hasAnyPermission(['users.manage', 'kontrak.establish_winners', 'semhas.manage'])) {
             return redirect()->route('pengusul.logbook.show', $usulan)
                 ->with('error', 'Rekap logbook baru dapat diunduh setelah estimasi capaian kegiatan lapangan mencapai minimal 50% (Capaian saat ini: ' . number_format($latestProgress, 1) . '%).');
         }

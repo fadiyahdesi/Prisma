@@ -17,7 +17,7 @@ class DisbursementController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Keuangan LPPM.');
+        abort_unless($user->hasPermission('keuangan.pencairan_hibah'), 403, 'Akses ditolak: Khusus Divisi Keuangan LPPM.');
 
         $tab = $request->query('tab', 'all');
         $search = $request->query('search');
@@ -96,7 +96,7 @@ class DisbursementController extends Controller
     public function show(PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('keuangan.pencairan_hibah'), 403, 'Akses ditolak.');
 
         $kontrak->loadMissing(['usulan.pengusul.fakultas', 'usulan.pengusul.prodi', 'usulan.skema', 'usulan.periode', 'pencairan.processor']);
 
@@ -109,7 +109,7 @@ class DisbursementController extends Controller
     public function verifyRekening(PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('keuangan.pencairan_hibah'), 403, 'Akses ditolak.');
 
         try {
             ContractAndDisbursementService::verifyRekening($kontrak, $user->id);
@@ -127,7 +127,7 @@ class DisbursementController extends Controller
     public function disburseTermin1(Request $request, PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('keuangan.pencairan_hibah'), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'nomor_referensi' => 'required|string|max:100',
@@ -159,7 +159,7 @@ class DisbursementController extends Controller
     public function disburseTermin2(Request $request, PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('keuangan.pencairan_hibah'), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'nomor_referensi' => 'required|string|max:100',
@@ -194,9 +194,10 @@ class DisbursementController extends Controller
     public function downloadPelunasanPdf(PpmKontrak $kontrak)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin', 'Admin P3M', 'Kepala P3M', 'Dosen / Pengusul']), 403, 'Akses ditolak.');
+        $canFinanceOrLeader = $user->hasAnyPermission(['keuangan.pencairan_hibah', 'kontrak.establish_winners', 'users.manage']);
+        abort_unless($canFinanceOrLeader || $user->hasPermission('laporan_akhir.submit'), 403, 'Akses ditolak.');
 
-        if ($kontrak->usulan->id_pengusul !== $user->id && !$user->hasRole(['Keuangan', 'Superadmin', 'Admin P3M', 'Kepala P3M'])) {
+        if ($kontrak->usulan->id_pengusul !== $user->id && !$canFinanceOrLeader) {
             abort(403, 'Akses ditolak.');
         }
 

@@ -148,29 +148,102 @@ class User extends Authenticatable
     }
 
     /**
+     * Resolve effective permission names for the active session role (or union of DB roles).
+     */
+    public function effectivePermissionNames(): array
+    {
+        $sessionRole = session('active_role');
+
+        if (!empty($sessionRole)) {
+            if ($sessionRole === 'Superadmin') {
+                return array_column(Permission::catalog(), 'name');
+            }
+
+            $roleObj = Role::where('name', $sessionRole)->with('permissions:id,name')->first();
+            if ($roleObj) {
+                return $roleObj->permissions->pluck('name')->all();
+            }
+        }
+
+        $roles = $this->relationLoaded('roles') ? $this->roles : $this->roles()->get();
+        if ($roles->contains('name', 'Superadmin')) {
+            return array_column(Permission::catalog(), 'name');
+        }
+
+        $roleIds = $roles->pluck('id')->all();
+        if (empty($roleIds)) {
+            return [];
+        }
+
+        return \Illuminate\Support\Facades\DB::table('role_has_permissions')
+            ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+            ->whereIn('role_has_permissions.role_id', $roleIds)
+            ->distinct()
+            ->pluck('permissions.name')
+            ->all();
+    }
+
+    /**
+     * Check whether the user has a given feature permission.
+     * Superadmin automatically has full access to every feature.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        $sessionRole = session('active_role');
+        if (!empty($sessionRole)) {
+            if ($sessionRole === 'Superadmin') {
+                return true;
+            }
+        } elseif ($this->hasRole('Superadmin')) {
+            return true;
+        }
+
+        return in_array($permission, $this->effectivePermissionNames(), true);
+    }
+
+    /**
+     * Check whether the user holds at least one of the listed feature permissions.
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        $sessionRole = session('active_role');
+        if (!empty($sessionRole)) {
+            if ($sessionRole === 'Superadmin') {
+                return true;
+            }
+        } elseif ($this->hasRole('Superadmin')) {
+            return true;
+        }
+
+        $held = $this->effectivePermissionNames();
+        foreach ($permissions as $perm) {
+            if (in_array($perm, $held, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Check whether the user holds full-dataset access for a division module.
      * Modules: 'penelitian', 'pengabdian', 'publikasi', 'hki'.
      */
     public function isFullDivisionFor(string $module): bool
     {
-        $divisionMap = [
-            'penelitian' => 'Divisi Penelitian',
-            'pengabdian' => 'Divisi Pengabdian',
-            'publikasi' => 'Divisi Publikasi',
-            'hki' => 'Divisi Publikasi',
+        $permMap = [
+            'penelitian' => 'penelitian.manage_all',
+            'pengabdian' => 'pengabdian.manage_all',
+            'publikasi' => 'publikasi.manage_all',
+            'hki' => 'hki.manage_all',
         ];
 
-        $requiredDivision = $divisionMap[strtolower(trim($module))] ?? null;
-        if (!$requiredDivision) {
+        $requiredPerm = $permMap[strtolower(trim($module))] ?? null;
+        if (!$requiredPerm) {
             return false;
         }
 
-        $activeRole = session('active_role');
-        if (!empty($activeRole)) {
-            return in_array($activeRole, [$requiredDivision, 'Superadmin'], true);
-        }
-
-        return $this->hasRole([$requiredDivision, 'Superadmin']);
+        return $this->hasPermission($requiredPerm);
     }
 
     /**

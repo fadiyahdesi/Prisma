@@ -25,7 +25,8 @@ class DashboardController extends Controller
         // In Production, activeRole strictly uses the database assigned role (or valid session role held by user).
         // In local demo/debug mode, allows viewing specific role dashboards for testing.
         $sessionRole = session('active_role');
-        $assignedRole = (!empty($sessionRole) && $user->hasRole($sessionRole))
+        $canUseSessionRole = !empty($sessionRole) && (config('app.debug') || $user->hasRole('Superadmin') || $user->hasRole($sessionRole));
+        $assignedRole = $canUseSessionRole
             ? $sessionRole
             : $user->primaryRoleName();
         $activeRole = (config('app.debug') || $user->hasRole('Superadmin'))
@@ -67,18 +68,22 @@ class DashboardController extends Controller
         $myPengabdian = (clone $pengabdianBase)->ownedByUser($user)->count();
         $myPublikasi = \App\Models\PpmPublikasiJurnal::ownedByUser($user)->count();
 
-        $proposalStatQuery = match ($activeRole) {
-            'Divisi Penelitian' => (clone $penelitianBase),
-            'Divisi Pengabdian' => (clone $pengabdianBase),
-            'Superadmin' => \App\Models\PpmUsulan::query(),
+        $canFullPenelitian = $activeRole === 'Superadmin' || $activeRole === 'Divisi Penelitian' || $user->isFullDivisionFor('penelitian');
+        $canFullPengabdian = $activeRole === 'Superadmin' || $activeRole === 'Divisi Pengabdian' || $user->isFullDivisionFor('pengabdian');
+        $canFullPublikasi = $activeRole === 'Superadmin' || $activeRole === 'Divisi Publikasi' || $user->isFullDivisionFor('publikasi');
+
+        $proposalStatQuery = match (true) {
+            $activeRole === 'Superadmin' || ($canFullPenelitian && $canFullPengabdian) => \App\Models\PpmUsulan::query(),
+            $canFullPenelitian => (clone $penelitianBase),
+            $canFullPengabdian => (clone $pengabdianBase),
             default => \App\Models\PpmUsulan::ownedByUser($user),
         };
 
         $totalNominal = (float) (clone $proposalStatQuery)->sum('total_rab');
-        $publikasiCountStat = in_array($activeRole, ['Divisi Publikasi', 'Superadmin'], true)
+        $publikasiCountStat = $canFullPublikasi
             ? \App\Models\PpmPublikasiJurnal::count()
             : $myPublikasi;
-        $hkiCountStat = in_array($activeRole, ['Divisi Publikasi', 'Superadmin'], true)
+        $hkiCountStat = ($activeRole === 'Superadmin' || $activeRole === 'Divisi Publikasi' || $user->isFullDivisionFor('hki'))
             ? \App\Models\PpmHki::count()
             : \App\Models\PpmHki::where('user_id', $user->id)->count();
 
@@ -91,8 +96,8 @@ class DashboardController extends Controller
             'hki_granted' => $hkiCountStat,
             'total_users' => User::whereNotNull('no_urut')->count(),
             'audit_logs_count' => AuditLog::count(),
-            'penelitian_count' => in_array($activeRole, ['Divisi Penelitian', 'Superadmin'], true) ? (clone $penelitianBase)->count() : $myPenelitian,
-            'pengabdian_count' => in_array($activeRole, ['Divisi Pengabdian', 'Superadmin'], true) ? (clone $pengabdianBase)->count() : $myPengabdian,
+            'penelitian_count' => $canFullPenelitian ? (clone $penelitianBase)->count() : $myPenelitian,
+            'pengabdian_count' => $canFullPengabdian ? (clone $pengabdianBase)->count() : $myPengabdian,
             'my_penelitian' => $myPenelitian,
             'my_pengabdian' => $myPengabdian,
             'my_publikasi' => $myPublikasi,
@@ -161,8 +166,8 @@ class DashboardController extends Controller
         $roleObj = Role::where('name', $roleName)->first();
 
         if ($roleObj && $user) {
-            $beforeRole = $user->primaryRoleName();
-            $user->roles()->sync([$roleObj->id]);
+            $beforeRole = $user->effectiveRoleName();
+            session(['active_role' => $roleName]);
 
             AuditLogService::log('ROLE_SWITCHED_DEMO', ['role' => $beforeRole], ['role' => $roleName], $user->id);
         }

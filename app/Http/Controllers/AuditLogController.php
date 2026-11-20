@@ -15,10 +15,12 @@ class AuditLogController extends Controller
     {
         $user = Auth::user();
 
-        // Otorisasi: Khusus Superadmin
-        if (!$user->hasRole('Superadmin')) {
-            return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Halaman Audit Trail Logging hanya dapat diakses oleh Superadmin.');
-        }
+        // Otorisasi dinamis via RBAC Permission (otomatis bypass untuk Superadmin)
+        abort_unless(
+            $user && $user->hasPermission('audit_logs.view'),
+            403,
+            'Akses Ditolak: Anda tidak memiliki izin untuk mengakses Audit Trail Logging.'
+        );
 
         $query = AuditLog::with('user')->orderBy('id', 'desc');
 

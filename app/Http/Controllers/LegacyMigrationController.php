@@ -16,9 +16,11 @@ class LegacyMigrationController extends Controller
     public function index(LegacyDataMigrationService $migrationService)
     {
         $user = auth()->user();
-        if (!$user || (!$user->hasRole('Admin P3M') && !$user->hasRole('Superadmin'))) {
-            abort(403, 'Akses ditolak: Hanya Admin P3M dan Superadmin yang berhak mengakses modul Migrasi Data Legasi.');
-        }
+        abort_unless(
+            $user && $user->hasPermission('migrasi.legasi'),
+            403,
+            'Akses ditolak: Anda tidak memiliki izin mengakses modul Migrasi Data Legasi.'
+        );
 
         $mapping = $migrationService->getMappingDictionary();
         $validation = $migrationService->validateIntegrity();
@@ -43,9 +45,11 @@ class LegacyMigrationController extends Controller
     public function run(Request $request, LegacyDataMigrationService $migrationService)
     {
         $user = auth()->user();
-        if (!$user || (!$user->hasRole('Admin P3M') && !$user->hasRole('Superadmin'))) {
-            abort(403, 'Akses ditolak: Hanya Admin P3M dan Superadmin yang berhak menjalankan migrasi data.');
-        }
+        abort_unless(
+            $user && $user->hasPermission('migrasi.legasi'),
+            403,
+            'Akses ditolak: Anda tidak memiliki izin menjalankan migrasi data legasi.'
+        );
 
         $dryRun = $request->boolean('dry_run', true);
         $result = $migrationService->migrate($dryRun);

@@ -20,7 +20,7 @@ class RewardClaimController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $isStaff = $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin', 'Keuangan']);
+        $isStaff = $user->hasAnyPermission(['reward.verify', 'keuangan.pencairan_reward', 'users.manage']);
 
         $query = PpmKlaimReward::with(['user', 'publikasi', 'hki', 'distribusi']);
 
@@ -53,6 +53,7 @@ class RewardClaimController extends Controller
     public function create(): View
     {
         $user = Auth::user();
+        abort_unless($user->hasAnyPermission(['reward.claim', 'reward.verify']), 403, 'Akses ditolak: Tidak memiliki izin Pengajuan Klaim Reward.');
 
         // Available publications (unclaimed)
         $publikasiList = PpmPublikasiJurnal::where('user_id', $user->id)
@@ -78,6 +79,7 @@ class RewardClaimController extends Controller
      */
     public function store(Request $request, RewardDistributionService $service): RedirectResponse
     {
+        abort_unless(Auth::user()->hasAnyPermission(['reward.claim', 'reward.verify']), 403, 'Akses ditolak.');
         $validated = $request->validate([
             'jenis_klaim' => 'required|in:Publikasi,HKI',
             'id_publikasi' => 'required_if:jenis_klaim,Publikasi|nullable|exists:ppm_publikasi_jurnal,id',
@@ -140,7 +142,7 @@ class RewardClaimController extends Controller
     public function show(PpmKlaimReward $klaim): View
     {
         $user = Auth::user();
-        $isStaff = $user->isFullDivisionFor('publikasi') || $user->hasRole('Keuangan');
+        $isStaff = $user->hasAnyPermission(['reward.verify', 'keuangan.pencairan_reward']);
 
         if (!$isStaff && $klaim->user_id !== $user->id) {
             // Check if user is one of the distribution members
@@ -161,7 +163,7 @@ class RewardClaimController extends Controller
     public function adminIndex(Request $request): View
     {
         $user = Auth::user();
-        abort_unless($user->isFullDivisionFor('publikasi'), 403, 'Khusus Divisi Publikasi.');
+        abort_unless($user->hasPermission('reward.verify'), 403, 'Khusus Divisi Publikasi / Verifikator Reward.');
 
         $status = $request->query('status', 'Submitted');
         $search = $request->query('search');
@@ -198,7 +200,7 @@ class RewardClaimController extends Controller
     public function adminApprove(Request $request, PpmKlaimReward $klaim, RewardDistributionService $service): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->isFullDivisionFor('publikasi'), 403, 'Khusus Divisi Publikasi.');
+        abort_unless($user->hasPermission('reward.verify'), 403, 'Khusus Divisi Publikasi / Verifikator Reward.');
 
         if ($klaim->jenis_klaim === 'Publikasi' && $klaim->publikasi) {
             if ($klaim->publikasi->peran_penulis && !in_array($klaim->publikasi->peran_penulis, ['Penulis Pertama', 'First Author', 'Penulis Utama', 'First & Corresponding Author'])) {
@@ -218,7 +220,7 @@ class RewardClaimController extends Controller
     public function adminReject(Request $request, PpmKlaimReward $klaim, RewardDistributionService $service): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->isFullDivisionFor('publikasi'), 403, 'Khusus Divisi Publikasi.');
+        abort_unless($user->hasPermission('reward.verify'), 403, 'Khusus Divisi Publikasi / Verifikator Reward.');
 
         $request->validate([
             'catatan_p3m' => 'required|string|max:1000',

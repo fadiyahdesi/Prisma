@@ -15,10 +15,12 @@ class LppmApprovalController extends Controller
 
         $user = Auth::user();
         $activeRole = $user->effectiveRoleName();
+        $canPenelitian = $user->hasPermission('verifikasi.usulan_penelitian');
+        $canPengabdian = $user->hasPermission('verifikasi.usulan_pengabdian');
 
         $forcedDivisi = match (true) {
-            $activeRole === 'Divisi Penelitian' => 'penelitian',
-            $activeRole === 'Divisi Pengabdian' => 'pengabdian',
+            $canPenelitian && !$canPengabdian => 'penelitian',
+            $canPengabdian && !$canPenelitian => 'pengabdian',
             default => null,
         };
 
@@ -27,7 +29,7 @@ class LppmApprovalController extends Controller
             $divisi = $forcedDivisi ?? 'all';
         }
 
-        $canSwitchDivisi = in_array($activeRole, ['Superadmin', 'Kepala P3M'], true);
+        $canSwitchDivisi = $canPenelitian && $canPengabdian;
 
         $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota', 'luaran'])
             ->whereIn('status', ['Submitted', 'In_review'])
@@ -152,7 +154,7 @@ class LppmApprovalController extends Controller
 
     public function roadmapIndex()
     {
-        abort_unless(Auth::user()->hasRole(['Kaprodi', 'Superadmin']), 403, 'Halaman ini hanya untuk Kaprodi.');
+        abort_unless(Auth::user()->hasPermission('prodi.roadmap'), 403, 'Halaman ini memerlukan izin Evaluasi Roadmap Prodi.');
 
         $proposals = PpmUsulan::with(['pengusul', 'skema', 'anggota'])
             ->whereHas('pengusul', fn ($query) => $query->where('id_prodi', Auth::user()->id_prodi))
@@ -165,7 +167,7 @@ class LppmApprovalController extends Controller
 
     public function updateRoadmap(Request $request, PpmUsulan $usulan)
     {
-        abort_unless(Auth::user()->hasRole(['Kaprodi', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless(Auth::user()->hasPermission('prodi.roadmap'), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'kaprodi_alignment_status' => 'required|in:aligned,revision,not_aligned',
@@ -182,16 +184,20 @@ class LppmApprovalController extends Controller
     private function authorizeVerifier(?PpmUsulan $usulan = null): void
     {
         $user = Auth::user();
+        $canPenelitian = $user->hasPermission('verifikasi.usulan_penelitian');
+        $canPengabdian = $user->hasPermission('verifikasi.usulan_pengabdian');
+
         abort_unless(
-            $user->hasRole(['Divisi Penelitian', 'Divisi Pengabdian', 'Kepala P3M', 'Superadmin']),
+            $canPenelitian || $canPengabdian,
             403,
             'Anda tidak memiliki akses ke antrean verifikasi dokumen usulan.'
         );
 
-        if ($usulan !== null && !$user->hasRole(['Kepala P3M', 'Superadmin'])) {
+        if ($usulan !== null) {
             $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+            $allowedCategory = $kategori === 'pengabdian' ? $canPengabdian : $canPenelitian;
             abort_unless(
-                $user->isFullDivisionFor($kategori),
+                $allowedCategory,
                 403,
                 'Usulan ini bukan wewenang divisi Anda.'
             );

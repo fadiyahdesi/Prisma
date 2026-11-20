@@ -2,22 +2,30 @@
 
 @php
     $user = Auth::user();
-    $currentRole = $activeRole ?? ($user ? $user->primaryRoleName() : 'Guest');
+    $currentRole = $activeRole ?? ($user ? $user->effectiveRoleName() : 'Guest');
     $availableRoles = \App\Models\Role::all();
     $currentRoute = Route::currentRouteName() ?? '';
 
-    // 1. EPIC 05: Data Penelitian Dosen & Wizard Usulan Proposal BIMA
-    $canSubmitProposals = in_array($currentRole, ['Dosen / Pengusul', 'Kepala P3M', 'Kaprodi', 'Dekanat', 'Superadmin'], true);
+    $hasPerm = static fn (string $perm): bool => $user ? $user->hasPermission($perm) : false;
 
-    // Division Specific Role Flags
+    // Division & Special Role Display Flags (Superadmin otomatis bypass melalui hasPermission)
     $isSuperadmin       = ($currentRole === 'Superadmin');
     $isDivisiPenelitian = ($currentRole === 'Divisi Penelitian');
     $isDivisiPengabdian = ($currentRole === 'Divisi Pengabdian');
     $isDivisiPublikasi  = ($currentRole === 'Divisi Publikasi');
     $isGeneralAdmin     = ($currentRole === 'Admin P3M');
 
-    // Count Penelitian, Pengabdian & Publikasi (Hanya Divisi terkait atau Superadmin melihat total penuh; role lain melihat karya sendiri)
-    $penelitianCount = ($isDivisiPenelitian || $isSuperadmin)
+    // 1. EPIC 05: Data Riset, Abmas & Wizard Usulan Proposal BIMA
+    $canSubmitProposals  = $hasPerm('proposal.submit_wizard');
+    $canManagePenelitian = $hasPerm('penelitian.manage_all');
+    $canViewPenelitian   = $hasPerm('penelitian.view_own') || $canManagePenelitian;
+    $canManagePengabdian = $hasPerm('pengabdian.manage_all');
+    $canViewPengabdian   = $hasPerm('pengabdian.view_own') || $canManagePengabdian;
+    $canManagePublikasi  = $hasPerm('publikasi.manage_all');
+    $canViewPublikasi    = $hasPerm('publikasi.view_own') || $canManagePublikasi;
+
+    // Count Penelitian, Pengabdian & Publikasi berdasarkan izin manage_all (otomatis penuh untuk Superadmin)
+    $penelitianCount = $canManagePenelitian
         ? \App\Models\PpmUsulan::where(function ($q) {
             $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
         })->count()
@@ -25,105 +33,97 @@
             $q->where('kategori_usulan', 'penelitian')->orWhereNull('kategori_usulan');
         })->ownedByUser($user)->count() : 0);
 
-    $pengabdianCount = ($isDivisiPengabdian || $isSuperadmin)
+    $pengabdianCount = $canManagePengabdian
         ? \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->count()
         : ($user ? \App\Models\PpmUsulan::where('kategori_usulan', 'pengabdian')->ownedByUser($user)->count() : 0);
 
-    $publikasiCount = ($isDivisiPublikasi || $isSuperadmin)
+    $publikasiCount = $canManagePublikasi
         ? \App\Models\PpmPublikasiJurnal::count()
         : ($user ? \App\Models\PpmPublikasiJurnal::ownedByUser($user)->count() : 0);
 
-    // 2. EPIC 06: Persetujuan Anggota Tim - Member Consent (Calon Anggota Tim)
+    // 2. EPIC 06: Persetujuan Anggota Tim - Member Consent
     $pendingConsentCount = $user ? \App\Models\PpmUsulanAnggota::where('user_id', $user->id)
         ->where('status_persetujuan', 'pending')
         ->count() : 0;
     $hasAnyConsent = $user ? \App\Models\PpmUsulanAnggota::where('user_id', $user->id)->exists() : false;
-    $canViewConsent = match ($currentRole) {
-        'Dosen / Mahasiswa Anggota', 'Superadmin' => true,
-        'Dosen / Pengusul' => $pendingConsentCount > 0 || $hasAnyConsent || str_starts_with($currentRoute, 'member-consent'),
-        default => false,
-    };
+    $hasConsentPerm = $hasPerm('proposal.member_consent');
+    $canViewConsent = $hasConsentPerm && (
+        $currentRole !== 'Dosen / Pengusul'
+        || $pendingConsentCount > 0
+        || $hasAnyConsent
+        || str_starts_with($currentRoute, 'member-consent')
+    );
 
-    // 3. EPIC 03: Profil Metrik SINTA (Dosen / Pengusul & Reviewer untuk pantau skor kepakaran & eligibilitas)
-    $canViewSinta = in_array($currentRole, ['Dosen / Pengusul', 'Reviewer', 'Superadmin'], true);
+    // 3. EPIC 03 & 01: Profil SINTA & Pencarian PDDIKTI
+    $canViewSinta = $hasPerm('sinta.profile');
+    $canSearchPddikti = $hasPerm('pddikti.search');
 
-    // 4. EPIC 01 & 05: Pencarian Pangkalan Data PDDIKTI (Cari dosen & mahasiswa IKU-2 untuk anggota usulan)
-    $canSearchPddikti = in_array($currentRole, ['Dosen / Pengusul', 'Admin P3M', 'Superadmin'], true);
+    // 4. Master, Integrasi, Pengguna & Migrasi
+    $canViewIntegrations = $hasPerm('integrasi.manage');
+    $canManageSchemes = $hasPerm('master.skema_bima');
+    $canManagePeriods = $hasPerm('master.periode_hibah');
+    $canManageUsers = $hasPerm('users.manage');
+    $canManageMigration = $hasPerm('migrasi.legasi');
 
-    // 5. Integrasi API (4 Modul) - Admin P3M, Kepala P3M (Ka3M), & Superadmin
-    $canViewIntegrations = in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true);
+    // 5. EPIC 07 & 08: Verifikasi Dokumen Divisi, Roadmap Prodi, Plotting Reviewer, Pemeringkatan
+    $canVerifPenelitian = $hasPerm('verifikasi.usulan_penelitian');
+    $canVerifPengabdian = $hasPerm('verifikasi.usulan_pengabdian');
+    $canReviewLppm = $canVerifPenelitian || $canVerifPengabdian;
+    $canReviewRoadmap = $hasPerm('prodi.roadmap');
+    $canAssignReviewers = $hasPerm('reviewer.assign');
+    $canViewRanking = $hasPerm('ranking.view');
 
-    // 6. EPIC 04: Master Skema BIMA (General Admin P3M & Superadmin)
-    $canManageSchemes = in_array($currentRole, ['Admin P3M', 'Superadmin'], true);
-
-    // 7. EPIC 04: Periode Call for Proposals & Server-Time Scheduler (General Admin P3M & Superadmin)
-    $canManagePeriods = in_array($currentRole, ['Admin P3M', 'Superadmin'], true);
-
-    // 8. EPIC 07: Verifikasi Kelembagaan / LPPM Approval Workflow (Kepala P3M, Divisi Penelitian, Divisi Pengabdian, Superadmin)
-    $canReviewLppm = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
-
-    // 9. EPIC 07: Keselarasan Usulan dengan Roadmap Keilmuan Prodi
-    $canReviewRoadmap = in_array($currentRole, ['Kaprodi', 'Superadmin'], true);
-
-    // 10. EPIC 08: Penilaian Proposal Substantif (Reviewer + dual-role Dosen yang ditugaskan Reviewer)
     $isDualReviewer = ($user && empty(session('active_role')) && $currentRole === 'Dosen / Pengusul' && $user->hasRole('Reviewer'));
-    $canReviewSubstance = in_array($currentRole, ['Reviewer', 'Superadmin'], true) || $isDualReviewer;
+    $canReviewSubstance = $hasPerm('reviewer.evaluate') || $isDualReviewer;
     $pendingReviewCount = $user ? \App\Models\PpmPenugasanReviewer::where('id_reviewer', $user->id)
         ->where('status_penugasan', 'assigned')
         ->count() : 0;
 
-    // 11. EPIC 08: Penugasan Reviewer & Adjudikasi (Admin P3M, Divisi Penelitian, Divisi Pengabdian, Superadmin)
-    $canAssignReviewers = in_array($currentRole, ['Admin P3M', 'Superadmin'], true);
-    $pendingVerifPenelitianCount = ($isDivisiPenelitian || $isSuperadmin)
+    $pendingVerifPenelitianCount = $canVerifPenelitian
         ? \App\Models\PpmUsulan::where('status', 'Submitted')->where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'penelitian')))->count()
         : 0;
-    $pendingVerifPengabdianCount = ($isDivisiPengabdian || $isSuperadmin)
+    $pendingVerifPengabdianCount = $canVerifPengabdian
         ? \App\Models\PpmUsulan::where('status', 'Submitted')->where(fn($q) => $q->where('kategori_usulan', 'pengabdian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'pengabdian')))->count()
         : 0;
 
     $pendingAssignmentBase = \App\Models\PpmUsulan::where(fn($q) => $q->whereNull('no_urut')->orWhereHas('penugasanReviewer'))
         ->whereIn('status', ['Submitted', 'In_review', 'Adjudication']);
-    if ($isDivisiPenelitian) {
+    if ($isDivisiPenelitian && !$canManagePengabdian) {
         $pendingAssignmentBase->where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'penelitian')));
-    } elseif ($isDivisiPengabdian) {
+    } elseif ($isDivisiPengabdian && !$canManagePenelitian) {
         $pendingAssignmentBase->where(fn($q) => $q->where('kategori_usulan', 'pengabdian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'pengabdian')));
     }
-    $pendingAssignmentCount = in_array($currentRole, ['Admin P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin'], true)
-        ? $pendingAssignmentBase->count()
-        : 0;
+    $pendingAssignmentCount = $canAssignReviewers ? $pendingAssignmentBase->count() : 0;
 
-    // 12. EPIC 08: Pemeringkatan Usulan & Kuota (Kepala P3M)
-    $canViewRanking = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
+    // 6. Audit Trail & RBAC Management
+    $canViewAuditLogs = $hasPerm('audit_logs.view');
+    $canManageRbac = $hasPerm('rbac.manage');
 
-    // 13. Audit Trail Logs (Superadmin Only)
-    $canViewAuditLogs = in_array($currentRole, ['Superadmin'], true);
-
-    // 13b. Manajemen Pengguna & Data Dosen (Admin P3M General, Kepala P3M, Superadmin)
-    $canManageUsers = in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true);
-
-    // 14. EPIC 09 & 10: Kontrak SPK & Pelaksanaan Hibah (Dosen / Pengusul)
-    $canViewContracts = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
+    // 7. EPIC 09 & 10: Kontrak SPK & Pelaksanaan Hibah
+    $canViewContracts = $hasPerm('kontrak.pengusul');
     $pendingContractCount = ($user && $canViewContracts) ? \App\Models\PpmKontrak::whereHas('usulan', fn($q) => $q->where('id_pengusul', $user->id))->where(function($q) {
         $q->where('signed_by_pengusul', false)
           ->orWhereNull('nomor_rekening');
     })->count() : 0;
-    $canAccessPelaksanaan = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true);
+    $canManageLogbook = $hasPerm('logbook.manage');
+    $canSubmitMonev = $hasPerm('monev.submit');
+    $canSubmitLaporanAkhir = $hasPerm('laporan_akhir.submit');
+    $canAccessPelaksanaan = $canManageLogbook || $canSubmitMonev || $canSubmitLaporanAkhir;
 
-    // 15. EPIC 10: Evaluasi Monev Lapangan 70% (Reviewer)
-    $canReviewMonev = in_array($currentRole, ['Reviewer', 'Superadmin'], true) || $isDualReviewer;
+    $canReviewMonev = $hasPerm('monev.evaluate') || $isDualReviewer;
     $pendingMonevCount = ($user && $canReviewMonev) ? \App\Models\PpmMonevKemajuan::where('status', 'submitted')->count() : 0;
 
-    // 16. EPIC 10: Seminar Hasil (Semhas) & Laporan Akhir (Kepala P3M, Divisi, Superadmin)
-    $canManageSemhas = in_array($currentRole, ['Kepala P3M', 'Superadmin'], true);
-    $pendingSemhasPenelitianCount = ($isDivisiPenelitian || $isSuperadmin)
+    $canManageSemhas = $hasPerm('semhas.manage');
+    $pendingSemhasPenelitianCount = ($isDivisiPenelitian || $isSuperadmin) && $canManageSemhas
         ? \App\Models\PpmUsulan::whereNull('no_urut')->whereIn('status', ['Contracted', 'Ongoing', 'Completed'])->where(fn($q) => $q->where('kategori_usulan', 'penelitian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'penelitian')))->whereDoesntHave('seminarHasil', fn($q) => $q->whereNotNull('skor_seminar'))->count()
         : 0;
-    $pendingSemhasPengabdianCount = ($isDivisiPengabdian || $isSuperadmin)
+    $pendingSemhasPengabdianCount = ($isDivisiPengabdian || $isSuperadmin) && $canManageSemhas
         ? \App\Models\PpmUsulan::whereNull('no_urut')->whereIn('status', ['Contracted', 'Ongoing', 'Completed'])->where(fn($q) => $q->where('kategori_usulan', 'pengabdian')->orWhereHas('skema', fn($sq) => $sq->where('kategori', 'pengabdian')))->whereDoesntHave('seminarHasil', fn($q) => $q->whereNotNull('skor_seminar'))->count()
         : 0;
 
-    // 17. EPIC 09 & 10: Pencairan Dana Hibah Termin 1 & 2 (Divisi Keuangan)
-    $canManageDisbursement = in_array($currentRole, ['Keuangan', 'Superadmin'], true);
+    // 8. EPIC 09, 10, 11: Divisi Keuangan (Pencairan Hibah & Reward)
+    $canManageDisbursement = $hasPerm('keuangan.pencairan_hibah');
+    $canManageRewardDisbursement = $hasPerm('keuangan.pencairan_reward');
     $pendingDisbursementCount = $canManageDisbursement ? \App\Models\PpmKontrak::where(function($q) {
         $q->where(function($sub) {
             $sub->whereNotNull('nomor_rekening')->whereNull('rekening_verified_at');
@@ -138,46 +138,45 @@
         });
     })->count() : 0;
 
-    // 18. EPIC 11: Luaran, HKI & Reward Insentif (Dosen / Pengusul & Anggota)
-    $canAccessLuaran = in_array($currentRole, ['Dosen / Pengusul', 'Dosen / Mahasiswa Anggota', 'Superadmin'], true);
+    // 9. EPIC 11: Luaran, HKI & Reward Insentif
+    $canSubmitHki = $hasPerm('hki.submit');
+    $canClaimReward = $hasPerm('reward.claim');
+    $canAccessLuaran = !$isDivisiPublikasi && ($canSubmitHki || $canViewPublikasi || $canClaimReward);
 
-    // 19. EPIC 11: Sentra HKI Verification & Klaim Reward Review (Khusus Divisi Publikasi & Superadmin)
-    $canManageHkiAdmin = in_array($currentRole, ['Superadmin'], true);
-    $pendingHkiCount = ($canManageHkiAdmin || $isDivisiPublikasi) ? \App\Models\PpmHki::where('status_hki', 'Pending_verification')->count() : 0;
-    $canManageRewardAdmin = in_array($currentRole, ['Superadmin'], true);
-    $pendingRewardCount = ($canManageRewardAdmin || $isDivisiPublikasi) ? \App\Models\PpmKlaimReward::where('status_klaim', 'Submitted')->count() : 0;
+    $canManageHkiAdmin = $hasPerm('hki.manage_all');
+    $pendingHkiCount = $canManageHkiAdmin ? \App\Models\PpmHki::where('status_hki', 'Pending_verification')->count() : 0;
+    $canManageRewardAdmin = $hasPerm('reward.verify');
+    $pendingRewardCount = $canManageRewardAdmin ? \App\Models\PpmKlaimReward::where('status_klaim', 'Submitted')->count() : 0;
 
-    // 20. EPIC 11: Pencairan Insentif Multi-Penulis (Divisi Keuangan)
-    $pendingRewardDisbursementCount = $canManageDisbursement ? \App\Models\PpmRewardDistribusi::where('status_transfer', 'Pending')->whereHas('klaimReward', fn($q) => $q->where('status_klaim', 'Approved_P3M'))->count() : 0;
+    $pendingRewardDisbursementCount = $canManageRewardDisbursement ? \App\Models\PpmRewardDistribusi::where('status_transfer', 'Pending')->whereHas('klaimReward', fn($q) => $q->where('status_klaim', 'Approved_P3M'))->count() : 0;
 
-    // 21. EPIC 12: Dasbor Analitik Eksekutif (Rektor, Kepala P3M, Superadmin - US-12.1)
-    $canViewExecutiveAnalytics = in_array($currentRole, ['Kepala P3M', 'Superadmin', 'Rektor'], true);
+    // 10. EPIC 12 & 13: Analitik, Akreditasi, UAT & Panduan
+    $canViewExecutiveAnalytics = $hasPerm('analitik.eksekutif');
+    $canViewFacultyAnalytics = $hasPerm('analitik.fakultas');
+    $canViewAccreditationReports = $hasPerm('laporan.akreditasi');
+    $canAccessUat = $hasPerm('uat.access');
+    $canAccessPanduan = $user ? $hasPerm('panduan.access') : true;
 
-    // 22. EPIC 12: Dasbor Performa Fakultas (Dekanat, Kepala P3M, Superadmin - US-12.2)
-    $canViewFacultyAnalytics = in_array($currentRole, ['Dekanat', 'Kepala P3M', 'Superadmin', 'Rektor'], true);
-
-    // 23. EPIC 12: Pelaporan Akreditasi & Ekspor Data (Kepala P3M, Superadmin, Dekanat - US-12.3)
-    $canViewAccreditationReports = in_array($currentRole, ['Kepala P3M', 'Superadmin', 'Dekanat'], true);
-
-    // 24. EPIC 13: Migrasi Data Legasi (Admin P3M, Superadmin - US-13.1)
-    $canManageMigration = in_array($currentRole, ['Admin P3M', 'Superadmin'], true);
-
-    // 25. EPIC 13: Digital UAT Portal & Berita Acara (Tanpa Kaprodi & Kepala P3M)
-    $canAccessUat = in_array($currentRole, ['Dekanat', 'Admin P3M', 'Superadmin', 'Rektor'], true);
+    // Pengaturan visibilitas sub-grup Pengelolaan P3M (cegah duplikasi link khusus 3 Divisi kecuali diberi izin tambahan oleh Superadmin)
+    $showP3mLppmLink = $canReviewLppm && !($isDivisiPenelitian && !$canVerifPengabdian) && !($isDivisiPengabdian && !$canVerifPenelitian);
+    $showP3mAssignLink = $canAssignReviewers && !$isDivisiPenelitian && !$isDivisiPengabdian;
+    $showP3mSemhasLink = $canManageSemhas && !$isDivisiPenelitian && !$isDivisiPengabdian;
+    $showP3mHkiLink = $canManageHkiAdmin && !$isDivisiPublikasi;
+    $showP3mRewardLink = $canManageRewardAdmin && !$isDivisiPublikasi;
 
     // Group Presence Flags
-    $hasProposalGroup = $canSubmitProposals || ($canViewConsent && in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true));
+    $hasProposalGroup = $canSubmitProposals || ($canViewConsent && $currentRole === 'Dosen / Pengusul');
     $hasPelaksanaanGroup = $canViewContracts || $canAccessPelaksanaan;
     $hasLuaranGroup = $canAccessLuaran;
     $hasReviewerGroup = $canReviewSubstance || $canReviewMonev;
     $hasProdiSection = $canReviewRoadmap;
-    $hasP3mSelectionGroup = $canManageSchemes || $canManagePeriods || $canReviewLppm || $canAssignReviewers || $canViewRanking;
-    $hasP3mMonevLuaranGroup = $canManageSemhas || $canManageHkiAdmin || $canManageRewardAdmin;
-    $hasP3mSystemGroup = $canViewIntegrations || $canSearchPddikti || $canManageMigration;
-    $hasP3mManagement = $hasP3mSelectionGroup || $hasP3mMonevLuaranGroup || $hasP3mSystemGroup || $canViewAuditLogs;
-    $hasKeuanganGroup = $canManageDisbursement;
+    $hasP3mSelectionGroup = $canManageSchemes || $canManagePeriods || $showP3mLppmLink || $showP3mAssignLink || $canViewRanking;
+    $hasP3mMonevLuaranGroup = $showP3mSemhasLink || $showP3mHkiLink || $showP3mRewardLink;
+    $hasP3mSystemGroup = $canViewIntegrations || $canManageMigration || $canManageUsers || ($canSearchPddikti && in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true));
+    $hasP3mManagement = $hasP3mSelectionGroup || $hasP3mMonevLuaranGroup || $hasP3mSystemGroup || $canViewAuditLogs || $canManageRbac;
+    $hasKeuanganGroup = $canManageDisbursement || $canManageRewardDisbursement;
     $hasAnalyticsGroup = $canViewExecutiveAnalytics || $canViewFacultyAnalytics || $canViewAccreditationReports;
-    $hasDosenDatabaseGroup = in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true) && ($canViewSinta || $canSearchPddikti);
+    $hasDosenDatabaseGroup = $currentRole !== 'Reviewer' && ($canViewSinta || $canSearchPddikti);
 
     // Submenu Active Statuses (Auto-Expand on Active Page)
     $isProposalActive = str_contains($currentRoute, 'usulan') || str_starts_with($currentRoute, 'member-consent');
@@ -196,7 +195,8 @@
         || str_contains($currentRoute, 'admin.reward');
     $isP3mSystemActive = str_contains($currentRoute, 'integrasi') 
         || str_contains($currentRoute, 'pddikti') 
-        || str_contains($currentRoute, 'admin.migrasi');
+        || str_contains($currentRoute, 'admin.migrasi')
+        || str_contains($currentRoute, 'admin.users');
     $isKeuanganActive = str_contains($currentRoute, 'keuangan.');
     $isAnalyticsActive = str_contains($currentRoute, 'analitik.') || str_contains($currentRoute, 'laporan.akreditasi');
     $isDosenDatabaseActive = in_array($currentRoute, ['sinta.profile', 'pddikti.search'], true);
@@ -298,7 +298,7 @@
             </a>
 
             {{-- Database Dosen Tetap (146) khusus Admin P3M General di Menu Utama --}}
-            @if($isGeneralAdmin)
+            @if($isGeneralAdmin && $canManageUsers)
                 <a href="{{ route('admin.users.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'admin.users') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -309,32 +309,32 @@
                 </a>
             @endif
 
-            {{-- Penelitian Saya (Non-Divisi & non-Kepala P3M, Superadmin melihat Data Penelitian) --}}
-            @if(!$isDivisiPengabdian && !$isDivisiPublikasi && !$isGeneralAdmin && !$isDivisiPenelitian && $currentRole !== 'Kepala P3M')
+            {{-- Penelitian (Dinamis sesuai permission penelitian.view_own / manage_all) --}}
+            @if($canViewPenelitian && !$isDivisiPenelitian && $currentRole !== 'Kepala P3M')
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        <span>{{ $isSuperadmin ? 'Data Penelitian Dosen' : 'Penelitian Saya' }}</span>
+                        <span>{{ $canManagePenelitian ? 'Data Penelitian Dosen' : 'Penelitian Saya' }}</span>
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-extrabold">{{ $penelitianCount }}</span>
                 </a>
             @endif
 
-            {{-- Pengabdian Saya (Non-Divisi & non-Kepala P3M; Superadmin menampilkan total penuh) --}}
-            @if(in_array($currentRole, ['Superadmin', 'Dekanat', 'Kaprodi', 'Dosen / Pengusul'], true))
+            {{-- Pengabdian (Dinamis sesuai permission pengabdian.view_own / manage_all) --}}
+            @if($canViewPengabdian && !$isDivisiPengabdian && $currentRole !== 'Kepala P3M')
                 <a href="{{ route('pengabdian.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>{{ $isSuperadmin ? 'Data Pengabdian' : 'Pengabdian Saya' }}</span>
+                        <span>{{ $canManagePengabdian ? 'Data Pengabdian' : 'Pengabdian Saya' }}</span>
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px] font-extrabold">{{ $pengabdianCount }}</span>
                 </a>
             @endif
 
-            {{-- Persetujuan Anggota untuk Role Non-Pengusul (Mahasiswa Anggota) --}}
-            @if($canViewConsent && !in_array($currentRole, ['Dosen / Pengusul', 'Superadmin'], true))
+            {{-- Persetujuan Anggota untuk Role Non-Pengusul --}}
+            @if($canViewConsent && !$canSubmitProposals && !$isSuperadmin)
                 <a href="{{ route('member-consent.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-amber-500 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -360,10 +360,11 @@
         {{-- ========================================================================= --}}
         {{-- 1A. MENU KHUSUS KEPALA P3M (KaP3M): RIWAYAT PENELITIAN, PENGABDIAN, PUBLIKASI --}}
         {{-- ========================================================================= --}}
-        @if($currentRole === 'Kepala P3M')
+        @if($currentRole === 'Kepala P3M' && ($canViewPenelitian || $canViewPengabdian || $canViewPublikasi))
             <div class="space-y-1 pt-1">
                 <p class="px-2.5 text-[9px] font-bold uppercase tracking-wider text-cyan-400 mb-0.5">Riwayat Karya KaP3M</p>
 
+                @if($canViewPenelitian)
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -372,7 +373,9 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-extrabold">{{ $penelitianCount }}</span>
                 </a>
+                @endif
 
+                @if($canViewPengabdian)
                 <a href="{{ route('pengabdian.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -381,7 +384,9 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px] font-extrabold">{{ $pengabdianCount }}</span>
                 </a>
+                @endif
 
+                @if($canViewPublikasi)
                 <a href="{{ route('publikasi.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -390,16 +395,18 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[9px] font-extrabold">{{ $publikasiCount }}</span>
                 </a>
+                @endif
             </div>
         @endif
 
         {{-- ========================================================================= --}}
         {{-- 1B. MENU KHUSUS 3 DIVISI P3M (PENELITIAN, PENGABDIAN, PUBLIKASI)          --}}
         {{-- ========================================================================= --}}
-        @if($isDivisiPenelitian)
+        @if($isDivisiPenelitian && ($canViewPenelitian || $canVerifPenelitian || $canAssignReviewers || $canManageSemhas))
             <div class="space-y-1 pt-1">
                 <p class="px-2.5 text-[9px] font-bold uppercase tracking-wider text-blue-400 mb-0.5">Divisi Penelitian</p>
 
+                @if($canViewPenelitian)
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'usulan') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -408,7 +415,9 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-extrabold">{{ $penelitianCount }}</span>
                 </a>
+                @endif
 
+                @if($canVerifPenelitian)
                 <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -419,7 +428,9 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingVerifPenelitianCount }}</span>
                     @endif
                 </a>
+                @endif
 
+                @if($canAssignReviewers)
                 <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -430,7 +441,9 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingAssignmentCount }}</span>
                     @endif
                 </a>
+                @endif
 
+                @if($canManageSemhas)
                 <a href="{{ route('admin.semhas.index', ['divisi' => 'penelitian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -441,13 +454,15 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-indigo-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingSemhasPenelitianCount }}</span>
                     @endif
                 </a>
+                @endif
             </div>
         @endif
 
-        @if($isDivisiPengabdian)
+        @if($isDivisiPengabdian && ($canViewPengabdian || $canVerifPengabdian || $canAssignReviewers || $canManageSemhas))
             <div class="space-y-1 pt-1">
                 <p class="px-2.5 text-[9px] font-bold uppercase tracking-wider text-purple-400 mb-0.5">Divisi Pengabdian</p>
 
+                @if($canViewPengabdian)
                 <a href="{{ route('pengabdian.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -456,7 +471,9 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px] font-extrabold">{{ $pengabdianCount }}</span>
                 </a>
+                @endif
 
+                @if($canVerifPengabdian)
                 <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'pengabdian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -467,7 +484,9 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingVerifPengabdianCount }}</span>
                     @endif
                 </a>
+                @endif
 
+                @if($canAssignReviewers)
                 <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'pengabdian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -478,7 +497,9 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingAssignmentCount }}</span>
                     @endif
                 </a>
+                @endif
 
+                @if($canManageSemhas)
                 <a href="{{ route('admin.semhas.index', ['divisi' => 'pengabdian']) }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -489,13 +510,15 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-indigo-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingSemhasPengabdianCount }}</span>
                     @endif
                 </a>
+                @endif
             </div>
         @endif
 
-        @if($isDivisiPublikasi)
+        @if($isDivisiPublikasi && ($canViewPublikasi || $canManageHkiAdmin || $canSubmitHki || $canManageRewardAdmin))
             <div class="space-y-1 pt-1">
                 <p class="px-2.5 text-[9px] font-bold uppercase tracking-wider text-teal-400 mb-0.5">Divisi Publikasi &amp; HKI</p>
 
+                @if($canViewPublikasi)
                 <a href="{{ route('publikasi.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -504,7 +527,9 @@
                     </span>
                     <span class="px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[9px] font-extrabold">{{ $publikasiCount }}</span>
                 </a>
+                @endif
 
+                @if($canManageHkiAdmin)
                 <a href="{{ route('admin.hki.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -515,7 +540,9 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingHkiCount }}</span>
                     @endif
                 </a>
+                @endif
 
+                @if($canSubmitHki || $canManageHkiAdmin)
                 <a href="{{ route('hki.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki')) ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -523,7 +550,9 @@
                         <span>Katalog HKI Terdaftar</span>
                     </span>
                 </a>
+                @endif
 
+                @if($canManageRewardAdmin)
                 <a href="{{ route('admin.reward.index') }}" 
                    class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
@@ -534,6 +563,7 @@
                         <span class="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingRewardCount }}</span>
                     @endif
                 </a>
+                @endif
             </div>
         @endif
 
@@ -621,19 +651,23 @@
                         </a>
                         @endif
 
-                        @if($canAccessPelaksanaan)
+                        @if($canManageLogbook)
                         <a href="{{ route('pengusul.logbook.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.logbook') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.logbook') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Logbook Harian</span>
                         </a>
+                        @endif
 
+                        @if($canSubmitMonev)
                         <a href="{{ route('pengusul.monev.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.monev') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.monev') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Laporan Kemajuan</span>
                         </a>
+                        @endif
 
+                        @if($canSubmitLaporanAkhir)
                         <a href="{{ route('pengusul.laporan-akhir.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.laporan-akhir') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.laporan-akhir') ? 'bg-white' : 'bg-slate-600' }}"></span>
@@ -659,6 +693,7 @@
                     </button>
 
                     <div x-show="activeGroup === 'luaran'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
+                        @if($canSubmitHki)
                         <a href="{{ route('hki.create') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'hki.create' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2 truncate">
@@ -673,21 +708,26 @@
                             <span class="w-1.5 h-1.5 rounded-full {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Sentra HKI &amp; Paten</span>
                         </a>
+                        @endif
 
+                        @if($canViewPublikasi)
                         <a href="{{ route('publikasi.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2 truncate">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'publikasi') ? 'bg-white' : 'bg-slate-600' }}"></span>
-                                <span>Publikasi Saya</span>
+                                <span>{{ $canManagePublikasi ? 'Bank Publikasi Dosen' : 'Publikasi Saya' }}</span>
                             </span>
                             <span class="px-1.5 py-0.2 rounded-full bg-teal-500/20 text-teal-300 text-[9px] font-extrabold">{{ $publikasiCount }}</span>
                         </a>
+                        @endif
 
+                        @if($canClaimReward)
                         <a href="{{ route('reward.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reward.') && !str_contains($currentRoute, 'admin.reward') && !str_contains($currentRoute, 'keuangan.reward') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'reward.') && !str_contains($currentRoute, 'admin.reward') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Klaim Reward Insentif</span>
                         </a>
+                        @endif
                     </div>
                 </div>
                 @endif
@@ -844,7 +884,7 @@
                         </a>
                         @endif
 
-                        @if($canReviewLppm)
+                        @if($showP3mLppmLink)
                         <a href="{{ route('admin.lppm-approval.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-white' : 'bg-slate-600' }}"></span>
@@ -852,7 +892,7 @@
                         </a>
                         @endif
 
-                        @if($canAssignReviewers)
+                        @if($showP3mAssignLink)
                         <a href="{{ route('admin.reviewer-assignment.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
@@ -896,7 +936,7 @@
                     </button>
 
                     <div x-show="activeGroup === 'p3m_monev'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
-                        @if($canManageSemhas)
+                        @if($showP3mSemhasLink)
                         <a href="{{ route('admin.semhas.index') }}" 
                            class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-white' : 'bg-slate-600' }}"></span>
@@ -904,7 +944,7 @@
                         </a>
                         @endif
 
-                        @if($canManageHkiAdmin)
+                        @if($showP3mHkiLink)
                         <a href="{{ route('admin.hki.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
@@ -917,7 +957,7 @@
                         </a>
                         @endif
 
-                        @if($canManageRewardAdmin)
+                        @if($showP3mRewardLink)
                         <a href="{{ route('admin.reward.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
@@ -933,8 +973,8 @@
                 </div>
                 @endif
 
-                {{-- SUB-MENU: Sistem & Integrasi (Admin P3M, Kepala P3M & Superadmin) --}}
-                @if($hasP3mSystemGroup && in_array($currentRole, ['Admin P3M', 'Kepala P3M', 'Superadmin'], true))
+                {{-- SUB-MENU: Sistem & Integrasi (Dinamis sesuai Permission) --}}
+                @if($hasP3mSystemGroup)
                 <div class="space-y-0.5">
                     <button @click="activeGroup = (activeGroup === 'p3m_system' ? '' : 'p3m_system')" 
                             type="button"
@@ -983,7 +1023,16 @@
                 </div>
                 @endif
 
-                {{-- Audit Trail Logs (Hanya Superadmin) --}}
+                {{-- Manajemen Role & Permission RBAC (Khusus Superadmin / rbac.manage) --}}
+                @if($canManageRbac)
+                    <a href="{{ route('admin.role-permissions.index') }}" 
+                       class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.role-permissions') ? 'bg-red-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>Role &amp; Permission (RBAC)</span>
+                    </a>
+                @endif
+
+                {{-- Audit Trail Logs --}}
                 @if($canViewAuditLogs)
                     <a href="{{ route('audit-logs') }}" 
                        class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'audit-logs' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -1018,6 +1067,7 @@
                     </button>
 
                     <div x-show="activeGroup === 'keuangan'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
+                        @if($canManageDisbursement)
                         <a href="{{ route('keuangan.pencairan.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.pencairan') ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
@@ -1028,7 +1078,9 @@
                                 <span class="min-w-4 h-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingDisbursementCount }}</span>
                             @endif
                         </a>
+                        @endif
 
+                        @if($canManageRewardDisbursement)
                         <a href="{{ route('keuangan.reward.index') }}" 
                            class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.reward') ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
@@ -1039,6 +1091,7 @@
                                 <span class="min-w-4 h-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center">{{ $pendingRewardDisbursementCount }}</span>
                             @endif
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -1106,12 +1159,14 @@
             </a>
             @endif
 
-            {{-- Buku Panduan Interaktif (Semua Pengguna) --}}
+            {{-- Buku Panduan Interaktif --}}
+            @if($canAccessPanduan)
             <a href="{{ route('panduan.index') }}" 
                class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'panduan') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 <span>Buku Panduan Sistem</span>
             </a>
+            @endif
 
             {{-- Pengaturan Profil Mandiri (Semua Pengguna) --}}
             <a href="{{ route('profile.edit') }}" 

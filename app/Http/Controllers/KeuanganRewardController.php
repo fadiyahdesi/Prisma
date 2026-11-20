@@ -18,7 +18,7 @@ class KeuanganRewardController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Keuangan.');
+        abort_unless($user->hasPermission('keuangan.pencairan_reward'), 403, 'Akses ditolak: Memerlukan izin Pencairan Insentif Reward.');
 
         $tab = $request->query('tab', 'ready'); // ready, all, disbursed
         $search = $request->query('search');
@@ -57,7 +57,7 @@ class KeuanganRewardController extends Controller
     public function show(PpmKlaimReward $klaim): View
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Keuangan.');
+        abort_unless($user->hasPermission('keuangan.pencairan_reward'), 403, 'Akses ditolak: Memerlukan izin Pencairan Insentif Reward.');
 
         $klaim->load(['user', 'publikasi', 'hki', 'distribusi', 'approver']);
 
@@ -70,7 +70,7 @@ class KeuanganRewardController extends Controller
     public function disburseMember(Request $request, PpmRewardDistribusi $distribusi, RewardDistributionService $service): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Keuangan', 'Superadmin']), 403, 'Akses ditolak: Khusus Divisi Keuangan.');
+        abort_unless($user->hasPermission('keuangan.pencairan_reward'), 403, 'Akses ditolak: Memerlukan izin Pencairan Insentif Reward.');
 
         // Validasi Penulis Pertama untuk pencairan reward publikasi
         $klaim = $distribusi->klaimReward;

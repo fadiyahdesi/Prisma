@@ -18,14 +18,14 @@ class SemhasController extends Controller
     public function adminIndex(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']), 403, 'Akses khusus Divisi / Kepala P3M.');
+        abort_unless($user->hasPermission('semhas.manage'), 403, 'Akses ditolak: Memerlukan izin Manajemen Seminar Hasil.');
 
         $activeRole = $user->effectiveRoleName();
         $filter = $request->query('filter', 'all');
         $search = $request->query('search');
         $forcedDivisi = match ($activeRole) {
-            'Divisi Penelitian' => 'penelitian',
-            'Divisi Pengabdian' => 'pengabdian',
+            'Divisi Penelitian' => $user->isFullDivisionFor('pengabdian') ? null : 'penelitian',
+            'Divisi Pengabdian' => $user->isFullDivisionFor('penelitian') ? null : 'pengabdian',
             default => null,
         };
         $divisi = $forcedDivisi ?? $request->query('divisi');
@@ -119,8 +119,9 @@ class SemhasController extends Controller
     {
         $user = Auth::user();
         $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $onlyOneDiv = $user->isFullDivisionFor('penelitian') xor $user->isFullDivisionFor('pengabdian');
         abort_unless(
-            $user->isFullDivisionFor($kategori) || $user->hasRole('Kepala P3M'),
+            $user->hasPermission('semhas.manage') && (!$onlyOneDiv || $user->hasRole(['Kepala P3M', 'Superadmin']) || $user->isFullDivisionFor($kategori)),
             403,
             'Akses ditolak: Khusus Divisi terkait.'
         );
@@ -148,8 +149,10 @@ class SemhasController extends Controller
     {
         $user = Auth::user();
         $kategori = strtolower((string) ($semhas->usulan?->kategori_usulan ?? $semhas->usulan?->skema?->kategori ?? 'penelitian'));
+        $canReviewSemhas = $user->hasAnyPermission(['reviewer.evaluate', 'monev.evaluate']);
+        $onlyOneDiv = $user->isFullDivisionFor('penelitian') xor $user->isFullDivisionFor('pengabdian');
         abort_unless(
-            $user->isFullDivisionFor($kategori) || $user->hasRole(['Kepala P3M', 'Reviewer']),
+            $canReviewSemhas || ($user->hasPermission('semhas.manage') && (!$onlyOneDiv || $user->hasRole(['Kepala P3M', 'Superadmin']) || $user->isFullDivisionFor($kategori))),
             403,
             'Akses ditolak.'
         );
@@ -174,8 +177,9 @@ class SemhasController extends Controller
     {
         $user = Auth::user();
         $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+        $onlyOneDiv = $user->isFullDivisionFor('penelitian') xor $user->isFullDivisionFor('pengabdian');
         abort_unless(
-            $user->isFullDivisionFor($kategori) || $user->hasRole('Kepala P3M'),
+            $user->hasPermission('semhas.manage') && (!$onlyOneDiv || $user->hasRole(['Kepala P3M', 'Superadmin']) || $user->isFullDivisionFor($kategori)),
             403,
             'Akses khusus Divisi / Kepala P3M.'
         );
@@ -216,6 +220,7 @@ class SemhasController extends Controller
     public function pengusulLaporanAkhir(?PpmUsulan $usulan = null)
     {
         $user = Auth::user();
+        abort_unless($user->hasAnyPermission(['laporan_akhir.submit', 'semhas.manage']), 403, 'Akses ditolak: Anda tidak memiliki izin akses Laporan Akhir.');
 
         if (!$usulan || !$usulan->exists) {
             $usulanList = PpmUsulan::with(['skema', 'periode', 'seminarHasil', 'laporanAkhir'])
@@ -298,7 +303,7 @@ class SemhasController extends Controller
         $user = Auth::user();
         $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
 
-        if ($usulan->id_pengusul !== $user->id && !$user->isFullDivisionFor($kategori) && !$user->hasRole(['Kepala P3M', 'Keuangan'])) {
+        if ($usulan->id_pengusul !== $user->id && !$user->isFullDivisionFor($kategori) && !$user->hasAnyPermission(['semhas.manage', 'keuangan.pencairan_hibah'])) {
             abort(403, 'Akses ditolak.');
         }
 

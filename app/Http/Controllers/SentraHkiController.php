@@ -566,7 +566,7 @@ class SentraHkiController extends Controller
     public function quickSyncDemo(): RedirectResponse
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Publikasi', 'Superadmin']), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
+        abort_unless($user->isFullDivisionFor('hki'), 403, 'Khusus Pengelola Sentra HKI / Divisi Publikasi.');
 
         $sharfina = User::where('nidn_nim', '0617029201')->first() ?? $user;
         $ginanjar = User::where('nidn_nim', '0613028601')->first() ?? $user;

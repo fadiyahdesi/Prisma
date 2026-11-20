@@ -15,7 +15,7 @@ class CheckRole
     {
         $user = Auth::user();
 
-        if (!$user || !$user->hasRole($roles)) {
+        if (!$user || (!$user->hasRole('Superadmin') && !$user->hasRole($roles))) {
             return redirect()->route('dashboard')->with('error', 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses halaman ini.');
         }
 

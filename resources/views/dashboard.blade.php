@@ -897,6 +897,9 @@
                             <p class="text-xs text-slate-700 mt-1">Kelola sistem &amp; berpindah peran ke masing-masing Divisi (Penelitian, Pengabdian, Publikasi) atau Admin P3M General.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('admin.role-permissions.index') }}" class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-extrabold text-xs sm:text-sm hover:bg-slate-800 shadow-md whitespace-nowrap">
+                                Atur Role &amp; Permission &rarr;
+                            </a>
                             <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-red-700 text-white font-extrabold text-xs sm:text-sm hover:bg-red-800 shadow-md whitespace-nowrap">
                                 Data Penelitian ({{ $stats['penelitian_count'] ?? 0 }}) &rarr;
                             </a>

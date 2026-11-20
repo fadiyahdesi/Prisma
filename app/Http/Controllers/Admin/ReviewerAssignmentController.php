@@ -23,8 +23,8 @@ class ReviewerAssignmentController extends Controller
 
         $activeRole = $user->effectiveRoleName();
         $forcedDivisi = match ($activeRole) {
-            'Divisi Penelitian' => 'penelitian',
-            'Divisi Pengabdian' => 'pengabdian',
+            'Divisi Penelitian' => $user->isFullDivisionFor('pengabdian') ? null : 'penelitian',
+            'Divisi Pengabdian' => $user->isFullDivisionFor('penelitian') ? null : 'pengabdian',
             default => null,
         };
         $canSwitchDivisi = $forcedDivisi === null;
@@ -248,14 +248,17 @@ class ReviewerAssignmentController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']),
+            $user->hasPermission('reviewer.assign'),
             403,
-            'Akses ditolak: Khusus Admin P3M / Divisi Penelitian / Divisi Pengabdian / Kepala P3M.'
+            'Akses ditolak: Anda tidak memiliki izin Penugasan Reviewer.'
         );
 
         if ($usulan !== null && !$user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin'])) {
-            $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
-            abort_unless($user->isFullDivisionFor($kategori), 403, 'Usulan ini berada di luar wewenang divisi Anda.');
+            $onlyOneDiv = $user->isFullDivisionFor('penelitian') xor $user->isFullDivisionFor('pengabdian');
+            if ($onlyOneDiv) {
+                $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
+                abort_unless($user->isFullDivisionFor($kategori), 403, 'Usulan ini berada di luar wewenang divisi Anda.');
+            }
         }
     }
 }

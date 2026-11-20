@@ -16,6 +16,7 @@ class MonevController extends Controller
     public function pengusulIndex(?PpmUsulan $usulan = null)
     {
         $user = Auth::user();
+        abort_unless($user->hasPermission('monev.submit') || $user->hasPermission('monev.evaluate'), 403, 'Akses ditolak: Anda tidak memiliki izin akses Laporan Kemajuan.');
 
         if (!$usulan || !$usulan->exists) {
             $usulanList = PpmUsulan::with(['skema', 'periode', 'monevKemajuan'])
@@ -58,6 +59,7 @@ class MonevController extends Controller
     public function pengusulStore(Request $request, PpmUsulan $usulan)
     {
         $user = Auth::user();
+        abort_unless($user->hasPermission('monev.submit'), 403, 'Akses ditolak.');
 
         if ($usulan->id_pengusul !== $user->id && !$user->hasRole('Superadmin')) {
             abort(403, 'Akses ditolak.');
@@ -97,7 +99,7 @@ class MonevController extends Controller
     public function reviewerIndex(Request $request)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Reviewer', 'Superadmin']), 403, 'Akses khusus reviewer monev.');
+        abort_unless($user->hasPermission('monev.evaluate'), 403, 'Akses khusus reviewer monev.');
 
         $monevList = PpmMonevKemajuan::with(['usulan.pengusul.fakultas', 'usulan.pengusul.prodi', 'usulan.skema', 'reviewer'])
             ->latest('updated_at')
@@ -112,7 +114,7 @@ class MonevController extends Controller
     public function reviewerShow(PpmMonevKemajuan $monev)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Reviewer', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('monev.evaluate'), 403, 'Akses ditolak.');
 
         $monev->loadMissing(['usulan.pengusul.fakultas', 'usulan.pengusul.prodi', 'usulan.skema', 'usulan.logbook', 'reviewer']);
 
@@ -125,7 +127,7 @@ class MonevController extends Controller
     public function reviewerStore(Request $request, PpmMonevKemajuan $monev)
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Reviewer', 'Superadmin']), 403, 'Akses ditolak.');
+        abort_unless($user->hasPermission('monev.evaluate'), 403, 'Akses ditolak.');
 
         $validated = $request->validate([
             'skor_monev' => 'required|numeric|min:0|max:100',

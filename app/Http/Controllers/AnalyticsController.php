@@ -19,9 +19,9 @@ class AnalyticsController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Superadmin', 'Rektor']),
+            $user->hasPermission('analitik.eksekutif'),
             403,
-            'Akses ditolak: Khusus Rektor & Kepala P3M.'
+            'Akses ditolak: Anda tidak memiliki izin Dasbor Analitik Eksekutif.'
         );
 
         $periodeId = $request->input('periode_id') ? (int) $request->input('periode_id') : null;
@@ -41,12 +41,12 @@ class AnalyticsController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Dekanat', 'Kepala P3M', 'Superadmin', 'Rektor']),
+            $user->hasPermission('analitik.fakultas'),
             403,
-            'Akses ditolak: Khusus Dekan / Pimpinan Fakultas.'
+            'Akses ditolak: Anda tidak memiliki izin Dasbor Performa Fakultas.'
         );
 
-        $isPrivileged = $user->hasRole(['Superadmin', 'Kepala P3M', 'Rektor']);
+        $isPrivileged = $user->hasRole('Superadmin') || $user->hasPermission('analitik.eksekutif');
         $userFakultasId = $user->id_fakultas;
 
         // Tenant Isolation Enforcement

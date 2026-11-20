@@ -19,7 +19,7 @@ class ReviewerController extends Controller
     {
         $user = Auth::user();
         $hasAssignment = PpmPenugasanReviewer::where('id_reviewer', $user->id)->exists();
-        abort_unless($user->hasRole(['Reviewer', 'Superadmin']) || $hasAssignment, 403, 'Akses ditolak: Halaman ini khusus untuk Reviewer.');
+        abort_unless($user->hasPermission('reviewer.evaluate') || $hasAssignment, 403, 'Akses ditolak: Halaman ini khusus untuk Reviewer.');
 
         $assignments = PpmPenugasanReviewer::with(['usulan.skema', 'usulan.periode', 'penilaian'])
             ->where('id_reviewer', $user->id)
@@ -41,6 +41,7 @@ class ReviewerController extends Controller
     public function applyAsReviewer(Request $request)
     {
         $user = Auth::user();
+        abort_unless($user->hasAnyPermission(['reviewer.apply', 'reviewer.evaluate']), 403, 'Akses ditolak: Anda tidak memiliki izin pengusulan Reviewer.');
 
         $validated = $request->validate([
             'rumpun_ilmu' => 'required|string|max:150',
@@ -52,7 +53,7 @@ class ReviewerController extends Controller
             'rumpun_ilmu' => trim($validated['rumpun_ilmu']),
             'bidang_keahlian' => trim($validated['bidang_keahlian']),
             'reviewer_expertise_notes' => trim((string) ($validated['reviewer_expertise_notes'] ?? '')) ?: null,
-            'reviewer_application_status' => $user->hasRole('Reviewer') ? 'approved' : 'pending',
+            'reviewer_application_status' => $user->hasPermission('reviewer.evaluate') ? 'approved' : 'pending',
             'reviewer_applied_at' => now(),
         ]);
 
@@ -64,7 +65,7 @@ class ReviewerController extends Controller
 
         return redirect()->back()->with(
             'success',
-            $user->hasRole('Reviewer')
+            $user->hasPermission('reviewer.evaluate')
                 ? 'Profil rumpun ilmu & bidang kepakaran Reviewer Anda berhasil diperbarui!'
                 : 'Usulan pengajuan Anda sebagai Calon Reviewer berhasil direkam ke database dan menunggu peninjauan/penugasan Divisi & Admin P3M.'
         );

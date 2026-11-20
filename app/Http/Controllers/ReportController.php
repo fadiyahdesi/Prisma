@@ -23,9 +23,9 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Dekanat', 'Superadmin', 'Kaprodi']),
+            $user->hasPermission('laporan.akreditasi'),
             403,
-            'Akses ditolak: Khusus Pengelola Akreditasi, Kepala P3M, atau Pimpinan Unit.'
+            'Akses ditolak: Anda tidak memiliki izin Pelaporan Akreditasi.'
         );
 
         $filters = $this->resolveFilters($request, $user);
@@ -48,7 +48,7 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Dekanat', 'Superadmin', 'Kaprodi']),
+            $user->hasPermission('laporan.akreditasi'),
             403,
             'Akses ditolak: Khusus Pengelola Akreditasi.'
         );
@@ -68,7 +68,7 @@ class ReportController extends Controller
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Dekanat', 'Superadmin', 'Kaprodi']),
+            $user->hasPermission('laporan.akreditasi'),
             403,
             'Akses ditolak: Khusus Pengelola Akreditasi.'
         );
@@ -96,7 +96,7 @@ class ReportController extends Controller
      */
     private function resolveFilters(Request $request, $user): array
     {
-        $isPrivileged = $user->hasRole(['Superadmin', 'Kepala P3M']);
+        $isPrivileged = $user->hasRole('Superadmin') || $user->hasPermission('analitik.eksekutif');
 
         $fakultasId = $request->input('fakultas_id') ? (int) $request->input('fakultas_id') : null;
         $prodiId = $request->input('prodi_id') ? (int) $request->input('prodi_id') : null;
