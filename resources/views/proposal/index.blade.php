@@ -66,11 +66,11 @@
                               onsubmit="return confirm('Sinkronkan ulang {{ $isPengabdian ? '420 Data Pengabdian Masyarakat' : '438 Data Penelitian Dosen' }} dari CSV resmi?');">
                             @csrf
                             <input type="hidden" name="kategori" value="{{ $kat }}">
-                            <button type="submit"
+                            <!-- <button type="submit"
                                     class="h-9 px-3 rounded-xl bg-white hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 hover:border-emerald-600 font-bold text-xs shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                 <span>Sinkron CSV ({{ $isPengabdian ? '420' : '438' }})</span>
-                            </button>
+                            </button> -->
                         </form>
 
                         <button type="button" @click="createModalOpen = true"
@@ -113,54 +113,62 @@
             @endif
 
             {{-- Summary Metric KPI Cards --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
-                    <div class="min-w-0">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
+                <div class="lg:col-span-3 bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2">
                         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                             {{ $isAdmin ? 'Total ' . $labelBidang : $labelBidang . ' Saya' }}
                         </p>
-                        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ number_format($proposals->total()) }}</p>
-                        <p class="text-[11px] font-medium text-slate-500 mt-0.5 truncate">
+                        <div class="w-8 h-8 rounded-xl {{ $isPengabdian ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600' }} flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 tabular-nums">{{ number_format($proposals->total()) }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5">
                             Menampilkan {{ $proposals->firstItem() ?? 0 }}&ndash;{{ $proposals->lastItem() ?? 0 }} data
                         </p>
                     </div>
-                    <div class="w-11 h-11 rounded-2xl {{ $isPengabdian ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600' }} flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    </div>
                 </div>
 
-                <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
-                    <div class="min-w-0">
+                <div class="lg:col-span-4 bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2">
                         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Akumulasi Dana Hibah</p>
-                        <p class="text-lg sm:text-xl font-black text-emerald-700 mt-1 tabular-nums truncate" title="Rp {{ number_format($totalNominal, 0, ',', '.') }}">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-lg sm:text-xl font-black text-emerald-700 tabular-nums leading-snug break-words">
                             Rp {{ number_format($totalNominal, 0, ',', '.') }}
                         </p>
                         <p class="text-[11px] font-medium text-slate-500 mt-0.5">Sesuai filter &amp; cakupan aktif</p>
                     </div>
-                    <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+
+                <div class="lg:col-span-2 bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Semester</p>
+                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 tabular-nums">{{ $semesterList->count() }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5">Periode Semester tercatat</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
-                    <div class="min-w-0">
-                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Periode Semester</p>
-                        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ $semesterList->count() }}</p>
-                        <p class="text-[11px] font-medium text-slate-500 mt-0.5">Periode akademik tercatat</p>
-                    </div>
-                    <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
-                    <div class="min-w-0">
+                <div class="lg:col-span-3 bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col justify-between gap-2">
+                    <div class="flex items-center justify-between gap-2">
                         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Program Studi</p>
-                        <p class="text-2xl font-black text-slate-900 mt-1 tabular-nums">{{ $prodiList->count() }}</p>
-                        <p class="text-[11px] font-medium text-slate-500 mt-0.5">Unit program studi terlibat</p>
+                        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
                     </div>
-                    <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <div>
+                        <p class="text-2xl font-black text-slate-900 tabular-nums">{{ $prodiList->count() }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 mt-0.5">Unit program studi terlibat</p>
                     </div>
                 </div>
             </div>
