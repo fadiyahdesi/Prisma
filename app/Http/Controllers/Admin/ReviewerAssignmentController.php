@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PpmUsulan;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\ReviewEngineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,22 +27,28 @@ class ReviewerAssignmentController extends Controller
             'Divisi Pengabdian' => 'pengabdian',
             default => null,
         };
+        $canSwitchDivisi = $forcedDivisi === null;
+
+        // Hanya tampilkan antrean proposal workflow aktif (bukan arsip historis CSV 2020-2025)
+        $workflowScope = function ($q) {
+            $q->whereNull('no_urut')->orWhereHas('penugasanReviewer');
+        };
 
         $query = PpmUsulan::with([
             'pengusul.fakultas',
             'pengusul.prodi',
+            'prodi',
             'skema',
             'periode',
             'penugasanReviewer.reviewer.fakultas',
             'penugasanReviewer.reviewer.prodi',
             'penugasanReviewer.penilaian',
         ])
-        ->whereIn('status', ['In_review', 'Approved', 'Submitted', 'Adjudication', 'Reviewed'])
-        ->latest('submitted_at');
-
-        if ($activeRole === 'Kepala P3M') {
-            $query->whereNull('no_urut');
-        }
+        ->where($workflowScope)
+        ->whereIn('status', ['Submitted', 'In_review', 'Approved', 'Adjudication', 'Reviewed'])
+        ->orderByRaw("CASE WHEN status = 'In_review' THEN 0 WHEN status = 'Submitted' THEN 1 WHEN status = 'Adjudication' THEN 2 ELSE 3 END ASC")
+        ->latest('submitted_at')
+        ->latest('id');
 
         if ($request->filled('status_filter')) {
             $query->where('status', $request->string('status_filter'));
@@ -57,32 +65,42 @@ class ReviewerAssignmentController extends Controller
 
         $proposals = $query->paginate(12)->withQueryString();
 
-        // Stats (terisolasi sesuai divisi yang login)
-        $statsScope = PpmUsulan::query();
+        // Stats (terisolasi pada proposal workflow aktif & sesuai divisi yang login)
+        $statsScope = PpmUsulan::where($workflowScope);
         if ($forcedDivisi) {
             $statsScope->where(function ($q) use ($forcedDivisi) {
                 $q->where('kategori_usulan', $forcedDivisi)
                   ->orWhereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$forcedDivisi]));
             });
-        } elseif ($activeRole === 'Kepala P3M') {
-            $statsScope->whereNull('no_urut');
         }
 
         $stats = [
-            'total_in_review'    => (clone $statsScope)->where('status', 'In_review')->count(),
+            'total_in_review'    => (clone $statsScope)->whereIn('status', ['Submitted', 'In_review'])->count(),
             'total_adjudication' => (clone $statsScope)->where('status', 'Adjudication')->count(),
             'total_reviewed'     => (clone $statsScope)->where('status', 'Reviewed')->count(),
             'total_penelitian'   => ($forcedDivisi === 'pengabdian') ? 0 : (clone $statsScope)->where(function ($q) {
                 $q->where('kategori_usulan', 'penelitian')
                   ->orWhereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', ['penelitian']));
-            })->whereIn('status', ['In_review', 'Approved', 'Submitted', 'Adjudication', 'Reviewed'])->count(),
+            })->whereIn('status', ['Submitted', 'In_review', 'Approved', 'Adjudication', 'Reviewed'])->count(),
             'total_pengabdian'   => ($forcedDivisi === 'penelitian') ? 0 : (clone $statsScope)->where(function ($q) {
                 $q->where('kategori_usulan', 'pengabdian')
                   ->orWhereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', ['pengabdian']));
-            })->whereIn('status', ['In_review', 'Approved', 'Submitted', 'Adjudication', 'Reviewed'])->count(),
+            })->whereIn('status', ['Submitted', 'In_review', 'Approved', 'Adjudication', 'Reviewed'])->count(),
         ];
 
-        return view('admin.reviewer-assignment.index', compact('proposals', 'stats', 'kategoriFilter'));
+        $reviewerApplicants = User::with(['fakultas', 'prodi', 'roles'])
+            ->where('reviewer_application_status', 'pending')
+            ->latest('reviewer_applied_at')
+            ->get();
+
+        return view('admin.reviewer-assignment.index', compact(
+            'proposals',
+            'stats',
+            'kategoriFilter',
+            'canSwitchDivisi',
+            'activeRole',
+            'reviewerApplicants'
+        ));
     }
 
     /**
@@ -94,7 +112,7 @@ class ReviewerAssignmentController extends Controller
         $user = Auth::user();
         $this->authorizeDivision($usulan);
 
-        $isPengabdian = strtolower($usulan->skema?->kategori ?? '') === 'pengabdian';
+        $isPengabdian = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? '')) === 'pengabdian';
 
         $rules = [
             'reviewer_1_id' => 'required|exists:users,id',
@@ -175,29 +193,67 @@ class ReviewerAssignmentController extends Controller
 
         return response()->json([
             'usulan_kode' => $usulan->kode_usulan,
+            'usulan_kategori' => $usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian',
+            'usulan_rumpun' => $usulan->rumpun_ilmu_level_1 ?? '-',
             'pengusul_fakultas' => $usulan->pengusul?->fakultas?->nama_fakultas,
-            'pengusul_prodi' => $usulan->pengusul?->prodi?->nama_prodi,
+            'pengusul_prodi' => $usulan->pengusul?->prodi?->nama_prodi ?? $usulan->nama_prodi,
             'reviewers' => $eligible->map(fn($r) => [
                 'id' => $r->id,
                 'name' => $r->name,
                 'nidn' => $r->nidn_nim,
                 'fakultas' => $r->fakultas?->nama_fakultas,
                 'prodi' => $r->prodi?->nama_prodi,
+                'jafung' => $r->jabatan_fungsional,
+                'rumpun' => $r->getAttribute('resolved_rumpun'),
+                'bidang' => $r->getAttribute('resolved_bidang'),
+                'sesuai_bidang' => (bool) $r->getAttribute('sesuai_bidang'),
+                'match_reason' => $r->getAttribute('match_reason'),
+                'is_reviewer_role' => (bool) $r->getAttribute('is_reviewer_role'),
                 'sinta_score' => $r->sinta_score_3yr,
             ]),
         ]);
+    }
+
+    /**
+     * Approve a lecturer's self-nomination as Reviewer and attach Reviewer role.
+     */
+    public function approveApplicant(User $user)
+    {
+        $this->authorizeDivision();
+
+        $reviewerRole = Role::where('name', 'Reviewer')->firstOrFail();
+        $user->roles()->syncWithoutDetaching([$reviewerRole->id]);
+        $user->update([
+            'reviewer_application_status' => 'approved',
+        ]);
+
+        return redirect()->back()->with('success', "{$user->name} telah disetujui dan resmi terdaftar sebagai Reviewer sesuai bidang {$user->bidang_keahlian}.");
+    }
+
+    /**
+     * Reject a lecturer's reviewer application.
+     */
+    public function rejectApplicant(User $user)
+    {
+        $this->authorizeDivision();
+
+        $user->update([
+            'reviewer_application_status' => 'rejected',
+        ]);
+
+        return redirect()->back()->with('info', "Usulan calon Reviewer atas nama {$user->name} ditolak.");
     }
 
     private function authorizeDivision(?PpmUsulan $usulan = null): void
     {
         $user = Auth::user();
         abort_unless(
-            $user->hasRole(['Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']),
+            $user->hasRole(['Admin P3M', 'Kepala P3M', 'Divisi Penelitian', 'Divisi Pengabdian', 'Superadmin']),
             403,
-            'Akses ditolak: Khusus Divisi Penelitian / Pengabdian / Kepala P3M.'
+            'Akses ditolak: Khusus Admin P3M / Divisi Penelitian / Divisi Pengabdian / Kepala P3M.'
         );
 
-        if ($usulan !== null && !$user->hasRole(['Kepala P3M', 'Superadmin'])) {
+        if ($usulan !== null && !$user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin'])) {
             $kategori = strtolower((string) ($usulan->kategori_usulan ?? $usulan->skema?->kategori ?? 'penelitian'));
             abort_unless($user->isFullDivisionFor($kategori), 403, 'Usulan ini berada di luar wewenang divisi Anda.');
         }

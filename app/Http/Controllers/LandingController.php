@@ -307,6 +307,8 @@ class LandingController extends Controller
             $recentPublications = collect();
         }
 
+        $tktCatalog = \App\Services\RumpunIlmuService::getTktMeterCatalog();
+
         return view('landing', compact(
             'systemInfo',
             'stats',
@@ -315,7 +317,8 @@ class LandingController extends Controller
             'faculties',
             'wizardSteps',
             'integrations',
-            'recentPublications'
+            'recentPublications',
+            'tktCatalog'
         ));
     }
 

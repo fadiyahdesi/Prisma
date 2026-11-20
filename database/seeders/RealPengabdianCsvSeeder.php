@@ -192,12 +192,15 @@ class RealPengabdianCsvSeeder extends Seeder
         $now = now();
 
         DB::transaction(function () use ($rows, $byNidn, $byCleanName, $prodiKodeMap, $prodiByKode, $skemaPengabdian, $periodeMap, $now) {
-            // Hapus data pengabdian lama sebelum sinkronisasi ulang dari CSV
+            // Hapus hanya arsip CSV pengabdian lama sebelum sinkronisasi ulang dari CSV (pertahankan usulan live)
             $pengabdianIds = DB::table('ppm_usulan')
                 ->where(function ($q) {
                     $q->where('kategori_usulan', 'pengabdian')
                       ->orWhere('kode_usulan', 'like', 'PKM-%');
-                })->pluck('id')->toArray();
+                })
+                ->whereNotNull('no_urut')
+                ->pluck('id')
+                ->toArray();
 
             if (!empty($pengabdianIds)) {
                 foreach (array_chunk($pengabdianIds, 200) as $idChunk) {

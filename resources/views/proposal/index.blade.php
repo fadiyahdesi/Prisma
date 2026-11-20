@@ -12,6 +12,7 @@
 @section('content')
 <div x-data="{
     sidebarOpen: false,
+    ajukanModalOpen: false,
     createModalOpen: false,
     editModalOpen: false,
     editData: {
@@ -94,12 +95,13 @@
                         </span>
                     @endif
 
-                    <a href="{{ route('sinta.profile') }}"
-                       style="background-color: #681727 !important; color: #ffffff !important;"
-                       class="h-9 px-4 rounded-xl text-white font-extrabold text-xs shadow-xs transition inline-flex items-center gap-1.5 hover:opacity-90">
+                    <button type="button"
+                            @click="ajukanModalOpen = true"
+                            style="background-color: #681727 !important; color: #ffffff !important;"
+                            class="h-9 px-4 rounded-xl text-white font-extrabold text-xs shadow-xs transition inline-flex items-center gap-1.5 hover:opacity-90 cursor-pointer">
                         <svg class="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         <span style="color: #ffffff !important;">Ajukan Proposal Baru</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </header>
@@ -278,6 +280,16 @@
                                         <div class="font-bold text-slate-900 text-xs sm:text-[13px] leading-relaxed">
                                             {{ $p->judul_usulan ?: '(Judul Belum Diisi)' }}
                                         </div>
+                                        @if($p->no_urut === null)
+                                            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black border {{ $p->status === 'Approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : ($p->status === 'Rejected' ? 'bg-rose-100 text-rose-800 border-rose-200' : ($p->status === 'Draft' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-blue-100 text-blue-800 border-blue-200')) }}">
+                                                    Status: {{ $p->status }}
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                                    {{ $p->kode_usulan }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
 
                                     <!-- 4. Ketua -->
@@ -368,7 +380,7 @@
                                                     </button>
                                                 </form>
                                             @else
-                                                <a href="{{ route('usulan.step', ['usulan' => $p->id, 'step' => 6]) }}"
+                                                <a href="{{ route('usulan.step', ['usulan' => $p->id, 'step' => $p->status === 'Draft' ? 1 : 6]) }}"
                                                    class="h-8 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-extrabold text-xs transition inline-flex items-center justify-center gap-1.5">
                                                     <span>Detail</span>
                                                 </a>
@@ -401,6 +413,80 @@
                 @endif
             </div>
         </main>
+    </div>
+
+    <!-- Modal Pilih Skema BIMA & Mulai Ajukan Proposal Baru -->
+    <div x-show="ajukanModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4"
+         @keydown.escape.window="ajukanModalOpen = false">
+        <div @click.away="ajukanModalOpen = false"
+             class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl max-h-[88vh] flex flex-col overflow-hidden">
+            <div class="px-5 py-4 bg-gradient-to-r from-[#681727] to-[#8C1D32] text-white flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="font-extrabold text-sm sm:text-base">Ajukan Proposal {{ $labelBidang }} Baru (Wizard 6 Langkah)</h3>
+                    <p class="text-[11px] text-rose-100 font-medium">
+                        Pilih skema hibah aktif{{ $activePeriod ? ' untuk periode ' . $activePeriod->tahun_akademik : '' }} agar usulan tersimpan sebagai draf &amp; masuk alur verifikasi Divisi.
+                    </p>
+                </div>
+                <button type="button" @click="ajukanModalOpen = false" class="text-white/80 hover:text-white p-1 cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="p-5 overflow-y-auto space-y-4">
+                @if(!$activePeriod)
+                    <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold">
+                        Saat ini belum ada periode pengajuan hibah yang berstatus terbuka. Hubungi Admin P3M untuk membuka jadwal Call for Proposals.
+                    </div>
+                @else
+                    @php
+                        $matchedSchemes = ($activeSchemes ?? collect())->filter(function ($s) use ($kategori) {
+                            return strtolower((string) $s->kategori) === strtolower((string) $kategori);
+                        });
+                        $displaySchemes = $matchedSchemes->isNotEmpty() ? $matchedSchemes : ($activeSchemes ?? collect());
+                    @endphp
+
+                    @if($displaySchemes->isEmpty())
+                        <div class="p-6 text-center rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+                            Belum ada skema aktif untuk kategori {{ strtolower($labelBidang) }}.
+                        </div>
+                    @else
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            @foreach($displaySchemes as $skema)
+                                <div class="rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50/70 hover:bg-white p-4 flex flex-col justify-between transition shadow-xs">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-rose-100 text-[#681727]">
+                                                {{ $skema->kode_skema }}
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase {{ strtolower((string) $skema->kategori) === 'pengabdian' ? 'bg-indigo-100 text-indigo-800' : 'bg-blue-100 text-blue-800' }}">
+                                                {{ ucfirst($skema->kategori) }}
+                                            </span>
+                                        </div>
+                                        <h4 class="text-sm font-extrabold text-slate-900 leading-snug">{{ $skema->nama_skema }}</h4>
+                                        <div class="text-[11px] text-slate-600 space-y-1 font-medium">
+                                            <div>Pagu Maksimal: <span class="font-extrabold text-slate-800">Rp {{ number_format((float) $skema->plafon_dana, 0, ',', '.') }}</span></div>
+                                            <div>Rentang TKT: <span class="font-bold text-slate-800">TKT {{ $skema->min_tkt ?? 1 }} &ndash; {{ $skema->max_tkt ?? 9 }}</span></div>
+                                            @if($skema->min_sinta_overall || $skema->min_sinta_3yr)
+                                                <div>Min. SINTA Score: <span class="font-bold text-slate-800">{{ number_format((float) max($skema->min_sinta_overall ?? 0, $skema->min_sinta_3yr ?? 0), 0) }}</span></div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 mt-3 border-t border-slate-200">
+                                        <a href="{{ route('usulan.start', $skema->id) }}"
+                                           class="w-full h-9 px-3 rounded-lg bg-[#681727] hover:bg-[#8C1D32] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-xs">
+                                            <span>Mulai Pengisian Wizard</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                @endif
+            </div>
+        </div>
     </div>
 
     <!-- Modal Tambah Data 8 Kolom (Penelitian / Pengabdian) -->

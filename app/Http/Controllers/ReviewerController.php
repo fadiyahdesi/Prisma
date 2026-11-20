@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmPenugasanReviewer;
+use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\ReviewEngineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,8 @@ class ReviewerController extends Controller
     public function index()
     {
         $user = Auth::user();
-        abort_unless($user->hasRole(['Reviewer', 'Superadmin']), 403, 'Akses ditolak: Halaman ini khusus untuk Reviewer.');
+        $hasAssignment = PpmPenugasanReviewer::where('id_reviewer', $user->id)->exists();
+        abort_unless($user->hasRole(['Reviewer', 'Superadmin']) || $hasAssignment, 403, 'Akses ditolak: Halaman ini khusus untuk Reviewer.');
 
         $assignments = PpmPenugasanReviewer::with(['usulan.skema', 'usulan.periode', 'penilaian'])
             ->where('id_reviewer', $user->id)
@@ -30,6 +33,41 @@ class ReviewerController extends Controller
         ];
 
         return view('reviewer.index', compact('assignments', 'stats'));
+    }
+
+    /**
+     * Record Reviewer candidate/expertise nomination submitted by a Lecturer (Dosen / Pengusul).
+     */
+    public function applyAsReviewer(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'rumpun_ilmu' => 'required|string|max:150',
+            'bidang_keahlian' => 'required|string|max:255',
+            'reviewer_expertise_notes' => 'nullable|string|max:1500',
+        ]);
+
+        $user->update([
+            'rumpun_ilmu' => trim($validated['rumpun_ilmu']),
+            'bidang_keahlian' => trim($validated['bidang_keahlian']),
+            'reviewer_expertise_notes' => trim((string) ($validated['reviewer_expertise_notes'] ?? '')) ?: null,
+            'reviewer_application_status' => $user->hasRole('Reviewer') ? 'approved' : 'pending',
+            'reviewer_applied_at' => now(),
+        ]);
+
+        AuditLogService::log('REVIEWER_APPLICATION_SUBMITTED', null, [
+            'user_id' => $user->id,
+            'rumpun_ilmu' => $user->rumpun_ilmu,
+            'bidang_keahlian' => $user->bidang_keahlian,
+        ], $user->id);
+
+        return redirect()->back()->with(
+            'success',
+            $user->hasRole('Reviewer')
+                ? 'Profil rumpun ilmu & bidang kepakaran Reviewer Anda berhasil diperbarui!'
+                : 'Usulan pengajuan Anda sebagai Calon Reviewer berhasil direkam ke database dan menunggu peninjauan/penugasan Divisi & Admin P3M.'
+        );
     }
 
     /**

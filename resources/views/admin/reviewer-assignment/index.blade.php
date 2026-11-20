@@ -61,7 +61,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-blue-800 border border-blue-300">
-                        Admin P3M Portal
+                        {{ $activeRole ?? 'Portal Plotting Reviewer' }}
                     </span>
                 </div>
             </div>
@@ -114,51 +114,98 @@
                     <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs shrink-0">✅</span>
                 </div>
 
-                <!-- Divisi Penelitian (Klik untuk filter) -->
-                <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'penelitian' ? [] : ['divisi' => 'penelitian'])) }}"
-                   class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-blue-50/60 hover:bg-blue-100/70 border-blue-200 text-slate-800' }}">
-                    <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-900' }}">🔬 Penelitian</span>
-                        <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'penelitian' ? 'text-white' : 'text-blue-700' }}">
-                            {{ $stats['total_penelitian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-600' }}">Usulan</span>
+                @if(($canSwitchDivisi ?? true) || $kategoriFilter === 'penelitian')
+                    <!-- Divisi Penelitian (Klik untuk filter) -->
+                    <a href="{{ ($canSwitchDivisi ?? true) ? route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'penelitian' ? [] : ['divisi' => 'penelitian'])) : route('admin.reviewer-assignment.index') }}"
+                       class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-blue-50/60 hover:bg-blue-100/70 border-blue-200 text-slate-800' }}">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-900' }}">🔬 Penelitian</span>
+                            <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'penelitian' ? 'text-white' : 'text-blue-700' }}">
+                                {{ $stats['total_penelitian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'penelitian' ? 'text-blue-100' : 'text-blue-600' }}">Usulan</span>
+                            </div>
                         </div>
-                    </div>
-                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'penelitian' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700' }}">
-                        {{ $kategoriFilter === 'penelitian' ? 'Aktif' : 'Pilih' }}
-                    </span>
-                </a>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'penelitian' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700' }}">
+                            {{ $kategoriFilter === 'penelitian' ? 'Aktif' : 'Pilih' }}
+                        </span>
+                    </a>
+                @endif
 
-                <!-- Divisi Pengabdian (Klik untuk filter) -->
-                <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'pengabdian' ? [] : ['divisi' => 'pengabdian'])) }}"
-                   class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between col-span-2 md:col-span-1 {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-purple-50/60 hover:bg-purple-100/70 border-purple-200 text-slate-800' }}">
-                    <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-900' }}">🤝 Pengabdian</span>
-                        <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'pengabdian' ? 'text-white' : 'text-purple-700' }}">
-                            {{ $stats['total_pengabdian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-600' }}">Usulan</span>
+                @if(($canSwitchDivisi ?? true) || $kategoriFilter === 'pengabdian')
+                    <!-- Divisi Pengabdian (Klik untuk filter) -->
+                    <a href="{{ ($canSwitchDivisi ?? true) ? route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), $kategoriFilter === 'pengabdian' ? [] : ['divisi' => 'pengabdian'])) : route('admin.reviewer-assignment.index') }}"
+                       class="p-3 rounded-2xl border transition-all shadow-xs flex items-center justify-between col-span-2 md:col-span-1 {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 border-purple-600 text-white shadow-sm' : 'bg-purple-50/60 hover:bg-purple-100/70 border-purple-200 text-slate-800' }}">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider block {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-900' }}">🤝 Pengabdian</span>
+                            <div class="text-lg font-black leading-tight mt-0.5 {{ $kategoriFilter === 'pengabdian' ? 'text-white' : 'text-purple-700' }}">
+                                {{ $stats['total_pengabdian'] }} <span class="text-[11px] font-semibold {{ $kategoriFilter === 'pengabdian' ? 'text-purple-100' : 'text-purple-600' }}">Usulan</span>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'pengabdian' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700' }}">
+                            {{ $kategoriFilter === 'pengabdian' ? 'Aktif' : 'Pilih' }}
+                        </span>
+                    </a>
+                @endif
+            </div>
+
+            <!-- Panel Calon Usulan Reviewer dari Dosen Pengusul (Jika Ada) -->
+            @if(isset($reviewerApplicants) && $reviewerApplicants->count() > 0)
+                <div class="bg-white rounded-2xl border border-indigo-200 shadow-xs p-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-100">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Usulan Calon Reviewer dari Dosen Pengusul</span>
+                            <h3 class="text-sm font-extrabold text-slate-900">{{ $reviewerApplicants->count() }} Pendaftar Reviewer Menunggu Persetujuan</h3>
                         </div>
                     </div>
-                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md {{ $kategoriFilter === 'pengabdian' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700' }}">
-                        {{ $kategoriFilter === 'pengabdian' ? 'Aktif' : 'Pilih' }}
-                    </span>
-                </a>
-            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @foreach($reviewerApplicants as $calon)
+                            <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div class="space-y-0.5">
+                                    <p class="font-extrabold text-slate-900">{{ $calon->name }}</p>
+                                    <p class="text-[11px] text-slate-600">{{ $calon->prodi?->nama_prodi ?? '-' }} ({{ $calon->fakultas?->nama_fakultas ?? '-' }})</p>
+                                    <p class="text-[11px] font-bold text-indigo-800">Rumpun: {{ $calon->rumpun_ilmu }} &bull; Bidang: {{ $calon->bidang_keahlian }}</p>
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <form method="POST" action="{{ route('admin.reviewer-assignment.approve-applicant', $calon) }}">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] cursor-pointer">
+                                            ✓ Setujui Reviewer
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.reviewer-assignment.reject-applicant', $calon) }}">
+                                        @csrf
+                                        <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-bold text-[11px] cursor-pointer">
+                                            Tolak
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <!-- Toolbar Filter Divisi & Status Kompak -->
             <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-1.5">
                     <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Divisi:</span>
-                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), [])) }}"
-                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ !$kategoriFilter ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                        Semua Divisi
-                    </a>
-                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'penelitian'])) }}"
-                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                        🔬 Penelitian
-                    </a>
-                    <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'pengabdian'])) }}"
-                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-                        🤝 Pengabdian
-                    </a>
+                    @if($canSwitchDivisi ?? true)
+                        <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), [])) }}"
+                           class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ !$kategoriFilter ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                            Semua Divisi
+                        </a>
+                        <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'penelitian'])) }}"
+                           class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'penelitian' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                            🔬 Penelitian
+                        </a>
+                        <a href="{{ route('admin.reviewer-assignment.index', array_merge(request()->except('divisi', 'page'), ['divisi' => 'pengabdian'])) }}"
+                           class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
+                            🤝 Pengabdian
+                        </a>
+                    @else
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold {{ $kategoriFilter === 'pengabdian' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white' }}">
+                            {{ $kategoriFilter === 'pengabdian' ? '🤝 Khusus Divisi Pengabdian' : '🔬 Khusus Divisi Penelitian' }}
+                        </span>
+                    @endif
                 </div>
 
                 <div class="flex flex-wrap items-center gap-1.5">
@@ -227,9 +274,10 @@
                                     {{ $usulan->judul_usulan }}
                                 </h3>
                                 <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
-                                    <span>Pengusul: <strong class="text-slate-800">{{ $usulan->pengusul->name ?? '-' }}</strong></span>
+                                    <span>Pengusul: <strong class="text-slate-800">{{ $usulan->nama_ketua ?: ($usulan->pengusul->name ?? '-') }}</strong></span>
                                     <span>Fakultas: <strong class="text-blue-700">{{ $usulan->pengusul->fakultas->nama_fakultas ?? '-' }}</strong></span>
-                                    <span>Prodi: <strong class="text-slate-700">{{ $usulan->pengusul->prodi->nama_prodi ?? '-' }}</strong></span>
+                                    <span>Prodi: <strong class="text-slate-700">{{ $usulan->nama_prodi ?: ($usulan->prodi->nama_prodi ?? $usulan->pengusul->prodi->nama_prodi ?? '-') }}</strong></span>
+                                    <span>Bidang/Rumpun: <strong class="text-indigo-700">{{ $usulan->rumpun_ilmu_level_1 ?? ucfirst($usulan->kategori_usulan ?? 'Penelitian') }}</strong></span>
                                     <span>RAB: <strong class="text-slate-800">Rp {{ number_format($usulan->total_rab ?? 0, 0, ',', '.') }}</strong></span>
                                 </div>
                             </div>
@@ -419,11 +467,11 @@
                             Jumlah Penilai Usulan <span class="text-red-500">*</span>
                         </label>
                         <div class="grid grid-cols-2 gap-3">
-                            <label :class="{ 'opacity-50 cursor-not-allowed': selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian' }"
+                            <label :class="{ 'opacity-50 cursor-not-allowed': ((selectedProposal?.kategori_usulan || selectedProposal?.skema?.kategori || '').toLowerCase() === 'pengabdian') }"
                                    class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition"
                                    :style="reviewerCount == 1 ? 'border-color: #2563eb; background-color: #eff6ff;' : ''">
                                 <input type="radio" name="reviewer_mode" value="1" x-model="reviewerCount"
-                                       :disabled="selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian'"
+                                       :disabled="(selectedProposal?.kategori_usulan || selectedProposal?.skema?.kategori || '').toLowerCase() === 'pengabdian'"
                                        class="text-blue-600 focus:ring-blue-500">
                                 <div>
                                     <div class="font-bold text-xs text-slate-800">1 Reviewer</div>
@@ -440,7 +488,7 @@
                                 </div>
                             </label>
                         </div>
-                        <template x-if="selectedProposal?.skema?.kategori?.toLowerCase() === 'pengabdian'">
+                        <template x-if="(selectedProposal?.kategori_usulan || selectedProposal?.skema?.kategori || '').toLowerCase() === 'pengabdian'">
                             <p class="text-[11px] text-blue-700 font-bold mt-1.5 flex items-center gap-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span>Skema Pengabdian kepada Masyarakat mewajibkan minimal 2 Reviewer.</span>
@@ -450,24 +498,24 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Pilih Reviewer 1 <span class="text-red-500">*</span>
+                            Pilih Reviewer 1 (Diprioritaskan Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
                         </label>
                         <select name="reviewer_1_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 1 (Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.name} (${r.fakultas ?? 'Fakultas Lain'}) - SINTA: ${r.sinta_score ?? '-'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>
 
                     <div x-show="reviewerCount == 2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Pilih Reviewer 2 <span class="text-red-500">*</span>
+                            Pilih Reviewer 2 (Diprioritaskan Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
                         </label>
                         <select name="reviewer_2_id" :required="reviewerCount == 2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 2 (Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.name} (${r.fakultas ?? 'Fakultas Lain'}) - SINTA: ${r.sinta_score ?? '-'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>
@@ -525,7 +573,7 @@
                         <select name="adjudicator_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 3 --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.name} (${r.fakultas ?? 'Fakultas Lain'}) - SINTA: ${r.sinta_score ?? '-'}`"></option>
+                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[✓ Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
                             </template>
                         </select>
                     </div>

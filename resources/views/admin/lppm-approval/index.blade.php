@@ -61,20 +61,26 @@
             <!-- Division Tabs & Filter Toolbar -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3.5">
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                    <div class="inline-flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                        <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'penelitian'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'penelitian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                            <span>🔬 Divisi Penelitian</span>
-                        </a>
-                        <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'pengabdian'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'pengabdian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                            <span>🤝 Divisi Pengabdian</span>
-                        </a>
-                        <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'all'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'all' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
-                            <span>Semua Divisi</span>
-                        </a>
-                    </div>
+                    @if($canSwitchDivisi ?? false)
+                        <div class="inline-flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                            <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'penelitian'])) }}"
+                               class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'penelitian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                                <span>🔬 Divisi Penelitian</span>
+                            </a>
+                            <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'pengabdian'])) }}"
+                               class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'pengabdian' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                                <span>🤝 Divisi Pengabdian</span>
+                            </a>
+                            <a href="{{ route('admin.lppm-approval.index', array_merge(request()->except('divisi'), ['divisi' => 'all'])) }}"
+                               class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition inline-flex items-center gap-1.5 {{ $div === 'all' ? 'bg-[#681727] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900' }}">
+                                <span>Semua Divisi</span>
+                            </a>
+                        </div>
+                    @else
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-extrabold {{ $div === 'pengabdian' ? 'bg-purple-100 text-purple-900 border border-purple-200' : 'bg-blue-100 text-blue-900 border border-blue-200' }}">
+                            <span>{{ $div === 'pengabdian' ? '🤝 Antrean Khusus Divisi Pengabdian Masyarakat' : '🔬 Antrean Khusus Divisi Penelitian' }}</span>
+                        </div>
+                    @endif
 
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
                         <span class="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
@@ -226,7 +232,7 @@
                 @empty
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-8 text-center space-y-2">
                         <p class="text-sm font-extrabold text-slate-800">Tidak ada usulan baru yang menunggu verifikasi dokumen pada {{ $labelDivisi }}.</p>
-                        <p class="text-xs text-slate-500">Seluruh 438 data penelitian resmi telah berstatus <strong>Disetujui (Approved)</strong> dan telah lolos pemeriksaan template &amp; similarity.</p>
+                        <p class="text-xs text-slate-500">Usulan baru yang dikirim oleh dosen pada kategori {{ $div === 'pengabdian' ? 'Pengabdian' : 'Penelitian' }} akan langsung masuk ke halaman ini.</p>
                         <div class="pt-2">
                             <a href="{{ route('usulan.index', $div === 'pengabdian' ? ['kategori' => 'pengabdian'] : ['kategori' => 'penelitian']) }}"
                                class="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-slate-900 text-white text-xs font-extrabold">

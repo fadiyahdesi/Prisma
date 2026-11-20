@@ -180,11 +180,13 @@ class ProposalWizardController extends Controller
         }
 
         $periodService = new BimaPeriodService();
-        $activePeriod = $periodService->getLatestActivePeriod();
+        $activePeriod = $periodService->getActiveOpenPeriod() ?? $periodService->getLatestActivePeriod();
+        $activeSchemes = PpmSkemaBima::where('is_active', true)->orderBy('kategori')->orderBy('nama_skema')->get();
 
         return view('proposal.index', compact(
             'proposals',
             'activePeriod',
+            'activeSchemes',
             'kategori',
             'scope',
             'canViewAll',
@@ -340,23 +342,22 @@ class ProposalWizardController extends Controller
 
         // 2. Resolve Active Period dynamically (Auto-create if missing)
         $periodService = new BimaPeriodService();
-        $period = $periodService->getActiveOpenPeriod() 
-            ?? $periodService->getLatestActivePeriod() 
-            ?? PpmPeriodeHibah::where('is_active', true)->first();
+        $period = $periodService->getActiveOpenPeriod()
+            ?? $periodService->getLatestActivePeriod();
 
         if (!$period) {
             $period = PpmPeriodeHibah::create([
-                'tahun_akademik' => '2025/2026',
+                'tahun_akademik' => date('Y') . '/' . (date('Y') + 1),
                 'semester' => 'Ganjil',
-                'nama_periode' => 'Call for Proposals BIMA Hibah Riset 2025/2026',
+                'nama_periode' => 'Call for Proposals BIMA Hibah Riset & Abmas ' . date('Y') . '/' . (date('Y') + 1),
                 'waktu_buka' => now()->subDays(2),
-                'waktu_tutup' => now()->addDays(30),
+                'waktu_tutup' => now()->addMonths(2),
                 'is_active' => true,
                 'keterangan' => 'Periode Aktif BIMA UHN',
             ]);
         }
 
-        // Strict Deadline Check: Prevent proposal submission if period has ended
+        // Strict Deadline Check: Prevent proposal submission if active period has ended
         if ($period && $period->waktu_tutup && now()->gt($period->waktu_tutup)) {
             return redirect()->route('usulan.index')
                 ->with('error', 'Batas tenggat waktu Call for Proposals periode ' . $period->nama_periode . ' telah berakhir pada ' . $period->waktu_tutup->format('d/m/Y H:i') . '. Pengajuan usulan baru telah ditutup.');
@@ -370,6 +371,13 @@ class ProposalWizardController extends Controller
             $user->update(['sinta_score_3yr' => max($user->sinta_score_3yr, $skemaModel->min_sinta_3yr + 10)]);
         }
 
+        $kategoriUsulan = strtolower((string) ($skemaModel->kategori ?? 'penelitian'));
+        if (!in_array($kategoriUsulan, ['penelitian', 'pengabdian'], true)) {
+            $kategoriUsulan = 'penelitian';
+        }
+        $semesterLabel = trim(($period->tahun_akademik ?? '') . ' ' . ($period->semester ?? '')) ?: date('Y') . ' Ganjil';
+        $prodiName = $user->prodi?->nama_prodi ?? '-';
+
         // 4. Retrieve or Create Draft Proposal
         $usulan = PpmUsulan::firstOrCreate(
             [
@@ -380,8 +388,15 @@ class ProposalWizardController extends Controller
             ],
             [
                 'kode_usulan' => 'USL-' . date('Y') . '-' . sprintf('%04d', rand(1000, 9999)),
+                'kategori_usulan' => $kategoriUsulan,
+                'semester' => $semesterLabel,
+                'nama_ketua' => $user->name,
+                'nidn_ketua' => $user->nidn_nim ?? '-',
+                'id_prodi' => $user->id_prodi,
+                'nama_prodi' => $prodiName,
                 'judul_usulan' => 'Usulan Proposal ' . $skemaModel->nama_skema,
-                'target_tkt' => $skemaModel->min_tkt,
+                'rumpun_ilmu_level_1' => $user->rumpun_ilmu ?? RumpunIlmuService::resolveRumpunFromProdi($prodiName),
+                'target_tkt' => $skemaModel->min_tkt ?? 1,
             ]
         );
 
@@ -439,6 +454,14 @@ class ProposalWizardController extends Controller
             $validated['sdgs_indikator'] = json_encode($validated['sdgs_indikator']);
         } else {
             $validated['sdgs_indikator'] = null;
+        }
+
+        $validated['kategori_usulan'] = strtolower((string) ($usulan->skema?->kategori ?? $usulan->kategori_usulan ?? 'penelitian'));
+        if (empty($usulan->nama_ketua)) {
+            $validated['nama_ketua'] = Auth::user()->name;
+            $validated['nidn_ketua'] = Auth::user()->nidn_nim ?? '-';
+            $validated['id_prodi'] = Auth::user()->id_prodi;
+            $validated['nama_prodi'] = Auth::user()->prodi?->nama_prodi ?? '-';
         }
 
         $usulan->update($validated);
@@ -802,7 +825,17 @@ class ProposalWizardController extends Controller
             return redirect()->back()->with('error', "Submisi terkunci: Terdapat {$unapprovedMembers} anggota tim yang belum menyetujui keikutsertaan (*Member Consent*).");
         }
 
+        $kategoriUsulan = strtolower((string) ($usulan->skema?->kategori ?? $usulan->kategori_usulan ?? 'penelitian'));
+        $ketuaUser = $usulan->pengusul;
+
         // Submit!
+        $usulan->kategori_usulan = in_array($kategoriUsulan, ['penelitian', 'pengabdian'], true) ? $kategoriUsulan : 'penelitian';
+        if (empty($usulan->nama_ketua) && $ketuaUser) {
+            $usulan->nama_ketua = $ketuaUser->name;
+            $usulan->nidn_ketua = $ketuaUser->nidn_nim ?? '-';
+            $usulan->id_prodi = $usulan->id_prodi ?: $ketuaUser->id_prodi;
+            $usulan->nama_prodi = $usulan->nama_prodi ?: ($ketuaUser->prodi?->nama_prodi ?? '-');
+        }
         $usulan->status = 'Submitted';
         $usulan->submitted_at = now();
         $usulan->save();
@@ -810,10 +843,16 @@ class ProposalWizardController extends Controller
         AuditLogService::log('PROPOSAL_SUBMITTED', null, [
             'usulan_id' => $usulan->id,
             'kode_usulan' => $usulan->kode_usulan,
+            'kategori_usulan' => $usulan->kategori_usulan,
             'total_rab' => $usulan->total_rab,
         ]);
 
-        return redirect()->route('dashboard')->with('success', "Usulan proposal '{$usulan->judul_usulan}' berhasil dikirim (*Submitted*)!");
+        $targetRoute = $usulan->kategori_usulan === 'pengabdian' ? 'pengabdian.index' : 'usulan.index';
+
+        return redirect()->route($targetRoute)->with(
+            'success',
+            "Usulan proposal '{$usulan->judul_usulan}' berhasil dikirim (Submitted) dan masuk ke antrean verifikasi Divisi " . ucfirst($usulan->kategori_usulan) . '!'
+        );
     }
 
     public function downloadProposal(PpmUsulan $usulan)

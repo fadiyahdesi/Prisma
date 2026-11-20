@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PpmUsulan;
 use App\Models\PpmPenugasanReviewer;
 use App\Models\PpmPenilaianReviewer;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Collection;
@@ -64,19 +65,98 @@ class ReviewEngineService
     }
 
     /**
-     * Get all eligible reviewers for a proposal (US-08.1).
+     * Get all eligible reviewers for a proposal, prioritized by field match & non-CoI (US-08.1).
      */
-    public static function getEligibleReviewers(PpmUsulan $usulan): Collection
+    public static function getEligibleReviewers(PpmUsulan $usulan): \Illuminate\Support\Collection
     {
+        $usulan->loadMissing(['skema', 'prodi', 'pengusul.prodi', 'pengusul.fakultas']);
         $coiUserIds = self::getConflictOfInterestUserIds($usulan);
         $alreadyAssignedIds = $usulan->penugasanReviewer()->pluck('id_reviewer')->all();
 
-        return User::whereHas('roles', function ($q) {
-                $q->where('name', 'Reviewer');
+        $excludedIds = array_unique(array_merge($coiUserIds, $alreadyAssignedIds));
+
+        $candidates = User::with(['fakultas', 'prodi', 'roles'])
+            ->where(function ($q) {
+                $q->whereHas('roles', fn ($rq) => $rq->where('name', 'Reviewer'))
+                  ->orWhere('reviewer_application_status', 'approved')
+                  ->orWhere(function ($lq) {
+                      $lq->whereNotNull('no_urut')
+                         ->where(function ($jq) {
+                             $jq->where('jabatan_fungsional', 'like', '%Lektor%')
+                                ->orWhere('jabatan_fungsional', 'like', '%Guru Besar%')
+                                ->orWhere('jabatan_fungsional', 'like', '%Asisten Ahli%');
+                         });
+                  });
             })
-            ->whereNotIn('id', array_merge($coiUserIds, $alreadyAssignedIds))
-            ->with(['fakultas', 'prodi'])
+            ->whereNotIn('id', $excludedIds)
             ->get();
+
+        // Fallback aman jika semua dosen luar fakultas terfilter (tetap blokir pengusul & anggota & satu prodi)
+        if ($candidates->isEmpty()) {
+            $teamIds = collect([$usulan->id_pengusul])
+                ->merge($usulan->anggota()->pluck('user_id'))
+                ->filter()
+                ->all();
+            $prodiId = $usulan->id_prodi ?: $usulan->pengusul?->id_prodi;
+
+            $candidates = User::with(['fakultas', 'prodi', 'roles'])
+                ->whereNotNull('no_urut')
+                ->whereNotIn('id', array_merge($teamIds, $alreadyAssignedIds))
+                ->when($prodiId, fn ($q) => $q->where('id_prodi', '!=', $prodiId))
+                ->get();
+        }
+
+        $proposalRumpun = strtolower(trim(implode(' ', array_filter([
+            $usulan->rumpun_ilmu_level_1,
+            $usulan->rumpun_ilmu_level_2,
+            $usulan->rumpun_ilmu_level_3,
+            $usulan->fokus_rirn,
+            $usulan->nama_prodi,
+            $usulan->prodi?->nama_prodi,
+            $usulan->judul_usulan,
+        ]))));
+
+        $targetRumpunCategory = strtolower((string) ($usulan->rumpun_ilmu_level_1
+            ?: RumpunIlmuService::resolveRumpunFromProdi($usulan->nama_prodi ?: $usulan->prodi?->nama_prodi)));
+
+        return $candidates->map(function (User $candidate) use ($proposalRumpun, $targetRumpunCategory) {
+            $hasReviewerRole = $candidate->roles->contains('name', 'Reviewer');
+            $candidateProdi = (string) ($candidate->prodi?->nama_prodi ?? '');
+            $candidateRumpun = (string) ($candidate->rumpun_ilmu ?: RumpunIlmuService::resolveRumpunFromProdi($candidateProdi));
+            $candidateBidang = trim((string) ($candidate->bidang_keahlian ?: $candidateProdi));
+
+            $fieldMatches = false;
+            $matchReason = 'Lintas Bidang (Non-CoI)';
+
+            if ($targetRumpunCategory !== '' && strtolower($candidateRumpun) === $targetRumpunCategory) {
+                $fieldMatches = true;
+                $matchReason = 'Sesuai Rumpun: ' . $candidateRumpun;
+            } else {
+                $keywords = array_filter(preg_split('/[\s,&\/\-]+/', strtolower($candidateBidang . ' ' . $candidateProdi)), fn ($w) => strlen($w) >= 4);
+                foreach ($keywords as $kw) {
+                    if ($proposalRumpun !== '' && str_contains($proposalRumpun, $kw)) {
+                        $fieldMatches = true;
+                        $matchReason = 'Sesuai Bidang: ' . ($candidateBidang ?: $candidateProdi);
+                        break;
+                    }
+                }
+            }
+
+            $candidate->setAttribute('is_reviewer_role', $hasReviewerRole);
+            $candidate->setAttribute('sesuai_bidang', $fieldMatches);
+            $candidate->setAttribute('match_reason', $matchReason);
+            $candidate->setAttribute('resolved_rumpun', $candidateRumpun);
+            $candidate->setAttribute('resolved_bidang', $candidateBidang ?: '-');
+
+            return $candidate;
+        })->sortByDesc(function (User $u) {
+            return [
+                $u->getAttribute('sesuai_bidang') ? 1 : 0,
+                $u->getAttribute('is_reviewer_role') ? 1 : 0,
+                $u->reviewer_application_status === 'approved' ? 1 : 0,
+                (float) ($u->sinta_score_3yr ?? 0),
+            ];
+        })->values();
     }
 
     /**
@@ -100,6 +180,23 @@ class ReviewEngineService
         }
 
         return DB::transaction(function () use ($usulan, $reviewer1Id, $reviewer2Id, $adminId) {
+            // Pastikan kedua penilai memiliki role Reviewer aktif agar langsung muncul pada portal Reviewer
+            $reviewerRole = Role::where('name', 'Reviewer')->first();
+            if ($reviewerRole) {
+                foreach (array_filter([$reviewer1Id, $reviewer2Id]) as $rid) {
+                    $revUser = User::find($rid);
+                    if ($revUser) {
+                        $revUser->roles()->syncWithoutDetaching([$reviewerRole->id]);
+                        if ($revUser->reviewer_application_status !== 'approved') {
+                            $revUser->update([
+                                'reviewer_application_status' => 'approved',
+                                'reviewer_applied_at' => $revUser->reviewer_applied_at ?? now(),
+                            ]);
+                        }
+                    }
+                }
+            }
+
             // Delete previous assignments if any in draft
             $usulan->penugasanReviewer()->delete();
 
@@ -162,6 +259,20 @@ class ReviewEngineService
         }
 
         return DB::transaction(function () use ($usulan, $adjudicatorId, $adminId) {
+            $reviewerRole = Role::where('name', 'Reviewer')->first();
+            if ($reviewerRole) {
+                $adjUser = User::find($adjudicatorId);
+                if ($adjUser) {
+                    $adjUser->roles()->syncWithoutDetaching([$reviewerRole->id]);
+                    if ($adjUser->reviewer_application_status !== 'approved') {
+                        $adjUser->update([
+                            'reviewer_application_status' => 'approved',
+                            'reviewer_applied_at' => $adjUser->reviewer_applied_at ?? now(),
+                        ]);
+                    }
+                }
+            }
+
             $p3 = PpmPenugasanReviewer::create([
                 'id_usulan' => $usulan->id,
                 'id_reviewer' => $adjudicatorId,

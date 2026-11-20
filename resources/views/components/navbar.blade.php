@@ -115,13 +115,13 @@
                          x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
                          class="absolute left-1/2 -translate-x-1/2 mt-3 w-80 bg-white rounded-2xl p-3 shadow-2xl shadow-blue-950/15 border border-slate-200/90 z-50">
                         <div class="space-y-1">
-                            <a href="#tools" @click="close()" class="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/80 transition-colors group">
+                            <a href="#tkt-meter" @click="close()" class="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/80 transition-colors group">
                                 <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                 </div>
                                 <div>
-                                    <h5 class="text-xs font-extrabold text-slate-900 group-hover:text-blue-700">Simulator SINTA & TKT</h5>
-                                    <p class="text-[11px] text-slate-500 leading-tight">Uji kelayakan instrumen usulan</p>
+                                    <h5 class="text-xs font-extrabold text-slate-900 group-hover:text-blue-700">TKT Meter (Level 1-9) &amp; Simulator</h5>
+                                    <p class="text-[11px] text-slate-500 leading-tight">Ukur tingkat kesiapterapan teknologi &amp; skema</p>
                                 </div>
                             </a>
                             <a href="#tools" @click="close()" class="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/80 transition-colors group">

@@ -208,9 +208,11 @@ class RealPenelitianCsvSeeder extends Seeder
             $penelitianIds = DB::table('ppm_usulan')
                 ->where(function ($q) {
                     $q->where('kategori_usulan', 'penelitian')
-                      ->orWhereNull('kategori_usulan')
-                      ->orWhere('kode_usulan', 'like', 'USL-%');
-                })->pluck('id')->toArray();
+                      ->orWhere('kode_usulan', 'like', 'PNL-%');
+                })
+                ->whereNotNull('no_urut')
+                ->pluck('id')
+                ->toArray();
 
             if (!empty($penelitianIds)) {
                 foreach (array_chunk($penelitianIds, 200) as $idChunk) {
@@ -222,9 +224,12 @@ class RealPenelitianCsvSeeder extends Seeder
                 }
             }
 
-            // Hapus periode hibah dummy yang tidak termasuk 9 semester resmi CSV
+            // Hapus hanya periode historis non-aktif yang tidak termasuk daftar resmi CSV & pertahankan periode aktif berjalan
             if (!empty($periodeMap)) {
-                DB::table('ppm_periode_hibah')->whereNotIn('id', array_values($periodeMap))->delete();
+                DB::table('ppm_periode_hibah')
+                    ->whereNotIn('id', array_values($periodeMap))
+                    ->where('is_active', false)
+                    ->delete();
             }
 
             $usulanBatch = [];

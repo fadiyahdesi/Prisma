@@ -22,18 +22,18 @@ class DashboardController extends Controller
         // Load user relations & assigned roles
         $user->load(['roles', 'fakultas', 'prodi']);
 
-        // In Production, activeRole strictly uses the database assigned role.
+        // In Production, activeRole strictly uses the database assigned role (or valid session role held by user).
         // In local demo/debug mode, allows viewing specific role dashboards for testing.
-        $assignedRole = $user->primaryRoleName();
+        $sessionRole = session('active_role');
+        $assignedRole = (!empty($sessionRole) && $user->hasRole($sessionRole))
+            ? $sessionRole
+            : $user->primaryRoleName();
         $activeRole = (config('app.debug') || $user->hasRole('Superadmin'))
             ? $request->query('view_role', $assignedRole)
             : $assignedRole;
 
-        // Auto-sync 438 Penelitian Dosen & 420 Pengabdian Dosen UHN jika belum lengkap
-        if (
-            \App\Models\PpmUsulan::where('kategori_usulan', 'penelitian')->whereNotNull('no_urut')->count() < 438 ||
-            \App\Models\PpmUsulan::whereNull('no_urut')->exists()
-        ) {
+        // Auto-sync 438 Penelitian Dosen & 420 Pengabdian Dosen UHN jika arsip CSV belum lengkap (tanpa menghapus usulan live)
+        if (\App\Models\PpmUsulan::where('kategori_usulan', 'penelitian')->whereNotNull('no_urut')->count() < 438) {
             try {
                 app(\Database\Seeders\RealPenelitianCsvSeeder::class)->run();
             } catch (\Throwable $e) {
@@ -108,7 +108,34 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        return view('dashboard', compact('user', 'activeRole', 'assignedRole', 'availableRoles', 'stats', 'recentLogs', 'countdownData', 'pendingMemberInvitations'));
+        $reviewerAssignments = \App\Models\PpmPenugasanReviewer::with(['usulan.skema', 'usulan.periode', 'penilaian'])
+            ->where('id_reviewer', $user->id)
+            ->latest('assigned_at')
+            ->take(5)
+            ->get();
+
+        $myActiveProposals = \App\Models\PpmUsulan::with(['skema', 'penugasanReviewer'])
+            ->where('id_pengusul', $user->id)
+            ->whereNull('no_urut')
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
+
+        $tktCatalog = \App\Services\RumpunIlmuService::getTktMeterCatalog();
+
+        return view('dashboard', compact(
+            'user',
+            'activeRole',
+            'assignedRole',
+            'availableRoles',
+            'stats',
+            'recentLogs',
+            'countdownData',
+            'pendingMemberInvitations',
+            'reviewerAssignments',
+            'myActiveProposals',
+            'tktCatalog'
+        ));
     }
 
     /**

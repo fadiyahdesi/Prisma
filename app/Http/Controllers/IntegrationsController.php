@@ -17,6 +17,7 @@ class IntegrationsController extends Controller
     public function index()
     {
         $user = auth()->user();
+        abort_unless($user && $user->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses terbatas untuk Pengelola P3M / Kepala P3M.');
 
         $integrationsStatus = [
             'siakad' => [
@@ -57,6 +58,8 @@ class IntegrationsController extends Controller
      */
     public function verifyDjki(Request $request, DjkiClient $djkiClient)
     {
+        abort_unless(auth()->user()?->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses ditolak.');
+
         $validated = $request->validate([
             'nomor_permohonan' => 'required|string|max:100',
         ]);
@@ -71,6 +74,8 @@ class IntegrationsController extends Controller
      */
     public function uploadTestFile(Request $request)
     {
+        abort_unless(auth()->user()?->hasRole(['Admin P3M', 'Kepala P3M', 'Superadmin']), 403, 'Akses ditolak.');
+
         $request->validate([
             'file_document' => 'required|file|mimes:pdf|max:15360',
             'doc_type' => 'required|in:proposal,report',

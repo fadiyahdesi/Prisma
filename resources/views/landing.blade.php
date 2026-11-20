@@ -28,6 +28,9 @@
         <!-- Interactive Tools: SINTA Checker & QR Validator -->
         @include('components.tools-preview')
 
+        <!-- TKT Meter Interaktif Level 1 - 9 (Standar Permenristekdikti / PASINBIS) -->
+        <x-tkt-meter :catalog="$tktCatalog ?? null" />
+
         <!-- National Ecosystem Integrations -->
         @include('components.integrations')
 

@@ -305,8 +305,84 @@
                             <p class="text-xs text-blue-100 mt-1">Isi Identitas Usulan, Tim & Mitra, RAB SBM, Target Luaran Scopus/SINTA, & Member Consent.</p>
                         </div>
                         <a href="{{ route('usulan.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-blue-900 hover:bg-blue-50 font-extrabold text-sm shadow-md transition-all whitespace-nowrap text-center">
-                            Buka Penelitian Saya &rarr;
+                            Buka Daftar Usulan Saya &rarr;
                         </a>
+                    </div>
+
+                    <!-- Status Usulan Aktif & Tracking Plotting Reviewer -->
+                    @if(isset($myActiveProposals) && $myActiveProposals->count() > 0)
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Status Pengajuan Proposal &amp; Penelaahan Reviewer Terbaru</h5>
+                                <a href="{{ route('usulan.index') }}" class="text-xs font-bold text-blue-700 hover:underline">Semua Usulan &rarr;</a>
+                            </div>
+                            <div class="space-y-2">
+                                @foreach($myActiveProposals as $actProp)
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                        <div class="space-y-0.5">
+                                            <div class="flex flex-wrap items-center gap-1.5">
+                                                <span class="font-mono font-bold text-blue-700">{{ $actProp->kode_usulan }}</span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-black {{ strtolower($actProp->kategori_usulan ?? '') === 'pengabdian' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
+                                                    {{ ucfirst($actProp->kategori_usulan ?? ($actProp->skema?->kategori ?? 'Penelitian')) }}
+                                                </span>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-800">{{ $actProp->status }}</span>
+                                                @if($actProp->penugasanReviewer->count() > 0)
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                                        {{ $actProp->penugasanReviewer->where('status_penugasan', 'completed')->count() }}/{{ $actProp->penugasanReviewer->count() }} Reviewer Menilai
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p class="font-bold text-slate-900">{{ $actProp->judul_usulan }}</p>
+                                        </div>
+                                        <a href="{{ route('usulan.step', ['usulan' => $actProp->id, 'step' => $actProp->status === 'Draft' ? 1 : 6]) }}"
+                                           class="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white font-extrabold text-xs transition whitespace-nowrap text-center">
+                                            {{ $actProp->status === 'Draft' ? 'Lanjutkan Wizard →' : 'Lihat Status →' }}
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Form Pengusulan Diri sebagai Calon Reviewer (Terekam ke DB & Divisi) -->
+                    <div class="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Rekam Data Pengusulan Reviewer</span>
+                                <h5 class="text-sm font-extrabold text-indigo-950">Pengusulan Diri / Pemetaan Bidang Calon Reviewer</h5>
+                                <p class="text-xs text-slate-600">Daftarkan rumpun ilmu dan bidang kepakaran Anda agar terekam di database untuk penugasan Reviewer oleh Admin / Divisi sesuai bidang.</p>
+                            </div>
+                            @if($user->reviewer_application_status)
+                                <span class="px-3 py-1 rounded-full text-xs font-black {{ $user->reviewer_application_status === 'approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300' }}">
+                                    Status Reviewer: {{ strtoupper($user->reviewer_application_status) }}
+                                </span>
+                            @endif
+                        </div>
+                        <form method="POST" action="{{ route('reviewer.apply') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                            @csrf
+                            <div class="md:col-span-4">
+                                <label class="block text-[11px] font-extrabold text-slate-700 mb-1">Rumpun Ilmu Utama</label>
+                                <select name="rumpun_ilmu" required class="w-full h-9 px-3 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800">
+                                    @php
+                                        $curRumpun = $user->rumpun_ilmu ?: \App\Services\RumpunIlmuService::resolveRumpunFromProdi($user->prodi?->nama_prodi);
+                                    @endphp
+                                    @foreach(['Teknologi & Rekayasa', 'Sains & Matematika', 'Kesehatan & Farmasi', 'Sosial & Humaniora'] as $rmp)
+                                        <option value="{{ $rmp }}" @selected($curRumpun === $rmp)>{{ $rmp }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="md:col-span-5">
+                                <label class="block text-[11px] font-extrabold text-slate-700 mb-1">Bidang Keahlian / Kepakaran Spesifik</label>
+                                <input type="text" name="bidang_keahlian" required value="{{ old('bidang_keahlian', $user->bidang_keahlian ?: ($user->prodi?->nama_prodi ?? '')) }}"
+                                       placeholder="Contoh: Kecerdasan Buatan, Farmasi Klinis, Akuntansi..."
+                                       class="w-full h-9 px-3 rounded-xl bg-white border border-slate-300 text-xs font-semibold text-slate-900">
+                            </div>
+                            <div class="md:col-span-3">
+                                <button type="submit" class="w-full h-9 px-4 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer">
+                                    Simpan Usulan Reviewer &rarr;
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     {{-- Info Undang Anggota Tim --}}
@@ -594,13 +670,35 @@
                     <div class="p-6 rounded-3xl bg-purple-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
                         <div>
                             <span class="text-xs font-bold text-purple-200 uppercase">Double-Blind Assessment</span>
-                            <h4 class="text-lg font-extrabold mt-0.5">Kelola Penilaian Usulan Yang Ditugaskan Kepada Anda</h4>
-                            <p class="text-xs text-purple-100 mt-1">Penilaian objektif berbasis rubrik BIMA hanya untuk proposal yang ditugaskan kepada Anda oleh Divisi terkait.</p>
+                            <h4 class="text-lg font-extrabold mt-0.5">Penugasan &amp; Pengusulan Reviewer ({{ ($reviewerAssignments ?? collect())->count() }} Tugas Masuk)</h4>
+                            <p class="text-xs text-purple-100 mt-1">Setiap usulan yang ditugaskan Admin / Divisi sesuai bidang langsung masuk ke daftar penilaian Anda.</p>
                         </div>
-                        <a href="{{ route('reviewer.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-purple-900 font-extrabold text-sm hover:bg-purple-50 shadow-md whitespace-nowrap text-center">
-                            Buka Penugasan Review &rarr;
+                        <a href="{{ route('reviewer.penilaian.index') }}" class="px-6 py-3.5 rounded-2xl bg-white text-purple-900 font-extrabold text-sm hover:bg-purple-50 shadow-md whitespace-nowrap text-center">
+                            Buka Bagian Reviewer &rarr;
                         </a>
                     </div>
+
+                    @if(isset($reviewerAssignments) && $reviewerAssignments->count() > 0)
+                        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                            <h5 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Daftar Usulan Ditugaskan Kepada Anda</h5>
+                            <div class="space-y-2">
+                                @foreach($reviewerAssignments as $ra)
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                        <div>
+                                            <span class="font-mono font-bold text-purple-700">{{ $ra->usulan?->kode_usulan }}</span>
+                                            <span class="mx-1 text-slate-300">&bull;</span>
+                                            <span class="font-bold text-slate-600">{{ strtoupper(str_replace('_', ' ', $ra->peran_reviewer)) }}</span>
+                                            <p class="font-extrabold text-slate-900 mt-0.5">{{ $ra->usulan?->judul_usulan }}</p>
+                                        </div>
+                                        <a href="{{ route('reviewer.penilaian.show', $ra) }}"
+                                           class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs whitespace-nowrap text-center">
+                                            {{ $ra->status_penugasan === 'completed' ? 'Lihat Nilai' : 'Nilai Sekarang →' }}
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
             @elseif($activeRole === 'Kaprodi')
@@ -733,20 +831,38 @@
                 <div class="space-y-6">
                     <div class="p-6 rounded-3xl bg-cyan-50 border border-cyan-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
-                            <span class="text-xs font-bold text-cyan-900 uppercase tracking-wider">Analitik &amp; Persetujuan Kepala P3M</span>
-                            <h4 class="text-lg font-extrabold text-cyan-950 mt-1">Monitoring Kebijakan P3M &bull; Karya Pribadi ({{ $stats['my_penelitian'] ?? 0 }} Penelitian / {{ $stats['my_pengabdian'] ?? 0 }} Pengabdian)</h4>
-                            <p class="text-xs text-slate-700 mt-1">Pantau analitik eksekutif, akreditasi, serta persetujuan usulan aktif; akses full repositori data tetap khusus per divisi.</p>
+                            <span class="text-xs font-bold text-cyan-900 uppercase tracking-wider">Analitik, Integrasi &amp; Persetujuan Kepala P3M</span>
+                            <h4 class="text-lg font-extrabold text-cyan-950 mt-1">Monitoring Kebijakan P3M &amp; Riwayat Karya KaP3M</h4>
+                            <p class="text-xs text-slate-700 mt-1">Akses analitik eksekutif, akreditasi, fitur integrasi API (SIAKAD, SINTA, DJKI, MinIO), serta riwayat penelitian, pengabdian, dan publikasi Anda.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <a href="{{ route('analitik.eksekutif') }}" class="px-5 py-3 rounded-2xl bg-cyan-700 text-white font-extrabold text-xs sm:text-sm hover:bg-cyan-800 shadow-md whitespace-nowrap">
                                 Analitik Eksekutif &rarr;
                             </a>
-                            <a href="{{ route('usulan.index') }}" class="px-5 py-3 rounded-2xl bg-white text-cyan-900 border border-cyan-300 font-extrabold text-xs sm:text-sm hover:bg-cyan-100 whitespace-nowrap">
-                                Data Saya ({{ $stats['my_penelitian'] ?? 0 }})
+                            <a href="{{ route('integrasi.index') }}" class="px-5 py-3 rounded-2xl bg-white text-cyan-900 border border-cyan-300 font-extrabold text-xs sm:text-sm hover:bg-cyan-100 whitespace-nowrap">
+                                Integrasi API (4 Modul)
                             </a>
                             <a href="{{ route('admin.users.index') }}" class="px-5 py-3 rounded-2xl bg-white text-cyan-900 border border-cyan-300 font-extrabold text-xs sm:text-sm hover:bg-cyan-100 whitespace-nowrap">
                                 Data Dosen ({{ $stats['total_users'] }})
                             </a>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-5 rounded-2xl bg-blue-50/70 border border-blue-200">
+                            <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block">Riwayat Penelitian</span>
+                            <h4 class="text-xl font-extrabold text-slate-900 mt-1">{{ $stats['my_penelitian'] ?? 0 }} Penelitian</h4>
+                            <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" class="text-xs font-bold text-blue-700 hover:underline mt-2 inline-block">Buka Riwayat Penelitian &rarr;</a>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-purple-50/70 border border-purple-200">
+                            <span class="text-xs font-bold text-purple-900 uppercase tracking-wider block">Riwayat Pengabdian</span>
+                            <h4 class="text-xl font-extrabold text-purple-900 mt-1">{{ $stats['my_pengabdian'] ?? 0 }} Pengabdian</h4>
+                            <a href="{{ route('pengabdian.index') }}" class="text-xs font-bold text-purple-700 hover:underline mt-2 inline-block">Buka Riwayat Pengabdian &rarr;</a>
+                        </div>
+                        <div class="p-5 rounded-2xl bg-teal-50/70 border border-teal-200">
+                            <span class="text-xs font-bold text-teal-900 uppercase tracking-wider block">Riwayat Publikasi</span>
+                            <h4 class="text-xl font-extrabold text-teal-900 mt-1">{{ $stats['my_publikasi'] ?? 0 }} Publikasi</h4>
+                            <a href="{{ route('publikasi.index') }}" class="text-xs font-bold text-teal-700 hover:underline mt-2 inline-block">Buka Riwayat Publikasi &rarr;</a>
                         </div>
                     </div>
                 </div>
@@ -760,7 +876,7 @@
                             <p class="text-xs text-slate-700 mt-1">Verifikasi nomor rekening bank, pencairan termin 70%/30%, validasi SPJ/SPTB, serta penyaluran reward insentif.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <a href="{{ route('keuangan.disbursement.index') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs sm:text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
+                            <a href="{{ route('keuangan.pencairan.index') }}" class="px-5 py-3 rounded-2xl bg-emerald-700 text-white font-extrabold text-xs sm:text-sm hover:bg-emerald-800 shadow-md whitespace-nowrap">
                                 Pencairan Termin &rarr;
                             </a>
                             <a href="{{ route('keuangan.reward.index') }}" class="px-5 py-3 rounded-2xl bg-white text-emerald-900 border border-emerald-300 font-extrabold text-xs sm:text-sm hover:bg-emerald-100 whitespace-nowrap">
@@ -789,7 +905,40 @@
                     </div>
                 </div>
             @endif
+
+            @if($activeRole !== 'Reviewer' && isset($reviewerAssignments) && $reviewerAssignments->count() > 0)
+                <div class="mt-6 pt-6 border-t border-slate-200 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-purple-700">Penugasan Reviewer Masuk</span>
+                            <h4 class="text-sm font-extrabold text-purple-950">Usulan Proposal Ditugaskan untuk Anda Nilai ({{ $reviewerAssignments->count() }})</h4>
+                        </div>
+                        <a href="{{ route('reviewer.penilaian.index') }}" class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs shadow-xs whitespace-nowrap text-center">
+                            Buka Bagian Reviewer &rarr;
+                        </a>
+                    </div>
+                    <div class="space-y-2">
+                        @foreach($reviewerAssignments as $ra)
+                            <div class="p-3.5 rounded-xl bg-purple-50/70 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div>
+                                    <span class="font-mono font-bold text-purple-800">{{ $ra->usulan?->kode_usulan }}</span>
+                                    <span class="mx-1 text-slate-400">&bull;</span>
+                                    <span class="font-bold text-slate-600">{{ strtoupper(str_replace('_', ' ', $ra->peran_reviewer)) }}</span>
+                                    <p class="font-extrabold text-slate-900 mt-0.5">{{ $ra->usulan?->judul_usulan }}</p>
+                                </div>
+                                <a href="{{ route('reviewer.penilaian.show', $ra) }}"
+                                   class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs whitespace-nowrap text-center">
+                                    {{ $ra->status_penugasan === 'completed' ? 'Lihat Nilai' : 'Nilai Sekarang →' }}
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
+
+        <!-- TKT Meter UHN (Interaktif Level 1 - 9) di Dashboard -->
+        <x-tkt-meter :catalog="$tktCatalog ?? null" :compact="true" />
     </main>
     </div>
 </div>

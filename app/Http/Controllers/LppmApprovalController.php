@@ -27,14 +27,18 @@ class LppmApprovalController extends Controller
             $divisi = $forcedDivisi ?? 'all';
         }
 
+        $canSwitchDivisi = in_array($activeRole, ['Superadmin', 'Kepala P3M'], true);
+
         $query = PpmUsulan::with(['pengusul.fakultas', 'pengusul.prodi', 'prodi', 'skema', 'periode', 'anggota', 'luaran'])
             ->whereIn('status', ['Submitted', 'In_review'])
-            ->latest('submitted_at');
+            ->orderByRaw("CASE WHEN status = 'Submitted' THEN 0 ELSE 1 END ASC")
+            ->latest('submitted_at')
+            ->latest('id');
 
         if ($divisi !== 'all') {
             $query->where(function ($q) use ($divisi) {
                 $q->where('kategori_usulan', $divisi)
-                  ->orWhereHas('skema', fn ($sq) => $sq->where('kategori', $divisi));
+                  ->orWhereHas('skema', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$divisi]));
             });
         }
 
@@ -51,9 +55,12 @@ class LppmApprovalController extends Controller
         });
 
         $proposals = $query->get();
-        $schemes = \App\Models\PpmSkemaBima::where('is_active', true)->orderBy('nama_skema')->get();
+        $schemes = \App\Models\PpmSkemaBima::where('is_active', true)
+            ->when($divisi !== 'all', fn ($sq) => $sq->whereRaw('LOWER(kategori) = ?', [$divisi]))
+            ->orderBy('nama_skema')
+            ->get();
 
-        return view('admin.lppm-approval.index', compact('proposals', 'schemes', 'divisi', 'activeRole'));
+        return view('admin.lppm-approval.index', compact('proposals', 'schemes', 'divisi', 'activeRole', 'canSwitchDivisi'));
     }
 
     public function update(Request $request, PpmUsulan $usulan)

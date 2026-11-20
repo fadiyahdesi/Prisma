@@ -259,6 +259,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/prodi-roadmap/{usulan}', [\App\Http\Controllers\LppmApprovalController::class, 'updateRoadmap'])->name('admin.prodi-roadmap.update');
 
         // EPIC 08: Reviewer Substantive Evaluation (Double-Blind) (US-08.2)
+        Route::get('/reviewer', [\App\Http\Controllers\ReviewerController::class, 'index'])->name('reviewer.index');
+        Route::post('/reviewer/pengusulan-diri', [\App\Http\Controllers\ReviewerController::class, 'applyAsReviewer'])->name('reviewer.apply');
         Route::get('/reviewer/penilaian', [\App\Http\Controllers\ReviewerController::class, 'index'])->name('reviewer.penilaian.index');
         Route::get('/reviewer/penilaian/{penugasan}', [\App\Http\Controllers\ReviewerController::class, 'show'])->name('reviewer.penilaian.show');
         Route::post('/reviewer/penilaian/{penugasan}', [\App\Http\Controllers\ReviewerController::class, 'store'])->name('reviewer.penilaian.store');
@@ -268,6 +270,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/penugasan-reviewer/{usulan}/assign', [\App\Http\Controllers\Admin\ReviewerAssignmentController::class, 'assign'])->name('admin.reviewer-assignment.assign');
         Route::post('/admin/penugasan-reviewer/{usulan}/adjudicator', [\App\Http\Controllers\Admin\ReviewerAssignmentController::class, 'assignAdjudicator'])->name('admin.reviewer-assignment.adjudicator');
         Route::get('/admin/penugasan-reviewer/{usulan}/eligible', [\App\Http\Controllers\Admin\ReviewerAssignmentController::class, 'eligibleReviewers'])->name('admin.reviewer-assignment.eligible');
+        Route::post('/admin/penugasan-reviewer/calon/{user}/approve', [\App\Http\Controllers\Admin\ReviewerAssignmentController::class, 'approveApplicant'])->name('admin.reviewer-assignment.approve-applicant');
+        Route::post('/admin/penugasan-reviewer/calon/{user}/reject', [\App\Http\Controllers\Admin\ReviewerAssignmentController::class, 'rejectApplicant'])->name('admin.reviewer-assignment.reject-applicant');
 
         // EPIC 08: Pemeringkatan Usulan & Passing Grade Cut-off (US-08.4)
         Route::get('/admin/pemeringkatan-usulan', [\App\Http\Controllers\Admin\ProposalRankingController::class, 'index'])->name('admin.ranking.index');
