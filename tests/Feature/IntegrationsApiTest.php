@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 use App\Models\User;
 use App\Services\Integrations\DjkiClient;
@@ -18,12 +19,13 @@ class IntegrationsApiTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
     }
 
     /** @test */
     public function user_can_view_integrations_dashboard()
     {
-        $dosen = User::where('email', 'dosen@harkatnegeri.ac.id')->first();
+        $dosen = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
 
         $response = $this->actingAs($dosen)
             ->withSession(['is_otp_verified' => true])

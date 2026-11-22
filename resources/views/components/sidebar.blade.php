@@ -292,7 +292,7 @@
             
             {{-- Dasbor Utama (Semua Peran) --}}
             <a href="{{ route('dashboard') }}" 
-               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'dashboard' ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 <span>Dasbor Utama</span>
             </a>
@@ -300,7 +300,7 @@
             {{-- Database Dosen Tetap (146) khusus Admin P3M General di Menu Utama --}}
             @if($isGeneralAdmin && $canManageUsers)
                 <a href="{{ route('admin.users.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'admin.users') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'admin.users') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>Data Dosen Tetap</span>
@@ -312,7 +312,7 @@
             {{-- Penelitian (Dinamis sesuai permission penelitian.view_own / manage_all) --}}
             @if($canViewPenelitian && !$isDivisiPenelitian && $currentRole !== 'Kepala P3M')
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>{{ $canManagePenelitian ? 'Data Penelitian Dosen' : 'Penelitian Saya' }}</span>
@@ -324,7 +324,7 @@
             {{-- Pengabdian (Dinamis sesuai permission pengabdian.view_own / manage_all) --}}
             @if($canViewPengabdian && !$isDivisiPengabdian && $currentRole !== 'Kepala P3M')
                 <a href="{{ route('pengabdian.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>{{ $canManagePengabdian ? 'Data Pengabdian' : 'Pengabdian Saya' }}</span>
@@ -336,7 +336,7 @@
             {{-- Persetujuan Anggota untuk Role Non-Pengusul --}}
             @if($canViewConsent && !$canSubmitProposals && !$isSuperadmin)
                 <a href="{{ route('member-consent.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-amber-500 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19a6 6 0 00-12 0m6-8a4 4 0 100-8 4 4 0 000 8zm5-1l2 2 4-4"/></svg>
                         <span>Persetujuan Anggota</span>
@@ -350,7 +350,7 @@
             {{-- Profil SINTA untuk Reviewer (Single Link) --}}
             @if($currentRole === 'Reviewer' && $canViewSinta)
                 <a href="{{ route('sinta.profile') }}" 
-                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'sinta.profile' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'sinta.profile' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     <span>Profil Metrik SINTA</span>
                 </a>
@@ -366,7 +366,7 @@
 
                 @if($canViewPenelitian)
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'usulan.index' && request('kategori', 'penelitian') === 'penelitian') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>Riwayat Penelitian</span>
@@ -377,7 +377,7 @@
 
                 @if($canViewPengabdian)
                 <a href="{{ route('pengabdian.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>Riwayat Pengabdian</span>
@@ -388,7 +388,7 @@
 
                 @if($canViewPublikasi)
                 <a href="{{ route('publikasi.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                         <span>Riwayat Publikasi</span>
@@ -408,7 +408,7 @@
 
                 @if($canViewPenelitian)
                 <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'usulan') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_starts_with($currentRoute, 'usulan') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>Kelola Data Penelitian</span>
@@ -419,7 +419,7 @@
 
                 @if($canVerifPenelitian)
                 <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>Verifikasi (Template &amp; Similarity)</span>
@@ -432,7 +432,7 @@
 
                 @if($canAssignReviewers)
                 <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>Plotting Reviewer Penelitian</span>
@@ -445,7 +445,7 @@
 
                 @if($canManageSemhas)
                 <a href="{{ route('admin.semhas.index', ['divisi' => 'penelitian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Semhas &amp; Laporan Akhir</span>
@@ -464,7 +464,7 @@
 
                 @if($canViewPengabdian)
                 <a href="{{ route('pengabdian.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ ($currentRoute === 'pengabdian.index' || ($currentRoute === 'usulan.index' && request('kategori') === 'pengabdian')) ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>Data Pengabdian Masyarakat</span>
@@ -475,7 +475,7 @@
 
                 @if($canVerifPengabdian)
                 <a href="{{ route('admin.lppm-approval.index', ['divisi' => 'pengabdian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>Verifikasi (Template &amp; Similarity)</span>
@@ -488,7 +488,7 @@
 
                 @if($canAssignReviewers)
                 <a href="{{ route('admin.reviewer-assignment.index', ['divisi' => 'pengabdian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         <span>Plotting Reviewer Pengabdian</span>
@@ -501,7 +501,7 @@
 
                 @if($canManageSemhas)
                 <a href="{{ route('admin.semhas.index', ['divisi' => 'pengabdian']) }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         <span>Semhas &amp; Laporan Akhir</span>
@@ -520,7 +520,7 @@
 
                 @if($canViewPublikasi)
                 <a href="{{ route('publikasi.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                         <span>Data &amp; Verifikasi Publikasi</span>
@@ -531,7 +531,7 @@
 
                 @if($canManageHkiAdmin)
                 <a href="{{ route('admin.hki.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                         <span>Verifikasi Sentra HKI / Paten</span>
@@ -544,7 +544,7 @@
 
                 @if($canSubmitHki || $canManageHkiAdmin)
                 <a href="{{ route('hki.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki')) ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki')) ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                         <span>Katalog HKI Terdaftar</span>
@@ -554,7 +554,7 @@
 
                 @if($canManageRewardAdmin)
                 <a href="{{ route('admin.reward.index') }}" 
-                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-teal-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <span class="flex items-center gap-2.5">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>Verifikasi Klaim Insentif</span>
@@ -580,7 +580,7 @@
                     <button @click="activeGroup = (activeGroup === 'proposal' ? '' : 'proposal')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'proposal' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'proposal' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             <span>Pengajuan Usulan</span>
@@ -596,7 +596,7 @@
                     <div x-show="activeGroup === 'proposal'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canSubmitProposals)
                         <a href="{{ route('usulan.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'usulan') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'usulan') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'usulan') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Usulan Proposal BIMA</span>
                         </a>
@@ -604,7 +604,7 @@
 
                         @if($canViewConsent)
                         <a href="{{ route('member-consent.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_starts_with($currentRoute, 'member-consent') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Persetujuan Anggota</span>
@@ -624,7 +624,7 @@
                     <button @click="activeGroup = (activeGroup === 'pelaksanaan' ? '' : 'pelaksanaan')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'pelaksanaan' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'pelaksanaan' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             <span>Pelaksanaan Hibah</span>
@@ -640,7 +640,7 @@
                     <div x-show="activeGroup === 'pelaksanaan'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canViewContracts)
                         <a href="{{ route('pengusul.kontrak.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.kontrak') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.kontrak') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.kontrak') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Kontrak & Rekening</span>
@@ -653,7 +653,7 @@
 
                         @if($canManageLogbook)
                         <a href="{{ route('pengusul.logbook.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.logbook') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.logbook') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.logbook') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Logbook Harian</span>
                         </a>
@@ -661,7 +661,7 @@
 
                         @if($canSubmitMonev)
                         <a href="{{ route('pengusul.monev.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.monev') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.monev') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.monev') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Laporan Kemajuan</span>
                         </a>
@@ -669,7 +669,7 @@
 
                         @if($canSubmitLaporanAkhir)
                         <a href="{{ route('pengusul.laporan-akhir.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.laporan-akhir') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'pengusul.laporan-akhir') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'pengusul.laporan-akhir') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Laporan Akhir 100%</span>
                         </a>
@@ -684,7 +684,7 @@
                     <button @click="activeGroup = (activeGroup === 'luaran' ? '' : 'luaran')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'luaran' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'luaran' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                             <span>Luaran & HKI</span>
@@ -695,7 +695,7 @@
                     <div x-show="activeGroup === 'luaran'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canSubmitHki)
                         <a href="{{ route('hki.create') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'hki.create' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'hki.create' ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2 truncate">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'hki.create' ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span class="truncate">Pengajuan KI / Paten / HKI</span>
@@ -704,7 +704,7 @@
                         </a>
 
                         <a href="{{ route('hki.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ (str_contains($currentRoute, 'hki.') && !str_contains($currentRoute, 'admin.hki') && $currentRoute !== 'hki.create') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Sentra HKI &amp; Paten</span>
                         </a>
@@ -712,7 +712,7 @@
 
                         @if($canViewPublikasi)
                         <a href="{{ route('publikasi.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'publikasi') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2 truncate">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'publikasi') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>{{ $canManagePublikasi ? 'Bank Publikasi Dosen' : 'Publikasi Saya' }}</span>
@@ -723,7 +723,7 @@
 
                         @if($canClaimReward)
                         <a href="{{ route('reward.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reward.') && !str_contains($currentRoute, 'admin.reward') && !str_contains($currentRoute, 'keuangan.reward') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reward.') && !str_contains($currentRoute, 'admin.reward') && !str_contains($currentRoute, 'keuangan.reward') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'reward.') && !str_contains($currentRoute, 'admin.reward') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Klaim Reward Insentif</span>
                         </a>
@@ -744,7 +744,7 @@
                     <button @click="activeGroup = (activeGroup === 'database' ? '' : 'database')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'database' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'database' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z"/></svg>
                             <span>Pangkalan Data Riset</span>
@@ -755,7 +755,7 @@
                     <div x-show="activeGroup === 'database'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canViewSinta)
                         <a href="{{ route('sinta.profile') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'sinta.profile' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'sinta.profile' ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'sinta.profile' ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Profil Metrik SINTA</span>
                         </a>
@@ -763,7 +763,7 @@
 
                         @if($canSearchPddikti)
                         <a href="{{ route('pddikti.search') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'pddikti.search' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'pddikti.search' ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'pddikti.search' ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Pencarian PDDIKTI</span>
                         </a>
@@ -783,7 +783,7 @@
                     <button @click="activeGroup = (activeGroup === 'reviewer' ? '' : 'reviewer')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'reviewer' ? 'text-purple-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'reviewer' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             <span>Evaluasi Reviewer</span>
@@ -799,7 +799,7 @@
                     <div x-show="activeGroup === 'reviewer'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canReviewSubstance)
                         <a href="{{ route('reviewer.penilaian.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reviewer.penilaian') ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reviewer.penilaian') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'reviewer.penilaian') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Penugasan / Pengusulan Reviewer</span>
@@ -812,7 +812,7 @@
 
                         @if($canReviewMonev)
                         <a href="{{ route('reviewer.monev.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reviewer.monev') ? 'bg-purple-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'reviewer.monev') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'reviewer.monev') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Monev Kemajuan</span>
@@ -834,7 +834,7 @@
             <div class="space-y-0.5">
                 <p class="px-2.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">Program Studi</p>
                 <a href="{{ route('admin.prodi-roadmap.index') }}" 
-                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.prodi-roadmap') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.prodi-roadmap') ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                     <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v15H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
                     <span>Roadmap Keilmuan Prodi</span>
                 </a>
@@ -854,7 +854,7 @@
                     <button @click="activeGroup = (activeGroup === 'p3m_selection' ? '' : 'p3m_selection')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'p3m_selection' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'p3m_selection' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
                             <span>{{ $currentRole === 'Kepala P3M' ? 'Persetujuan & Kuota' : 'Program & Seleksi' }}</span>
@@ -870,7 +870,7 @@
                     <div x-show="activeGroup === 'p3m_selection'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canManageSchemes)
                         <a href="{{ route('admin.skema-bima.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.skema-bima') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.skema-bima') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.skema-bima') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Master Skema BIMA</span>
                         </a>
@@ -878,7 +878,7 @@
 
                         @if($canManagePeriods)
                         <a href="{{ route('admin.periode-hibah.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.periode-hibah') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.periode-hibah') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.periode-hibah') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Periode Call Proposals</span>
                         </a>
@@ -886,7 +886,7 @@
 
                         @if($showP3mLppmLink)
                         <a href="{{ route('admin.lppm-approval.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.lppm-approval') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>{{ $currentRole === 'Kepala P3M' ? 'Persetujuan LPPM' : 'Verifikasi Usulan' }}</span>
                         </a>
@@ -894,7 +894,7 @@
 
                         @if($showP3mAssignLink)
                         <a href="{{ route('admin.reviewer-assignment.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.reviewer-assignment') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Penugasan Reviewer</span>
@@ -907,7 +907,7 @@
 
                         @if($canViewRanking)
                         <a href="{{ route('admin.ranking.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.ranking') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.ranking') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.ranking') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Pemeringkatan & Kuota</span>
                         </a>
@@ -922,7 +922,7 @@
                     <button @click="activeGroup = (activeGroup === 'p3m_monev' ? '' : 'p3m_monev')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'p3m_monev' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'p3m_monev' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             <span>Monev & Sentra HKI</span>
@@ -938,7 +938,7 @@
                     <div x-show="activeGroup === 'p3m_monev'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($showP3mSemhasLink)
                         <a href="{{ route('admin.semhas.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.semhas') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Seminar Hasil (Semhas)</span>
                         </a>
@@ -946,7 +946,7 @@
 
                         @if($showP3mHkiLink)
                         <a href="{{ route('admin.hki.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.hki') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.hki') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Verifikasi Sentra HKI</span>
@@ -959,7 +959,7 @@
 
                         @if($showP3mRewardLink)
                         <a href="{{ route('admin.reward.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.reward') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.reward') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Review Klaim Reward</span>
@@ -979,7 +979,7 @@
                     <button @click="activeGroup = (activeGroup === 'p3m_system' ? '' : 'p3m_system')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'p3m_system' ? 'text-blue-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'p3m_system' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             <span>Sistem & Integrasi</span>
@@ -990,7 +990,7 @@
                     <div x-show="activeGroup === 'p3m_system'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canViewIntegrations)
                         <a href="{{ route('integrasi.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'integrasi.index' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'integrasi.index' ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'integrasi.index' ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Integrasi API (4 Modul)</span>
                         </a>
@@ -998,7 +998,7 @@
 
                         @if($canSearchPddikti)
                         <a href="{{ route('pddikti.search') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'pddikti.search' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ $currentRoute === 'pddikti.search' ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ $currentRoute === 'pddikti.search' ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Pencarian PDDIKTI</span>
                         </a>
@@ -1006,7 +1006,7 @@
 
                         @if($canManageMigration)
                         <a href="{{ route('admin.migrasi.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.migrasi') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.migrasi') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.migrasi') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Migrasi Data Legasi</span>
                         </a>
@@ -1014,7 +1014,7 @@
 
                         @if($canManageUsers)
                         <a href="{{ route('admin.users.index') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.users') ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'admin.users') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'admin.users') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Manajemen Pengguna</span>
                         </a>
@@ -1026,7 +1026,7 @@
                 {{-- Manajemen Role & Permission RBAC (Khusus Superadmin / rbac.manage) --}}
                 @if($canManageRbac)
                     <a href="{{ route('admin.role-permissions.index') }}" 
-                       class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.role-permissions') ? 'bg-red-600 text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                       class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'admin.role-permissions') ? 'bg-[#681727] text-white shadow-xs' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         <span>Role &amp; Permission (RBAC)</span>
                     </a>
@@ -1035,7 +1035,7 @@
                 {{-- Audit Trail Logs --}}
                 @if($canViewAuditLogs)
                     <a href="{{ route('audit-logs') }}" 
-                       class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'audit-logs' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                       class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ $currentRoute === 'audit-logs' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                         <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         <span>Audit Trail Logs</span>
                     </a>
@@ -1053,7 +1053,7 @@
                     <button @click="activeGroup = (activeGroup === 'keuangan' ? '' : 'keuangan')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'keuangan' ? 'text-emerald-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'keuangan' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             <span>Pencairan Dana</span>
@@ -1069,7 +1069,7 @@
                     <div x-show="activeGroup === 'keuangan'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canManageDisbursement)
                         <a href="{{ route('keuangan.pencairan.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.pencairan') ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.pencairan') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'keuangan.pencairan') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Pencairan Dana Hibah</span>
@@ -1082,7 +1082,7 @@
 
                         @if($canManageRewardDisbursement)
                         <a href="{{ route('keuangan.reward.index') }}" 
-                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.reward') ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center justify-between gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'keuangan.reward') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'keuangan.reward') ? 'bg-white' : 'bg-slate-600' }}"></span>
                                 <span>Pencairan Insentif Reward</span>
@@ -1107,7 +1107,7 @@
                     <button @click="activeGroup = (activeGroup === 'analytics' ? '' : 'analytics')" 
                             type="button"
                             class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors"
-                            :class="activeGroup === 'analytics' ? 'text-indigo-400 bg-slate-800/90' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+                            :class="activeGroup === 'analytics' ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
                         <span class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                             <span>Analitik Kinerja</span>
@@ -1118,7 +1118,7 @@
                     <div x-show="activeGroup === 'analytics'" x-cloak class="ml-3 pl-2.5 py-0.5 space-y-0.5 border-l-2 border-slate-800">
                         @if($canViewExecutiveAnalytics)
                         <a href="{{ route('analitik.eksekutif') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'analitik.eksekutif') ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'analitik.eksekutif') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'analitik.eksekutif') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Dasbor Eksekutif</span>
                         </a>
@@ -1126,7 +1126,7 @@
 
                         @if($canViewFacultyAnalytics)
                         <a href="{{ route('analitik.fakultas') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'analitik.fakultas') ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'analitik.fakultas') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'analitik.fakultas') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Performa Fakultas</span>
                         </a>
@@ -1134,7 +1134,7 @@
 
                         @if($canViewAccreditationReports)
                         <a href="{{ route('laporan.akreditasi') }}" 
-                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'laporan.akreditasi') ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                           class="flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {{ str_contains($currentRoute, 'laporan.akreditasi') ? 'bg-[#681727] text-white font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                             <span class="w-1.5 h-1.5 rounded-full {{ str_contains($currentRoute, 'laporan.akreditasi') ? 'bg-white' : 'bg-slate-600' }}"></span>
                             <span>Pelaporan Akreditasi</span>
                         </a>
@@ -1153,7 +1153,7 @@
             {{-- Digital UAT Portal & Berita Acara (Stakeholders) --}}
             @if($canAccessUat)
             <a href="{{ route('uat.index') }}" 
-               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'uat') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'uat') ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>UAT & Berita Acara</span>
             </a>
@@ -1162,7 +1162,7 @@
             {{-- Buku Panduan Interaktif --}}
             @if($canAccessPanduan)
             <a href="{{ route('panduan.index') }}" 
-               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'panduan') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+               class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors {{ str_contains($currentRoute, 'panduan') ? 'bg-[#681727] text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                 <svg class="w-4 h-4 shrink-0 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 <span>Buku Panduan Sistem</span>
             </a>

@@ -77,8 +77,8 @@ class HealthCheckController extends Controller
                 ],
             ],
             'governance' => [
-                'faculties' => 4,
-                'study_programs' => 22,
+                'faculties' => \App\Models\RefFakultas::count(),
+                'study_programs' => \App\Models\RefProgramStudi::count(),
                 'institution' => 'Universitas Harkat Negeri (UHN)',
             ],
         ], $allHealthy ? 200 : 503);

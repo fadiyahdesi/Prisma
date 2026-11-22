@@ -184,10 +184,12 @@
                 </div>
 
                 @auth
-                    <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}"
-                       class="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs text-center transition shadow-md block">
-                        Gunakan Hasil TKT di Usulan Proposal &rarr;
-                    </a>
+                    @if(auth()->user()->hasPermission('proposal.submit_wizard'))
+                        <a href="{{ route('usulan.index', ['kategori' => 'penelitian']) }}"
+                           class="w-full py-3 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs text-center transition shadow-md block">
+                            Gunakan Hasil TKT di Usulan Proposal &rarr;
+                        </a>
+                    @endif
                 @else
                     <a href="{{ route('login') }}"
                        class="w-full py-3 px-4 rounded-2xl bg-white hover:bg-blue-50 text-slate-950 font-black text-xs text-center transition shadow-md block">

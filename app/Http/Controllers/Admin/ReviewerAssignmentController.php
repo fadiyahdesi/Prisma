@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PpmUsulan;
-use App\Models\Role;
-use App\Models\User;
 use App\Services\ReviewEngineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -88,18 +86,12 @@ class ReviewerAssignmentController extends Controller
             })->whereIn('status', ['Submitted', 'In_review', 'Approved', 'Adjudication', 'Reviewed'])->count(),
         ];
 
-        $reviewerApplicants = User::with(['fakultas', 'prodi', 'roles'])
-            ->where('reviewer_application_status', 'pending')
-            ->latest('reviewer_applied_at')
-            ->get();
-
         return view('admin.reviewer-assignment.index', compact(
             'proposals',
             'stats',
             'kategoriFilter',
             'canSwitchDivisi',
-            'activeRole',
-            'reviewerApplicants'
+            'activeRole'
         ));
     }
 
@@ -189,7 +181,10 @@ class ReviewerAssignmentController extends Controller
         $user = Auth::user();
         $this->authorizeDivision($usulan);
 
-        $eligible = ReviewEngineService::getEligibleReviewers($usulan);
+        // Penetapan reviewer bersifat wajib sesuai bidang: kandidat lintas bidang tidak ditawarkan.
+        $eligible = ReviewEngineService::getEligibleReviewers($usulan)
+            ->filter(fn ($reviewer) => (bool) $reviewer->getAttribute('sesuai_bidang'))
+            ->values();
 
         return response()->json([
             'usulan_kode' => $usulan->kode_usulan,
@@ -212,36 +207,6 @@ class ReviewerAssignmentController extends Controller
                 'sinta_score' => $r->sinta_score_3yr,
             ]),
         ]);
-    }
-
-    /**
-     * Approve a lecturer's self-nomination as Reviewer and attach Reviewer role.
-     */
-    public function approveApplicant(User $user)
-    {
-        $this->authorizeDivision();
-
-        $reviewerRole = Role::where('name', 'Reviewer')->firstOrFail();
-        $user->roles()->syncWithoutDetaching([$reviewerRole->id]);
-        $user->update([
-            'reviewer_application_status' => 'approved',
-        ]);
-
-        return redirect()->back()->with('success', "{$user->name} telah disetujui dan resmi terdaftar sebagai Reviewer sesuai bidang {$user->bidang_keahlian}.");
-    }
-
-    /**
-     * Reject a lecturer's reviewer application.
-     */
-    public function rejectApplicant(User $user)
-    {
-        $this->authorizeDivision();
-
-        $user->update([
-            'reviewer_application_status' => 'rejected',
-        ]);
-
-        return redirect()->back()->with('info', "Usulan calon Reviewer atas nama {$user->name} ditolak.");
     }
 
     private function authorizeDivision(?PpmUsulan $usulan = null): void

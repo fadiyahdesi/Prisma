@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic13MigrationSecurityAndUatTest extends TestCase
@@ -26,10 +27,11 @@ class Epic13MigrationSecurityAndUatTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
     }
 
     // ==========================================
-    // 1. MASTER DATA INTEGRITY (4 FAKULTAS, 22 PRODI)
+    // 1. MASTER DATA INTEGRITY (4 FAKULTAS, 23 PRODI)
     // ==========================================
 
     public function test_master_data_strictly_aligns_with_official_blueprint(): void
@@ -39,10 +41,10 @@ class Epic13MigrationSecurityAndUatTest extends TestCase
         $faculties = RefFakultas::pluck('kode_fakultas')->sort()->values()->toArray();
         $this->assertEquals(['FPP', 'FSH', 'FST', 'SV'], $faculties);
 
-        // Must have exactly 22 official program studi
-        $this->assertEquals(22, RefProgramStudi::count());
+        // Must have exactly 23 official program studi
+        $this->assertEquals(23, RefProgramStudi::count());
 
-        // Check distribution: FST (4), FSH (4), FPP (2), SV (12)
+        // Check distribution: FST (4), FSH (4), FPP (2), SV (13)
         $fst = RefFakultas::where('kode_fakultas', 'FST')->first();
         $fsh = RefFakultas::where('kode_fakultas', 'FSH')->first();
         $fpp = RefFakultas::where('kode_fakultas', 'FPP')->first();
@@ -51,7 +53,7 @@ class Epic13MigrationSecurityAndUatTest extends TestCase
         $this->assertEquals(4, RefProgramStudi::where('id_fakultas', $fst->id_fakultas)->count());
         $this->assertEquals(4, RefProgramStudi::where('id_fakultas', $fsh->id_fakultas)->count());
         $this->assertEquals(2, RefProgramStudi::where('id_fakultas', $fpp->id_fakultas)->count());
-        $this->assertEquals(12, RefProgramStudi::where('id_fakultas', $sv->id_fakultas)->count());
+        $this->assertEquals(13, RefProgramStudi::where('id_fakultas', $sv->id_fakultas)->count());
     }
 
     // ==========================================
@@ -249,14 +251,14 @@ class Epic13MigrationSecurityAndUatTest extends TestCase
             ],
             'governance' => [
                 'faculties' => 4,
-                'study_programs' => 22,
+                'study_programs' => 23,
             ],
         ]);
     }
 
     public function test_digital_uat_portal_signoff_and_pdf_export(): void
     {
-        $kaprodi = User::where('email', 'kaprodi@harkatnegeri.ac.id')->first();
+        $kaprodi = User::where('email', 'dekan@harkatnegeri.ac.id')->first();
 
         // 1. Access UAT portal
         $response = $this->actingAs($kaprodi)

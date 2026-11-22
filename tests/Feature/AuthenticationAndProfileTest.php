@@ -10,6 +10,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class AuthenticationAndProfileTest extends TestCase
@@ -23,6 +24,7 @@ class AuthenticationAndProfileTest extends TestCase
     {
         parent::setUp();
         $this->seed(RbacSeeder::class);
+        $this->seed(TestingDemoAccountsSeeder::class);
         Storage::fake('public');
 
         $dosenRole = Role::where('name', 'Dosen / Pengusul')->first();

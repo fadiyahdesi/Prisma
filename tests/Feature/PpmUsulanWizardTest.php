@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use App\Models\Role;
+use Database\Seeders\RbacSeeder;
+use Database\Seeders\PermissionSeeder;
 use App\Models\User;
 use App\Models\PpmSkemaBima;
 use App\Models\PpmPeriodeHibah;
@@ -28,6 +31,7 @@ class PpmUsulanWizardTest extends TestCase
         parent::setUp();
 
         Storage::fake('public');
+        $this->seed([RbacSeeder::class, PermissionSeeder::class]);
 
         $this->dosenUser = User::factory()->create([
             'name' => 'Dr. Ir. Hendra Prasetya, M.T.',
@@ -36,6 +40,10 @@ class PpmUsulanWizardTest extends TestCase
             'sinta_score_3yr' => 185.50,
             'is_otp_verified' => true,
         ]);
+        $dosenRoleId = Role::where('name', 'Dosen / Pengusul')->value('id');
+        if ($dosenRoleId) {
+            $this->dosenUser->roles()->sync([$dosenRoleId]);
+        }
 
         $this->skemaBima = PpmSkemaBima::create([
             'kode_skema' => 'PDP',
@@ -215,7 +223,7 @@ class PpmUsulanWizardTest extends TestCase
                          ->withSession(['otp_verified' => true])
                          ->post(route('usulan.submit-final', $usulan));
 
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('usulan.index'));
         $usulan->refresh();
         $this->assertEquals('Submitted', $usulan->status);
         $this->assertNotNull($usulan->submitted_at);

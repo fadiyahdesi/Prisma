@@ -65,6 +65,68 @@ class ReviewEngineService
     }
 
     /**
+     * Evaluasi kecocokan rumpun/bidang calon reviewer terhadap usulan.
+     * Dipakai baik untuk daftar kandidat maupun untuk memblokir penugasan lintas bidang.
+     */
+    public static function evaluateFieldMatch(PpmUsulan $usulan, User $candidate): array
+    {
+        $usulan->loadMissing(['prodi']);
+        $candidate->loadMissing(['prodi']);
+
+        $proposalRumpun = strtolower(trim(implode(' ', array_filter([
+            $usulan->rumpun_ilmu_level_1,
+            $usulan->rumpun_ilmu_level_2,
+            $usulan->rumpun_ilmu_level_3,
+            $usulan->nama_prodi,
+            $usulan->prodi?->nama_prodi,
+            $usulan->judul_usulan,
+        ]))));
+
+        $targetRumpunCategory = strtolower((string) ($usulan->rumpun_ilmu_level_1
+            ?: RumpunIlmuService::resolveRumpunFromProdi($usulan->nama_prodi ?: $usulan->prodi?->nama_prodi)));
+
+        $candidateProdi = (string) ($candidate->prodi?->nama_prodi ?? '');
+        $candidateRumpun = (string) ($candidate->rumpun_ilmu ?: RumpunIlmuService::resolveRumpunFromProdi($candidateProdi));
+        $candidateBidang = trim((string) ($candidate->bidang_keahlian ?: $candidateProdi));
+
+        $result = [
+            'matched'  => false,
+            'reason'   => 'Lintas Bidang / Rumpun tidak sesuai dengan usulan',
+            'rumpun'   => $candidateRumpun,
+            'bidang'   => $candidateBidang ?: '-',
+        ];
+
+        if ($targetRumpunCategory !== '' && strtolower($candidateRumpun) === $targetRumpunCategory) {
+            $result['matched'] = true;
+            $result['reason'] = 'Sesuai Rumpun: ' . $candidateRumpun;
+
+            return $result;
+        }
+
+        // Kata generik seperti "Ilmu" sering muncul di rumpun usulan maupun nama prodi
+        // sehingga tidak boleh dianggap sebagai bukti kecocokan bidang.
+        $genericTokens = [
+            'ilmu', 'sains', 'studi', 'pendidikan', 'profesi', 'sarjana', 'strata',
+            'universitas', 'kampus', 'fakultas', 'program', 'umum', 'dasar', 'lanjut',
+        ];
+
+        $keywords = array_filter(
+            preg_split('/[\s,&\/\-]+/', strtolower($candidateBidang . ' ' . $candidateProdi)),
+            fn ($w) => strlen($w) >= 4 && !in_array($w, $genericTokens, true)
+        );
+
+        foreach ($keywords as $kw) {
+            if ($proposalRumpun !== '' && str_contains($proposalRumpun, $kw)) {
+                $result['matched'] = true;
+                $result['reason'] = 'Sesuai Bidang: ' . ($candidateBidang ?: $candidateProdi);
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Get all eligible reviewers for a proposal, prioritized by field match & non-CoI (US-08.1).
      */
     public static function getEligibleReviewers(PpmUsulan $usulan): \Illuminate\Support\Collection
@@ -106,47 +168,14 @@ class ReviewEngineService
                 ->get();
         }
 
-        $proposalRumpun = strtolower(trim(implode(' ', array_filter([
-            $usulan->rumpun_ilmu_level_1,
-            $usulan->rumpun_ilmu_level_2,
-            $usulan->rumpun_ilmu_level_3,
-            $usulan->fokus_rirn,
-            $usulan->nama_prodi,
-            $usulan->prodi?->nama_prodi,
-            $usulan->judul_usulan,
-        ]))));
+        return $candidates->map(function (User $candidate) use ($usulan) {
+            $match = self::evaluateFieldMatch($usulan, $candidate);
 
-        $targetRumpunCategory = strtolower((string) ($usulan->rumpun_ilmu_level_1
-            ?: RumpunIlmuService::resolveRumpunFromProdi($usulan->nama_prodi ?: $usulan->prodi?->nama_prodi)));
-
-        return $candidates->map(function (User $candidate) use ($proposalRumpun, $targetRumpunCategory) {
-            $hasReviewerRole = $candidate->roles->contains('name', 'Reviewer');
-            $candidateProdi = (string) ($candidate->prodi?->nama_prodi ?? '');
-            $candidateRumpun = (string) ($candidate->rumpun_ilmu ?: RumpunIlmuService::resolveRumpunFromProdi($candidateProdi));
-            $candidateBidang = trim((string) ($candidate->bidang_keahlian ?: $candidateProdi));
-
-            $fieldMatches = false;
-            $matchReason = 'Lintas Bidang (Non-CoI)';
-
-            if ($targetRumpunCategory !== '' && strtolower($candidateRumpun) === $targetRumpunCategory) {
-                $fieldMatches = true;
-                $matchReason = 'Sesuai Rumpun: ' . $candidateRumpun;
-            } else {
-                $keywords = array_filter(preg_split('/[\s,&\/\-]+/', strtolower($candidateBidang . ' ' . $candidateProdi)), fn ($w) => strlen($w) >= 4);
-                foreach ($keywords as $kw) {
-                    if ($proposalRumpun !== '' && str_contains($proposalRumpun, $kw)) {
-                        $fieldMatches = true;
-                        $matchReason = 'Sesuai Bidang: ' . ($candidateBidang ?: $candidateProdi);
-                        break;
-                    }
-                }
-            }
-
-            $candidate->setAttribute('is_reviewer_role', $hasReviewerRole);
-            $candidate->setAttribute('sesuai_bidang', $fieldMatches);
-            $candidate->setAttribute('match_reason', $matchReason);
-            $candidate->setAttribute('resolved_rumpun', $candidateRumpun);
-            $candidate->setAttribute('resolved_bidang', $candidateBidang ?: '-');
+            $candidate->setAttribute('is_reviewer_role', $candidate->roles->contains('name', 'Reviewer'));
+            $candidate->setAttribute('sesuai_bidang', $match['matched']);
+            $candidate->setAttribute('match_reason', $match['reason']);
+            $candidate->setAttribute('resolved_rumpun', $match['rumpun']);
+            $candidate->setAttribute('resolved_bidang', $match['bidang']);
 
             return $candidate;
         })->sortByDesc(function (User $u) {
@@ -177,6 +206,22 @@ class ReviewEngineService
 
         if ($reviewer2Id && in_array($reviewer2Id, $coiUserIds, true)) {
             throw new InvalidArgumentException('Reviewer 2 melanggar aturan Conflict of Interest (berasal dari fakultas/prodi yang sama dengan pengusul).');
+        }
+
+        // Penetapan reviewer WAJIB sesuai rumpun/bidang usulan (selain bebas CoI).
+        foreach (array_filter([$reviewer1Id, $reviewer2Id]) as $reviewerId) {
+            $reviewer = User::find($reviewerId);
+            if (!$reviewer) {
+                throw new InvalidArgumentException('Reviewer yang dipilih tidak ditemukan.');
+            }
+
+            $match = self::evaluateFieldMatch($usulan, $reviewer);
+            if (!$match['matched']) {
+                $label = $reviewerId === $reviewer1Id ? 'Reviewer 1' : 'Reviewer 2';
+                throw new InvalidArgumentException(
+                    "{$label} ({$reviewer->name}) tidak sesuai bidang usulan. {$match['reason']}. Pilih reviewer yang sesuai rumpun/bidang proposal."
+                );
+            }
         }
 
         return DB::transaction(function () use ($usulan, $reviewer1Id, $reviewer2Id, $adminId) {
@@ -256,6 +301,18 @@ class ReviewEngineService
 
         if (in_array($adjudicatorId, $existingReviewerIds, true)) {
             throw new InvalidArgumentException('Reviewer 3 harus reviewer independen yang berbeda dari Reviewer 1 dan Reviewer 2.');
+        }
+
+        $adjudicator = User::find($adjudicatorId);
+        if (!$adjudicator) {
+            throw new InvalidArgumentException('Reviewer 3 yang dipilih tidak ditemukan.');
+        }
+
+        $match = self::evaluateFieldMatch($usulan, $adjudicator);
+        if (!$match['matched']) {
+            throw new InvalidArgumentException(
+                "Reviewer 3 ({$adjudicator->name}) tidak sesuai bidang usulan. {$match['reason']}. Pilih penengah yang sesuai rumpun/bidang proposal."
+            );
         }
 
         return DB::transaction(function () use ($usulan, $adjudicatorId, $adminId) {

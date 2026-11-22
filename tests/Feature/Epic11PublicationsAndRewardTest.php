@@ -13,6 +13,7 @@ use Database\Seeders\RbacSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic11PublicationsAndRewardTest extends TestCase
@@ -20,18 +21,19 @@ class Epic11PublicationsAndRewardTest extends TestCase
     use RefreshDatabase;
 
     protected User $dosen;
-    protected User $adminP3m;
+    protected User $divisiPublikasi;
     protected User $keuangan;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(RbacSeeder::class);
+        $this->seed(TestingDemoAccountsSeeder::class);
         $this->seed(Epic11DemoDataSeeder::class);
         Storage::fake('public');
 
         $this->dosen = User::where('email', 'dosen@harkatnegeri.ac.id')->first();
-        $this->adminP3m = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $this->divisiPublikasi = User::where('email', 'divisipublikasi@harkatnegeri.ac.id')->first();
         $this->keuangan = User::where('email', 'keuangan@harkatnegeri.ac.id')->first();
     }
 
@@ -45,7 +47,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
             ->get(route('publikasi.index'));
 
         $response->assertStatus(200);
-        $response->assertSee('Bank Publikasi Jurnal Kampus');
+        $response->assertSee('Data Publikasi Ilmiah Dosen UHN');
 
         // Register new article
         $pdfFile = UploadedFile::fake()->create('manuscript.pdf', 500, 'application/pdf');
@@ -110,7 +112,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
     /**
      * US-11.2: Pendaftaran Perolehan HKI & Verifikasi oleh Sentra HKI.
      */
-    public function test_dosen_can_register_hki_and_admin_p3m_can_verify_it(): void
+    public function test_dosen_can_register_hki_and_divisi_publikasi_can_verify_it(): void
     {
         $certFile = UploadedFile::fake()->create('sertifikat_hki.pdf', 600, 'application/pdf');
         $nomorPermohonan = 'P002026' . rand(10000, 99999);
@@ -132,8 +134,8 @@ class Epic11PublicationsAndRewardTest extends TestCase
         $hki = PpmHki::where('nomor_permohonan', $nomorPermohonan)->first();
         $this->assertNotNull($hki);
 
-        // 2. Admin P3M verifies and approves HKI
-        $verifyResponse = $this->actingAs($this->adminP3m)
+        // 2. Divisi Publikasi verifies and approves HKI
+        $verifyResponse = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->post(route('admin.hki.verify', $hki), [
                 'action' => 'approve',
@@ -148,7 +150,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
         $this->assertEquals('Terverifikasi HKI', $hki->status_hki);
         $this->assertEquals('IDP000088991', $hki->nomor_sertifikat);
         $this->assertNotNull($hki->verified_at);
-        $this->assertEquals($this->adminP3m->id, $hki->verified_by_user_id);
+        $this->assertEquals($this->divisiPublikasi->id, $hki->verified_by_user_id);
     }
 
     /**
@@ -323,7 +325,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
         $this->assertTrue($hkiAsset->is_claimed_reward);
 
         // Reject claim
-        $rejectResponse = $this->actingAs($this->adminP3m)
+        $rejectResponse = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->post(route('admin.reward.reject', $klaim2), [
                 'catatan_p3m' => 'Surat pernyataan belum dibubuhi materai 10.000.',
@@ -383,7 +385,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
      */
     public function test_admin_can_download_hki_csv_template(): void
     {
-        $response = $this->actingAs($this->adminP3m)
+        $response = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->get(route('admin.hki.template-csv'));
 
@@ -396,7 +398,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
      */
     public function test_admin_can_export_hki_sinta_json(): void
     {
-        $response = $this->actingAs($this->adminP3m)
+        $response = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->get(route('admin.hki.export-sinta'));
 
@@ -426,7 +428,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('pdki_export.json', $jsonPayload);
 
-        $response = $this->actingAs($this->adminP3m)
+        $response = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->post(route('admin.hki.import'), [
                 'hki_file' => $file,
@@ -449,7 +451,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('hki_rekap.csv', $csvContent);
 
-        $response = $this->actingAs($this->adminP3m)
+        $response = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->post(route('admin.hki.import'), [
                 'hki_file' => $file,
@@ -468,7 +470,7 @@ class Epic11PublicationsAndRewardTest extends TestCase
      */
     public function test_admin_can_quick_sync_real_uhn_hki(): void
     {
-        $response = $this->actingAs($this->adminP3m)
+        $response = $this->actingAs($this->divisiPublikasi)
             ->withSession(['otp_verified' => true])
             ->post(route('admin.hki.quick-sync-real'));
 

@@ -9,6 +9,7 @@ use App\Services\AnalyticsService;
 use App\Services\AccreditationReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic12AnalyticsAndReportsTest extends TestCase
@@ -19,6 +20,7 @@ class Epic12AnalyticsAndReportsTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
         $this->artisan('db:seed', ['--class' => 'Epic12DemoDataSeeder']);
     }
 
@@ -142,9 +144,9 @@ class Epic12AnalyticsAndReportsTest extends TestCase
     /** @test */
     public function us_12_3_accreditation_report_preview_shows_all_4_tables()
     {
-        $adminP3m = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $kepala = User::where('email', 'kepalap3m@harkatnegeri.ac.id')->first();
 
-        $response = $this->actingAs($adminP3m)
+        $response = $this->actingAs($kepala)
             ->withSession(['is_otp_verified' => true])
             ->get(route('laporan.akreditasi'));
 
@@ -159,9 +161,9 @@ class Epic12AnalyticsAndReportsTest extends TestCase
     /** @test */
     public function us_12_3_excel_export_returns_xlsx_spreadsheet_download()
     {
-        $adminP3m = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $kepala = User::where('email', 'kepalap3m@harkatnegeri.ac.id')->first();
 
-        $response = $this->actingAs($adminP3m)
+        $response = $this->actingAs($kepala)
             ->withSession(['is_otp_verified' => true])
             ->get(route('laporan.akreditasi.excel'));
 
@@ -176,9 +178,9 @@ class Epic12AnalyticsAndReportsTest extends TestCase
     /** @test */
     public function us_12_3_pdf_export_returns_printable_document()
     {
-        $adminP3m = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $kepala = User::where('email', 'kepalap3m@harkatnegeri.ac.id')->first();
 
-        $response = $this->actingAs($adminP3m)
+        $response = $this->actingAs($kepala)
             ->withSession(['is_otp_verified' => true])
             ->get(route('laporan.akreditasi.pdf'));
 

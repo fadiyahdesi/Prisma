@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\PpmUsulanAnggota;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class MemberConsentTest extends TestCase
@@ -15,6 +16,7 @@ class MemberConsentTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
         $this->artisan('db:seed', ['--class' => 'MemberConsentDemoSeeder']);
     }
 

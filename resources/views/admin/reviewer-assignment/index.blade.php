@@ -153,43 +153,6 @@
                 @endif
             </div>
 
-            <!-- Panel Calon Usulan Reviewer dari Dosen Pengusul (Jika Ada) -->
-            @if(isset($reviewerApplicants) && $reviewerApplicants->count() > 0)
-                <div class="bg-white rounded-2xl border border-indigo-200 shadow-xs p-4 space-y-3">
-                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-100">
-                        <div>
-                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Usulan Calon Reviewer dari Dosen Pengusul</span>
-                            <h3 class="text-sm font-extrabold text-slate-900">{{ $reviewerApplicants->count() }} Pendaftar Reviewer Menunggu Persetujuan</h3>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        @foreach($reviewerApplicants as $calon)
-                            <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                                <div class="space-y-0.5">
-                                    <p class="font-extrabold text-slate-900">{{ $calon->name }}</p>
-                                    <p class="text-[11px] text-slate-600">{{ $calon->prodi?->nama_prodi ?? '-' }} ({{ $calon->fakultas?->nama_fakultas ?? '-' }})</p>
-                                    <p class="text-[11px] font-bold text-indigo-800">Rumpun: {{ $calon->rumpun_ilmu }} &bull; Bidang: {{ $calon->bidang_keahlian }}</p>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <form method="POST" action="{{ route('admin.reviewer-assignment.approve-applicant', $calon) }}">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] cursor-pointer">
-                                            Setujui Reviewer
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ route('admin.reviewer-assignment.reject-applicant', $calon) }}">
-                                        @csrf
-                                        <button type="submit" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-bold text-[11px] cursor-pointer">
-                                            Tolak
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
             <!-- Toolbar Filter Divisi & Status Kompak -->
             <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
                 <div class="flex flex-wrap items-center gap-1.5">
@@ -504,24 +467,24 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Pilih Reviewer 1 (Diprioritaskan Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
+                            Pilih Reviewer 1 (Wajib Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
                         </label>
                         <select name="reviewer_1_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="">-- Pilih Reviewer 1 (Non-CoI) --</option>
+                            <option value="">-- Pilih Reviewer 1 (Sesuai Bidang & Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - ${r.match_reason ?? 'Sesuai Bidang'}`"></option>
                             </template>
                         </select>
                     </div>
 
                     <div x-show="reviewerCount == 2">
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Pilih Reviewer 2 (Diprioritaskan Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
+                            Pilih Reviewer 2 (Wajib Sesuai Bidang &amp; Non-CoI) <span class="text-red-500">*</span>
                         </label>
                         <select name="reviewer_2_id" :required="reviewerCount == 2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="">-- Pilih Reviewer 2 (Non-CoI) --</option>
+                            <option value="">-- Pilih Reviewer 2 (Sesuai Bidang & Non-CoI) --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - ${r.match_reason ?? 'Sesuai Bidang'}`"></option>
                             </template>
                         </select>
                     </div>
@@ -574,12 +537,12 @@
                     @csrf
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Pilih Reviewer 3 (Penengah) <span class="text-red-500">*</span>
+                            Pilih Reviewer 3 (Penengah, Wajib Sesuai Bidang) <span class="text-red-500">*</span>
                         </label>
                         <select name="adjudicator_id" required class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none">
                             <option value="">-- Pilih Reviewer 3 --</option>
                             <template x-for="r in eligibleReviewers" :key="r.id">
-                                <option :value="r.id" x-text="`${r.sesuai_bidang ? '[Sesuai Bidang]' : '[Lintas Bidang]'} ${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - SINTA: ${r.sinta_score ?? '0'}`"></option>
+                                <option :value="r.id" x-text="`${r.name} • ${r.prodi ?? r.fakultas ?? '-'} (${r.rumpun ?? '-'}) - ${r.match_reason ?? 'Sesuai Bidang'}`"></option>
                             </template>
                         </select>
                     </div>

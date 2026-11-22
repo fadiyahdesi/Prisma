@@ -15,6 +15,7 @@ use App\Services\ContractAndDisbursementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic09ContractAndDisbursementTest extends TestCase
@@ -25,6 +26,7 @@ class Epic09ContractAndDisbursementTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
         Storage::fake('public');
     }
 

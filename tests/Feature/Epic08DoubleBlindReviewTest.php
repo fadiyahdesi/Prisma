@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\PpmPenugasanReviewer;
 use App\Models\PpmPeriodeHibah;
+use App\Models\Role;
 use App\Models\PpmSkemaBima;
 use App\Models\PpmUsulan;
 use App\Models\User;
 use App\Services\ReviewEngineService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic08DoubleBlindReviewTest extends TestCase
@@ -19,6 +21,7 @@ class Epic08DoubleBlindReviewTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
     }
 
     private function createSampleProposal(): PpmUsulan
@@ -50,6 +53,29 @@ class Epic08DoubleBlindReviewTest extends TestCase
             'status' => 'In_review',
             'submitted_at' => now(),
         ]);
+    }
+
+    private function createOutOfFieldReviewer(): User
+    {
+        $fppReviewer = User::where('email', 'reviewer3@harkatnegeri.ac.id')->first();
+        $reviewerRoleId = Role::where('name', 'Reviewer')->value('id');
+
+        $reviewer = User::factory()->create([
+            'name' => 'Reviewer Lintas Bidang',
+            'nidn_nim' => 'OUT-OF-FIELD-01',
+            'id_fakultas' => $fppReviewer->id_fakultas,
+            'id_prodi' => null,
+            'rumpun_ilmu' => 'Sosial & Humaniora',
+            'bidang_keahlian' => 'Akuntansi Keuangan dan Perpajakan',
+            'reviewer_application_status' => 'approved',
+            'is_otp_verified' => true,
+        ]);
+
+        if ($reviewerRoleId) {
+            $reviewer->roles()->sync([$reviewerRoleId]);
+        }
+
+        return $reviewer;
     }
 
     /** @test */
@@ -141,6 +167,51 @@ class Epic08DoubleBlindReviewTest extends TestCase
             'id_reviewer' => $fppReviewer->id,
             'peran_reviewer' => 'reviewer_2',
             'status_penugasan' => 'assigned',
+        ]);
+    }
+
+    /** @test */
+    public function us_08_1_eligible_reviewers_exclude_out_of_field_candidates()
+    {
+        $admin = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $usulan = $this->createSampleProposal();
+        $outOfField = $this->createOutOfFieldReviewer();
+        $inField = User::where('email', 'reviewer2@harkatnegeri.ac.id')->first();
+
+        $response = $this->actingAs($admin)
+            ->withSession(['is_otp_verified' => true])
+            ->get(route('admin.reviewer-assignment.eligible', $usulan));
+
+        $response->assertStatus(200);
+        $eligibleIds = collect($response->json('reviewers'))->pluck('id')->all();
+
+        $this->assertNotContains($outOfField->id, $eligibleIds, 'Reviewer lintas bidang tidak boleh ditawarkan.');
+        $this->assertContains($inField->id, $eligibleIds, 'Reviewer sesuai bidang harus tetap tersedia.');
+    }
+
+    /** @test */
+    public function us_08_1_assign_rejects_reviewer_outside_proposal_field()
+    {
+        $admin = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $usulan = $this->createSampleProposal();
+        $outOfField = $this->createOutOfFieldReviewer();
+        $inField = User::where('email', 'reviewer2@harkatnegeri.ac.id')->first();
+
+        $response = $this->actingAs($admin)
+            ->withSession(['is_otp_verified' => true])
+            ->post(route('admin.reviewer-assignment.assign', $usulan), [
+                'reviewer_1_id' => $outOfField->id,
+                'reviewer_2_id' => $inField->id,
+            ]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('ppm_penugasan_reviewer', [
+            'id_usulan' => $usulan->id,
+            'id_reviewer' => $outOfField->id,
+        ]);
+        $this->assertDatabaseMissing('ppm_penugasan_reviewer', [
+            'id_usulan' => $usulan->id,
+            'id_reviewer' => $inField->id,
         ]);
     }
 
@@ -280,6 +351,8 @@ class Epic08DoubleBlindReviewTest extends TestCase
             'email' => 'reviewer_adjudicator@harkatnegeri.ac.id',
             'id_fakultas' => 4,
             'id_prodi' => 17,
+            'rumpun_ilmu' => 'Teknik',
+            'bidang_keahlian' => 'Sistem Sensor Cerdas dan Pertanian Presisi',
         ]);
         $r3->roles()->attach($reviewerRole->id);
 
@@ -400,14 +473,14 @@ class Epic08DoubleBlindReviewTest extends TestCase
         $adminResponse->assertDontSee(route('admin.ranking.index'));
         $adminResponse->assertDontSee(route('reviewer.penilaian.index'));
 
-        // 3. Kepala P3M sees Pemeringkatan & Kuota, but not Penugasan Reviewer
+        // 3. Kepala P3M sees Pemeringkatan & Kuota, termasuk Penugasan Reviewer (reviewer.assign)
         $kepalaResponse = $this->actingAs($kepala)
             ->withSession(['is_otp_verified' => true])
             ->get(route('dashboard'));
 
         $kepalaResponse->assertStatus(200);
         $kepalaResponse->assertSee(route('admin.ranking.index'));
-        $kepalaResponse->assertDontSee(route('admin.reviewer-assignment.index'));
+        $kepalaResponse->assertSee(route('admin.reviewer-assignment.index'));
         $kepalaResponse->assertDontSee(route('reviewer.penilaian.index'));
     }
 }

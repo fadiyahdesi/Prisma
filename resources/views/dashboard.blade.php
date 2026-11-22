@@ -23,14 +23,14 @@
                     </button>
 
                     <div>
-                        <h1 class="font-extrabold text-xl text-slate-900 leading-tight">PRISMA Dashboard</h1>
-                        <p class="text-xs font-semibold text-slate-500">Universitas Harkat Negeri &bull; Alur Kerja Peran <strong class="text-blue-700">{{ $activeRole }}</strong></p>
+                        <h1 class="font-extrabold text-xl text-slate-900 leading-tight">PRISMA DASHBOARD</h1>
+                        <p class="text-xs font-semibold text-slate-500">Universitas Harkat Negeri</strong></p>
                     </div>
                 </div>
 
                 <!-- User Status & Quick Actions -->
                 <div class="flex items-center gap-3">
-                    @if($canSyncSinta)
+                    <!-- @if($canSyncSinta)
                     <a href="{{ route('sinta.profile') }}" class="px-4 py-2.5 rounded-xl bg-blue-100 border border-blue-300 text-blue-900 hover:bg-blue-700 hover:text-white text-xs font-extrabold transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span class="hidden sm:inline">Sinkronisasi SINTA (US-03.1)</span>
@@ -42,7 +42,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             <span class="hidden sm:inline">Audit Logs (US-02.4)</span>
                         </a>
-                    @endif
+                    @endif -->
 
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
@@ -86,9 +86,9 @@
 
 
         <!-- EPIC 04: Live Countdown Timer & Server Time Scheduler Banner (US-04.2) -->
-        <div class="bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl space-y-6 relative overflow-hidden">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                <div class="space-y-2">
+        <!-- <div class="bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl space-y-6 relative overflow-hidden"> -->
+            <!-- <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                    <div class="space-y-2">
                     <div class="flex items-center gap-2">
                         <span class="px-3 py-1 rounded-md text-xs font-black uppercase tracking-wider {{ ($countdownData['is_open'] ?? false) ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40' }}">
                             {{ $countdownData['status_label'] ?? 'PERIODE USULAN' }}
@@ -106,7 +106,7 @@
                     </p>
                 </div>
 
-                <!-- Live Countdown Timer Component -->
+                Live Countdown Timer Component 
                 <div class="flex items-center gap-3 shrink-0">
                     <div class="flex items-center gap-2 bg-white/10 p-3 sm:p-4 rounded-2xl border border-white/20 backdrop-blur-md">
                         <div class="text-center px-2">
@@ -130,10 +130,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Admin Shortcuts for Skema & Periode (If Admin P3M / Superadmin / Kepala P3M) -->
-            @if($canManageEpic04)
+            <!-- @if($canManageEpic04)
                 <div class="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
                     <span class="font-bold text-blue-300">Akses Pengelola P3M (EPIC 04):</span>
                     <div class="flex items-center gap-2">
@@ -145,10 +145,10 @@
                         </a>
                     </div>
                 </div>
-            @endif
-        </div>
+            @endif -->
+        <!-- </div> -->
 
-        <div id="countdownConfig" data-target-timestamp="{{ $countdownData['target_timestamp'] ?? 0 }}" hidden></div>
+        <!-- <div id="countdownConfig" data-target-timestamp="{{ $countdownData['target_timestamp'] ?? 0 }}" hidden></div>
         <script>
             (function() {
             let targetTimestamp = Number(document.getElementById('countdownConfig')?.dataset.targetTimestamp || 0);
@@ -180,7 +180,7 @@
                 setInterval(updateTimer, 1000);
                 updateTimer();
             })();
-        </script>
+        </script> -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl">
                 <div class="flex items-start justify-between gap-5">
@@ -343,47 +343,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <!-- Form Pengusulan Diri sebagai Calon Reviewer (Terekam ke DB & Divisi) -->
-                    <div class="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-4">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700">Rekam Data Pengusulan Reviewer</span>
-                                <h5 class="text-sm font-extrabold text-indigo-950">Pengusulan Diri / Pemetaan Bidang Calon Reviewer</h5>
-                                <p class="text-xs text-slate-600">Daftarkan rumpun ilmu dan bidang kepakaran Anda agar terekam di database untuk penugasan Reviewer oleh Admin / Divisi sesuai bidang.</p>
-                            </div>
-                            @if($user->reviewer_application_status)
-                                <span class="px-3 py-1 rounded-full text-xs font-black {{ $user->reviewer_application_status === 'approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300' }}">
-                                    Status Reviewer: {{ strtoupper($user->reviewer_application_status) }}
-                                </span>
-                            @endif
-                        </div>
-                        <form method="POST" action="{{ route('reviewer.apply') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                            @csrf
-                            <div class="md:col-span-4">
-                                <label class="block text-[11px] font-extrabold text-slate-700 mb-1">Rumpun Ilmu Utama</label>
-                                <select name="rumpun_ilmu" required class="w-full h-9 px-3 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800">
-                                    @php
-                                        $curRumpun = $user->rumpun_ilmu ?: \App\Services\RumpunIlmuService::resolveRumpunFromProdi($user->prodi?->nama_prodi);
-                                    @endphp
-                                    @foreach(['Teknologi & Rekayasa', 'Sains & Matematika', 'Kesehatan & Farmasi', 'Sosial & Humaniora'] as $rmp)
-                                        <option value="{{ $rmp }}" @selected($curRumpun === $rmp)>{{ $rmp }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="md:col-span-5">
-                                <label class="block text-[11px] font-extrabold text-slate-700 mb-1">Bidang Keahlian / Kepakaran Spesifik</label>
-                                <input type="text" name="bidang_keahlian" required value="{{ old('bidang_keahlian', $user->bidang_keahlian ?: ($user->prodi?->nama_prodi ?? '')) }}"
-                                       placeholder="Contoh: Kecerdasan Buatan, Farmasi Klinis, Akuntansi..."
-                                       class="w-full h-9 px-3 rounded-xl bg-white border border-slate-300 text-xs font-semibold text-slate-900">
-                            </div>
-                            <div class="md:col-span-3">
-                                <button type="submit" class="w-full h-9 px-4 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer">
-                                    Simpan Usulan Reviewer &rarr;
-                                </button>
-                            </div>
-                        </form>
-                    </div>
 
                     {{-- Info Undang Anggota Tim --}}
                     <div class="p-5 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col md:flex-row md:items-start gap-4">

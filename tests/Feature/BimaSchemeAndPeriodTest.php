@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\PpmPeriodeHibah;
 use App\Models\PpmSkemaBima;
 use App\Models\User;
 use App\Services\BimaPeriodService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class BimaSchemeAndPeriodTest extends TestCase
@@ -18,12 +20,24 @@ class BimaSchemeAndPeriodTest extends TestCase
     {
         parent::setUp();
         $this->seed();
+        $this->seed(TestingDemoAccountsSeeder::class);
+    }
+
+    private function createAdmin(array $attributes = []): User
+    {
+        $user = User::factory()->create($attributes);
+        $roleId = Role::where('name', 'Admin P3M')->value('id');
+        if ($roleId) {
+            $user->roles()->sync([$roleId]);
+        }
+
+        return $user;
     }
 
     #[Test]
     public function admin_can_view_and_create_bima_scheme(): void
     {
-        $user = User::factory()->create(['is_otp_verified' => true, 'sinta_score_3yr' => 200, 'nidn_nim' => '0699999001']);
+        $user = $this->createAdmin(['is_otp_verified' => true, 'sinta_score_3yr' => 200, 'nidn_nim' => '0699999001']);
 
         $response = $this->actingAs($user)->get(route('admin.skema-bima.index'));
         $response->assertStatus(200);
@@ -50,7 +64,7 @@ class BimaSchemeAndPeriodTest extends TestCase
     #[Test]
     public function admin_can_toggle_scheme_active_status(): void
     {
-        $user = User::factory()->create(['is_otp_verified' => true, 'nidn_nim' => '0699999002']);
+        $user = $this->createAdmin(['is_otp_verified' => true, 'nidn_nim' => '0699999002']);
         $scheme = PpmSkemaBima::where('kode_skema', 'PDP')->first();
 
         $this->assertTrue($scheme->is_active);
@@ -64,7 +78,7 @@ class BimaSchemeAndPeriodTest extends TestCase
     #[Test]
     public function rubric_weight_validation_rejects_sum_not_100_percent(): void
     {
-        $user = User::factory()->create(['is_otp_verified' => true, 'nidn_nim' => '0699999003']);
+        $user = $this->createAdmin(['is_otp_verified' => true, 'nidn_nim' => '0699999003']);
         $scheme = PpmSkemaBima::where('kode_skema', 'PDP')->first();
 
         $response = $this->actingAs($user)->post(route('admin.skema-bima.update-rubrik', $scheme), [
@@ -89,7 +103,7 @@ class BimaSchemeAndPeriodTest extends TestCase
     #[Test]
     public function rubric_weight_validation_accepts_sum_equal_to_100_percent(): void
     {
-        $user = User::factory()->create(['is_otp_verified' => true, 'nidn_nim' => '0699999004']);
+        $user = $this->createAdmin(['is_otp_verified' => true, 'nidn_nim' => '0699999004']);
         $scheme = PpmSkemaBima::where('kode_skema', 'PDP')->first();
 
         $response = $this->actingAs($user)->post(route('admin.skema-bima.update-rubrik', $scheme), [
@@ -123,7 +137,7 @@ class BimaSchemeAndPeriodTest extends TestCase
     #[Test]
     public function admin_can_create_periode_hibah_and_scheduler_calculates_countdown(): void
     {
-        $user = User::factory()->create(['is_otp_verified' => true, 'nidn_nim' => '0699999005']);
+        $user = $this->createAdmin(['is_otp_verified' => true, 'nidn_nim' => '0699999005']);
 
         $response = $this->actingAs($user)->post(route('admin.periode-hibah.store'), [
             'tahun_akademik' => '2026/2027',

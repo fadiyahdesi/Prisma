@@ -18,6 +18,7 @@ use App\Notifications\SemhasScheduledNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Database\Seeders\TestingDemoAccountsSeeder;
 use Tests\TestCase;
 
 class Epic10MonitoringAndCompletionTest extends TestCase
@@ -28,6 +29,7 @@ class Epic10MonitoringAndCompletionTest extends TestCase
     {
         parent::setUp();
         $this->artisan('db:seed');
+        $this->seed(TestingDemoAccountsSeeder::class);
         Storage::fake('public');
     }
 
@@ -256,7 +258,7 @@ class Epic10MonitoringAndCompletionTest extends TestCase
     public function test_us_10_3_p3m_can_schedule_semhas_and_record_examiner_grades()
     {
         extract($this->createOngoingProposal());
-        $adminP3m = User::where('email', 'adminp3m@harkatnegeri.ac.id')->first();
+        $adminP3m = User::where('email', 'kepalap3m@harkatnegeri.ac.id')->first();
         $reviewer = User::where('email', 'reviewer@harkatnegeri.ac.id')->first();
         // 0. Admin visits Semhas index page
         $indexResponse = $this->actingAs($adminP3m)
