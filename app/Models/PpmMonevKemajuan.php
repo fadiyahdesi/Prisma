@@ -20,6 +20,7 @@ class PpmMonevKemajuan extends Model
         'persentase_kemajuan',
         'id_reviewer',
         'skor_monev',
+        'penilaian',
         'catatan_evaluasi',
         'rekomendasi',
         'status',
@@ -31,6 +32,7 @@ class PpmMonevKemajuan extends Model
         return [
             'persentase_kemajuan' => 'decimal:2',
             'skor_monev' => 'decimal:2',
+            'penilaian' => 'array',
             'evaluated_at' => 'datetime',
         ];
     }

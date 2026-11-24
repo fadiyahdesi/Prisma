@@ -152,13 +152,74 @@
                             @endif
                         </div>
 
-                        <form action="{{ route('reviewer.monev.store', $monev) }}" method="POST" class="space-y-4 text-xs">
+                        <form id="form-monev" action="{{ route('reviewer.monev.store', $monev) }}" method="POST" class="space-y-4 text-xs">
                             @csrf
+                            <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-4">
+                                <div class="flex items-start justify-between gap-3 pb-2 border-b border-purple-200">
+                                    <div>
+                                        <h4 class="font-extrabold text-slate-900 text-xs">Indikator Penilaian Evaluasi Keberlanjutan</h4>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">{{ $pedoman['nama_skema'] }}</p>
+                                        <p class="text-[9px] text-slate-400">{{ $pedoman['sumber'] }}</p>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <span class="block text-[9px] font-bold text-purple-700 uppercase">Skor terhitung</span>
+                                        <span id="skor_terhitung" class="text-lg font-black text-purple-900">0.00</span>
+                                    </div>
+                                </div>
+
+                                @foreach($pedoman['komponen'] as $ck => $komponen)
+                                    <div class="space-y-2">
+                                        <p class="font-extrabold text-slate-800 text-[11px]">
+                                            {{ $loop->iteration }}. {{ $komponen['nama'] }}
+                                            <span class="font-bold text-purple-700">(maks. {{ $komponen['bobot_maks'] }})</span>
+                                        </p>
+                                        <select name="penilaian[{{ $ck }}][status]"
+                                                data-status
+                                                data-max="{{ $komponen['bobot_maks'] }}"
+                                                class="w-full px-3 py-2 rounded-xl bg-white border border-purple-200 text-[11px] font-bold focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                            <option value="">-- Pilih Status --</option>
+                                            @foreach($komponen['status'] as $label => $nilai)
+                                                <option value="{{ $nilai }}"
+                                                        {{ (string) old("penilaian.{$ck}.status", $penilaianAwal[$ck]['status'] ?? '') === (string) $nilai ? 'selected' : '' }}>
+                                                    {{ $label }} (Skor {{ $nilai }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            @foreach($komponen['items'] as $ik => $item)
+                                                <div>
+                                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">
+                                                        {{ $item['nama'] }} <span class="text-purple-700">(bobot {{ $item['bobot'] }}%)</span>
+                                                    </label>
+                                                    <select name="penilaian[{{ $ck }}][items][{{ $ik }}]"
+                                                            data-item
+                                                            data-bobot="{{ $item['bobot'] }}"
+                                                            class="w-full px-2.5 py-2 rounded-xl bg-white border border-purple-200 text-[11px] font-semibold focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                                        <option value="">-- Pilih Nilai --</option>
+                                                        @foreach($item['penilaian'] as $label => $nilai)
+                                                            <option value="{{ $nilai }}"
+                                                                    {{ (string) old("penilaian.{$ck}.items.{$ik}", $penilaianAwal[$ck]['items'][$ik] ?? '') === (string) $nilai ? 'selected' : '' }}>
+                                                                {{ $label }} ({{ $nilai }}%)
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                <p class="text-[10px] text-slate-500 leading-relaxed">
+                                    Skor akhir = Σ (status komponen × rata-rata bobot item yang terpenuhi). Field skor di bawah akan diisi otomatis setelah status komponen dipilih.
+                                </p>
+                            </div>
+
                             <div>
                                 <label class="block font-bold text-slate-700 mb-1">
                                     Skor Evaluasi Kemajuan (0 - 100) *
                                 </label>
-                                <input type="number" name="skor_monev" step="0.1" min="0" max="100" value="{{ old('skor_monev', $monev->skor_monev) }}" required placeholder="Contoh: 85.5" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-purple-500 focus:bg-white focus:outline-none">
+                                <input type="number" id="skor_monev" name="skor_monev" step="0.01" min="0" max="100" value="{{ old('skor_monev', $monev->skor_monev) }}" required placeholder="Contoh: 85.5" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-purple-500 focus:bg-white focus:outline-none">
                                 <p class="text-[10px] text-slate-400 mt-1">Passing grade rekomendasi lanjut minimal adalah 70.0.</p>
                             </div>
 
@@ -198,5 +259,51 @@
         </main>
     </div>
 </div>
+<script>
+(function () {
+    const form = document.getElementById('form-monev');
+    const skorInput = document.getElementById('skor_monev');
+    const skorTeks = document.getElementById('skor_terhitung');
+    if (!form || !skorInput || !skorTeks) return;
+
+    function hitung() {
+        const komponen = new Map();
+
+        form.querySelectorAll('[data-status]').forEach(function (select) {
+            const status = parseFloat(select.value || '0');
+            const bobot = 0;
+            komponen.set(select, { status: status, bobot: bobot, bobotPenuh: 0 });
+        });
+
+        form.querySelectorAll('[data-item]').forEach(function (select) {
+            const statusSelect = select.closest('.space-y-2').querySelector('[data-status]');
+            if (!statusSelect || !komponen.has(statusSelect)) return;
+            const data = komponen.get(statusSelect);
+            const nilai = parseFloat(select.value || '0');
+            const bobot = parseFloat(select.dataset.bobot || '0');
+            data.bobot += (nilai / 100) * bobot;
+            data.bobotPenuh += bobot;
+        });
+
+        let total = 0;
+        komponen.forEach(function (data) {
+            if (data.bobotPenuh <= 0) return;
+            total += data.status * (data.bobot / data.bobotPenuh);
+        });
+
+        const hasil = Math.round(Math.min(100, Math.max(0, total)) * 100) / 100;
+        skorTeks.textContent = hasil.toFixed(2);
+        if ([...form.querySelectorAll('[data-status]')].some(function (s) { return s.value !== ''; })) {
+            skorInput.value = hasil.toFixed(2);
+        }
+    }
+
+    form.querySelectorAll('select').forEach(function (select) {
+        select.addEventListener('change', hitung);
+    });
+    hitung();
+})();
+</script>
+
 @endsection
 

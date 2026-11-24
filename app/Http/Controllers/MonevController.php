@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PpmMonevKemajuan;
 use App\Models\PpmUsulan;
 use App\Services\MonitoringAndCompletionService;
+use App\Support\PedomanKriteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -118,7 +119,11 @@ class MonevController extends Controller
 
         $monev->loadMissing(['usulan.pengusul.fakultas', 'usulan.pengusul.prodi', 'usulan.skema', 'usulan.logbook', 'reviewer']);
 
-        return view('reviewer.monev.show', compact('monev'));
+        $kodeSkema = $monev->usulan?->skema?->kode_skema ?? '';
+        $pedoman = PedomanKriteria::monev($kodeSkema);
+        $penilaianAwal = PedomanKriteria::defaultPenilaian($kodeSkema, $monev->penilaian);
+
+        return view('reviewer.monev.show', compact('monev', 'pedoman', 'penilaianAwal'));
     }
 
     /**
@@ -129,15 +134,50 @@ class MonevController extends Controller
         $user = Auth::user();
         abort_unless($user->hasPermission('monev.evaluate'), 403, 'Akses ditolak.');
 
-        $validated = $request->validate([
-            'skor_monev' => 'required|numeric|min:0|max:100',
+        $kodeSkema = $monev->usulan?->skema?->kode_skema ?? '';
+        $pedoman = PedomanKriteria::monev($kodeSkema);
+
+        $rules = [
+            'skor_monev' => 'nullable|numeric|min:0|max:100',
+            'penilaian' => 'nullable|array',
             'rekomendasi' => 'required|in:Lanjut,Perbaikan,Ditunda',
             'catatan_evaluasi' => 'required|string|min:10|max:2000',
-        ], [
-            'skor_monev.required' => 'Skor monev wajib diisi (0-100).',
+        ];
+        $messages = [
             'rekomendasi.required' => 'Rekomendasi kelanjutan wajib dipilih (Lanjut, Perbaikan, atau Ditunda).',
             'catatan_evaluasi.required' => 'Catatan evaluasi kemajuan wajib diisi minimal 10 karakter.',
-        ]);
+        ];
+
+        foreach ($pedoman['komponen'] as $ck => $komponen) {
+            $rules["penilaian.{$ck}.status"] = 'nullable|numeric|min:0|max:' . $komponen['bobot_maks'];
+            $messages["penilaian.{$ck}.status.numeric"] = "Status komponen '{$komponen['nama']}' harus berupa angka.";
+
+            foreach ($komponen['items'] as $ik => $item) {
+                $rules["penilaian.{$ck}.items.{$ik}"] = 'nullable|numeric|min:0|max:100';
+                $messages["penilaian.{$ck}.items.{$ik}.numeric"] = "Nilai item '{$item['nama']}' harus berupa angka.";
+            }
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        $adaPenilaian = false;
+        foreach ($validated['penilaian'] ?? [] as $komponen) {
+            if (array_key_exists('status', $komponen) && $komponen['status'] !== null && $komponen['status'] !== '') {
+                $adaPenilaian = true;
+                break;
+            }
+        }
+
+        if ($adaPenilaian) {
+            $validated['skor_monev'] = PedomanKriteria::hitungSkorMonev($kodeSkema, $validated['penilaian']);
+        } else {
+            $request->validate([
+                'skor_monev' => 'required|numeric|min:0|max:100',
+            ], [
+                'skor_monev.required' => 'Skor monev wajib diisi (0-100) atau lengkapi indikator penilaian terstruktur.',
+            ]);
+            $validated['penilaian'] = $monev->penilaian;
+        }
 
         MonitoringAndCompletionService::evaluateMonev($monev, $validated, $user->id);
 

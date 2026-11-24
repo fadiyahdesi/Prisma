@@ -18,7 +18,7 @@
                     </a>
                     <div>
                         <h1 class="font-extrabold text-xl text-slate-900 leading-tight">Pengajuan Klaim Reward Insentif</h1>
-                        <p class="text-xs font-semibold text-slate-500">Matriks SK Rektor UHN &amp; Mesin Distribusi Multi-Penulis 100% (US-11.3 &amp; US-11.4)</p>
+                        <p class="text-xs font-semibold text-slate-500">Pedoman Dispo PPM 2026 &amp; Mesin Distribusi Multi-Penulis 100% (US-11.3 &amp; US-11.4)</p>
                     </div>
                 </div>
             </div>
@@ -138,6 +138,50 @@
                     </ul>
                 </div>
             @endif
+
+            <!-- Pedoman resmi Dispo PPM 2026 -->
+            <div class="mb-6 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h2 class="font-extrabold text-sm text-slate-900">Matriks Kriteria &amp; Besaran Reward Luaran 2026</h2>
+                        <p class="text-[11px] text-slate-500">{{ $sumberReward }}</p>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 self-start">
+                        Berlaku untuk ajuan baru
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[11px]">
+                        <thead class="bg-slate-50 text-slate-500 uppercase tracking-wider">
+                            <tr>
+                                <th class="text-left font-bold px-4 py-2.5">Kategori</th>
+                                <th class="text-left font-bold px-4 py-2.5">Besaran</th>
+                                <th class="text-left font-bold px-4 py-2.5">Batas Klaim</th>
+                                <th class="text-left font-bold px-4 py-2.5">Syarat Ringkas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($pedomanReward as $row)
+                                <tr class="hover:bg-slate-50/70">
+                                    <td class="px-4 py-2.5 font-bold text-slate-800">
+                                        {{ $row['nama'] }}
+                                        @if(!empty($row['poin']))
+                                            <span class="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">{{ $row['poin'] }} poin</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2.5 font-extrabold text-emerald-700 whitespace-nowrap">Rp {{ number_format($row['nominal'], 0, ',', '.') }}</td>
+                                    <td class="px-4 py-2.5 text-slate-600 whitespace-nowrap">{{ $row['batas'] }}</td>
+                                    <td class="px-4 py-2.5 text-slate-600">{{ $row['syarat'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-600 leading-relaxed">
+                    <p><span class="font-extrabold text-slate-800">Prioritas indeks:</span> {{ implode(' → ', $urutanIndeks) }}. Jika satu artikel terindeks lebih dari satu database, yang diakui adalah peringkat tertinggi.</p>
+                    <p class="mt-1"><span class="font-extrabold text-slate-800">HKI:</span> Ajuan baru hanya untuk Paten dan Paten Sederhana berstatus <em>Diberi</em>. Hak Cipta, Desain Industri, dan Merk Dagang tetap tampil pada arsip klaim lama.</p>
+                </div>
+            </div>
 
             <form action="{{ route('reward.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf

@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\DisbursementTermin2Notification;
 use App\Notifications\MonevEvaluatedNotification;
 use App\Notifications\SemhasScheduledNotification;
+use App\Support\PedomanKriteria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -253,6 +254,58 @@ class Epic10MonitoringAndCompletionTest extends TestCase
             'notifiable_id' => $dosen->id,
             'type' => MonevEvaluatedNotification::class,
         ]);
+    }
+
+    public function test_reviewer_monev_menyimpan_penilaian_terstruktur_dan_skor_otomatis(): void
+    {
+        extract($this->createOngoingProposal(40000000.0));
+        $reviewer = User::where('email', 'reviewer@harkatnegeri.ac.id')->first();
+
+        $monev = PpmMonevKemajuan::create([
+            'id_usulan' => $usulan->id,
+            'file_laporan_kemajuan' => 'monev/sample_kemajuan.pdf',
+            'file_sptb_70' => 'monev/sample_sptb70.pdf',
+            'persentase_kemajuan' => 70.0,
+            'ringkasan_kemajuan' => 'Capaian luaran sesuai target dan mitra mulai terlibat.',
+            'status' => 'submitted',
+        ]);
+
+        $kodeSkema = $usulan->skema?->kode_skema ?? '';
+        $pedoman = PedomanKriteria::monev($kodeSkema);
+        $penilaian = [];
+
+        foreach ($pedoman['komponen'] as $ck => $komponen) {
+            $nilaiStatus = array_values($komponen['status']);
+            $penilaian[$ck]['status'] = $nilaiStatus[0];
+
+            foreach ($komponen['items'] as $ik => $item) {
+                $nilaiItem = array_values($item['penilaian']);
+                $penilaian[$ck]['items'][$ik] = $nilaiItem[1] ?? $nilaiItem[0];
+            }
+        }
+
+        $skorDiharapkan = PedomanKriteria::hitungSkorMonev($kodeSkema, $penilaian);
+
+        $this->actingAs($reviewer)
+            ->withSession(['is_otp_verified' => true])
+            ->get(route('reviewer.monev.show', $monev))
+            ->assertOk()
+            ->assertSee('Indikator Penilaian Evaluasi Keberlanjutan');
+
+        $this->actingAs($reviewer)
+            ->withSession(['is_otp_verified' => true])
+            ->post(route('reviewer.monev.store', $monev), [
+                'skor_monev' => 0,
+                'penilaian' => $penilaian,
+                'rekomendasi' => 'Lanjut',
+                'catatan_evaluasi' => 'Penilaian terstruktur sesuai indikator keberlanjutan penelitian.',
+            ])
+            ->assertRedirect(route('reviewer.monev.index'));
+
+        $monev->refresh();
+        $this->assertEquals($skorDiharapkan, (float) $monev->skor_monev);
+        $this->assertSame($penilaian, $monev->penilaian);
+        $this->assertSame('evaluated', $monev->status);
     }
 
     public function test_us_10_3_p3m_can_schedule_semhas_and_record_examiner_grades()

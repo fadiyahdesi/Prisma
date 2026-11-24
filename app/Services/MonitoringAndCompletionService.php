@@ -105,6 +105,7 @@ class MonitoringAndCompletionService
         $monev->update([
             'id_reviewer' => $reviewerId,
             'skor_monev' => (float) $data['skor_monev'],
+            'penilaian' => $data['penilaian'] ?? $monev->penilaian,
             'catatan_evaluasi' => trim($data['catatan_evaluasi']),
             'rekomendasi' => $data['rekomendasi'], // Lanjut, Perbaikan, Ditunda
             'status' => 'evaluated',

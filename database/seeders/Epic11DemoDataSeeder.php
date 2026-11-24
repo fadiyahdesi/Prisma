@@ -6,8 +6,8 @@ use App\Models\PpmHki;
 use App\Models\PpmKlaimReward;
 use App\Models\PpmPublikasiJurnal;
 use App\Models\PpmRewardDistribusi;
-use App\Models\RefTarifRewardSk;
 use App\Models\User;
+use App\Support\PedomanKriteria;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -31,34 +31,8 @@ class Epic11DemoDataSeeder extends Seeder
         $pdfService->generateRewardKesepakatan([], 'surat_pernyataan_reward/sample_kesepakatan.pdf');
         $pdfService->generateBuktiTransfer([], 'bukti_transfer_reward/sample_transfer.pdf');
 
-        // 1. Matriks Tarif SK Rektor UHN 2026
-        $rates = [
-            // Publikasi
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Scopus Q1', 'nominal_insentif' => 35000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Bereputasi Q1 (SJR/Impact Factor Tinggi)'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Scopus Q2', 'nominal_insentif' => 25000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Bereputasi Q2'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Scopus Q3', 'nominal_insentif' => 15000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Bereputasi Q3'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Scopus Q4', 'nominal_insentif' => 10000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Bereputasi Q4'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'SINTA 1', 'nominal_insentif' => 12000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional Terakreditasi SINTA 1'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'SINTA 2', 'nominal_insentif' => 8000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional Terakreditasi SINTA 2'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'SINTA 3', 'nominal_insentif' => 5000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional Terakreditasi SINTA 3'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'SINTA 4', 'nominal_insentif' => 3000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional Terakreditasi SINTA 4'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Internasional Terindeks Lainnya', 'nominal_insentif' => 7500000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Non-Q'],
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Nasional Terakreditasi', 'nominal_insentif' => 2500000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional Terakreditasi Lainnya'],
-
-            // HKI
-            ['kategori' => 'HKI', 'sub_kategori' => 'Paten', 'nominal_insentif' => 40000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Paten Biasa Granted'],
-            ['kategori' => 'HKI', 'sub_kategori' => 'Paten Sederhana', 'nominal_insentif' => 20000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Paten Sederhana Granted'],
-            ['kategori' => 'HKI', 'sub_kategori' => 'Hak Cipta', 'nominal_insentif' => 5000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Sertifikat Pencatatan Ciptaan DJKI'],
-            ['kategori' => 'HKI', 'sub_kategori' => 'Desain Industri', 'nominal_insentif' => 10000000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Desain Industri Terdaftar'],
-            ['kategori' => 'HKI', 'sub_kategori' => 'Merk Dagang', 'nominal_insentif' => 7500000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Merk Dagang Terdaftar'],
-        ];
-
-        foreach ($rates as $r) {
-            RefTarifRewardSk::updateOrCreate(
-                ['kategori' => $r['kategori'], 'sub_kategori' => $r['sub_kategori']],
-                array_merge($r, ['is_active' => true])
-            );
-        }
+        // 1. Matriks Tarif SK Rektor UHN 2026 (sumber: Dispo PPM No. 373.03/PPM.HN/X/2026)
+        PedomanKriteria::seedTarif();
 
         // 2. Bank Publikasi Jurnal (US-11.1)
         // Paper 1: Scopus Q1 (Unclaimed)
@@ -161,7 +135,7 @@ class Epic11DemoDataSeeder extends Seeder
         );
 
         // 4. Klaim Reward & Mesin Distribusi Multi-Penulis (US-11.3 & US-11.4)
-        // Klaim 1: Paper 2 (SINTA 2 - Rp 8.000.000) -> Status: Approved_P3M, Siap Cair di Keuangan!
+        // Klaim 1: Paper 2 (SINTA 2 - nominal lama Rp 8.000.000, sengaja tidak diubah) -> Approved_P3M.
         $klaim1 = PpmKlaimReward::updateOrCreate(
             ['nomor_klaim' => 'REW/2026/09/DEMO1'],
             [
@@ -216,7 +190,7 @@ class Epic11DemoDataSeeder extends Seeder
             ]
         );
 
-        // Klaim 2: HKI 3 (Hak Cipta - Rp 5.000.000) -> Status: Submitted (In P3M Queue)
+        // Klaim 2: HKI 3 (Hak Cipta - arsip tarif lama Rp 5.000.000) -> Status: Submitted (In P3M Queue).
         $klaim2 = PpmKlaimReward::updateOrCreate(
             ['nomor_klaim' => 'REW/2026/09/DEMO2'],
             [

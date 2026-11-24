@@ -8,6 +8,7 @@ use App\Models\PpmPublikasiJurnal;
 use App\Models\PpmRewardDistribusi;
 use App\Models\RefTarifRewardSk;
 use App\Models\User;
+use App\Support\PedomanKriteria;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -19,26 +20,48 @@ class RewardDistributionService
      */
     public function getTarif(string $kategori, string $subKategori): ?RefTarifRewardSk
     {
-        $exact = RefTarifRewardSk::where('kategori', $kategori)
-            ->where('sub_kategori', $subKategori)
+        $canonical = PedomanKriteria::aliasReward($subKategori);
+
+        return RefTarifRewardSk::where('kategori', $kategori)
+            ->where('sub_kategori', $canonical)
             ->where('is_active', true)
             ->first();
+    }
 
-        if ($exact) {
-            return $exact;
+    /**
+     * Terapkan batas klaim dari Dispo PPM 2026 (per semester / per tahun).
+     */
+    private function validateBatasKlaim(User $user, string $kategori, string $subKategori): void
+    {
+        $pedoman = PedomanKriteria::rewardBySubKategori($kategori, $subKategori);
+
+        if (!$pedoman) {
+            return;
         }
 
-        $normalized = strtolower(trim($subKategori));
-        $alias = match ($normalized) {
-            'internasional', 'jurnal internasional' => 'Internasional Terindeks Lainnya',
-            'nasional tidak terakreditasi', 'jurnal nasional' => 'Nasional Terakreditasi',
-            default => null,
-        };
+        $query = PpmKlaimReward::where('user_id', $user->id)
+            ->whereIn('kategori_insentif', PedomanKriteria::aliasKeluarga($subKategori))
+            ->where('status_klaim', '!=', 'Rejected');
 
-        return $alias ? RefTarifRewardSk::where('kategori', $kategori)
-            ->where('sub_kategori', $alias)
-            ->where('is_active', true)
-            ->first() : null;
+        if ($pedoman['batas_periode'] === 'tahun') {
+            $query->whereYear('created_at', now()->year);
+        } else {
+            $semesterAwal = now()->month < 7 ? 1 : 7;
+            $semesterAkhir = $semesterAwal + 5;
+
+            $query->whereYear('created_at', now()->year)
+                ->whereMonth('created_at', '>=', $semesterAwal)
+                ->whereMonth('created_at', '<=', $semesterAkhir);
+        }
+
+        if ($query->count() >= $pedoman['batas_jumlah']) {
+            throw ValidationException::withMessages([
+                'kategori_insentif' => [
+                    "Batas klaim '{$pedoman['sub_kategori']}' tercapai: {$pedoman['batas']}. " .
+                    'Ajuan berikutnya dapat dibuat pada periode berikutnya.',
+                ],
+            ]);
+        }
     }
 
     /**
@@ -50,7 +73,7 @@ class RewardDistributionService
             $jenisKlaim = $data['jenis_klaim'];
             $publikasi = null;
             $hki = null;
-            $kategoriInsentif = $data['kategori_insentif'];
+            $kategoriInsentif = PedomanKriteria::aliasReward($data['kategori_insentif']);
 
             // 1. Anti-Duplicate Claim Check & Asset Validation
             if ($jenisKlaim === 'Publikasi') {
@@ -83,13 +106,15 @@ class RewardDistributionService
 
             // 2. Fetch Rate from SK Rektor Matrix
             $tarifRecord = $this->getTarif($jenisKlaim, $kategoriInsentif);
-            $tarifNominal = $tarifRecord ? (float) $tarifRecord->nominal_insentif : (float) ($data['total_reward'] ?? 0);
+            $tarifNominal = $tarifRecord ? (float) $tarifRecord->nominal_insentif : 0.0;
 
             if ($tarifNominal <= 0) {
                 throw ValidationException::withMessages([
-                    'kategori_insentif' => ['Tarif insentif untuk kategori ini tidak ditemukan atau bernilai 0.'],
+                    'kategori_insentif' => ['Tarif insentif untuk kategori ini tidak ditemukan atau bernilai 0. Periksa kembali pedoman Dispo PPM 2026.'],
                 ]);
             }
+
+            $this->validateBatasKlaim($user, $jenisKlaim, $kategoriInsentif);
 
             // 3. Strict 100% Multi-Author Distribution Validation
             $distribusiList = $data['distribusi'] ?? [];

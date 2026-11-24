@@ -263,18 +263,18 @@ class Epic11PublicationsAndRewardTest extends TestCase
 
         $responseSuccess->assertRedirect();
 
-        // Check rate from SK Rektor: Scopus Q1 = Rp 35.000.000
-        // Author A: 65% = Rp 22.750.000
-        // Author B: 35% = Rp 12.250.000
+        // Dispo PPM 2026: Scopus Q1 = Rp 15.000.000
+        // Author A: 65% = Rp 9.750.000
+        // Author B: 35% = Rp 5.250.000
         $claim = PpmKlaimReward::where('id_publikasi', $pub->id)->first();
         $this->assertNotNull($claim);
-        $this->assertEquals(35000000, (float) $claim->total_reward);
+        $this->assertEquals(15000000, (float) $claim->total_reward);
 
         $distA = PpmRewardDistribusi::where('id_klaim_reward', $claim->id)->where('nama_penulis', 'Author A')->first();
         $distB = PpmRewardDistribusi::where('id_klaim_reward', $claim->id)->where('nama_penulis', 'Author B')->first();
 
-        $this->assertEquals(22750000, (float) $distA->nominal_bagian);
-        $this->assertEquals(12250000, (float) $distB->nominal_bagian);
+        $this->assertEquals(9750000, (float) $distA->nominal_bagian);
+        $this->assertEquals(5250000, (float) $distB->nominal_bagian);
 
         // Anti-duplicate lock verified!
         $pub->refresh();

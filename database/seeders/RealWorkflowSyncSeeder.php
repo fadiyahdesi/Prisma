@@ -21,10 +21,10 @@ use App\Models\PpmUsulanAnggota;
 use App\Models\PpmUsulanLuaran;
 use App\Models\PpmUsulanRab;
 use App\Models\RefFakultas;
-use App\Models\RefTarifRewardSk;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\DemoPdfGeneratorService;
+use App\Support\PedomanKriteria;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -1103,15 +1103,9 @@ class RealWorkflowSyncSeeder extends Seeder
         // =========================================================================
         // 7. KLAIM REWARD INSENTIF & DISTRIBUSI MULTI-PENULIS (DARI PUBLIKASI CSV REAL & HKI REAL)
         // =========================================================================
-        // Pastikan tarif dasar lengkap untuk artikel CSV Internasional & Nasional
-        RefTarifRewardSk::updateOrCreate(
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Internasional'],
-            ['nominal_insentif' => 7500000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Internasional Terindeks (CSV Resmi)', 'is_active' => true]
-        );
-        RefTarifRewardSk::updateOrCreate(
-            ['kategori' => 'Publikasi', 'sub_kategori' => 'Nasional Tidak Terakreditasi'],
-            ['nominal_insentif' => 1500000, 'nomor_sk_rektor' => 'SK-REKTOR/UHN/2026/015', 'keterangan' => 'Jurnal Nasional ISSN', 'is_active' => true]
-        );
+        // Tarif dasar mengikuti matriks Dispo PPM 2026. Kategori CSV lama
+        // (Internasional, Nasional Tidak Terakreditasi) dinormalisasi lewat aliasReward.
+        PedomanKriteria::seedTarif();
 
         // Klaim 1 (Submitted -> antrean verifikasi Divisi Publikasi), terkait publikasi CSV nyata!
         $pubRealSubmitted = PpmPublikasiJurnal::whereNotNull('user_id')

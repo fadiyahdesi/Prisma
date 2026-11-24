@@ -7,6 +7,7 @@ use App\Models\PpmKlaimReward;
 use App\Models\PpmPublikasiJurnal;
 use App\Models\RefTarifRewardSk;
 use App\Services\RewardDistributionService;
+use App\Support\PedomanKriteria;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,10 +69,35 @@ class RewardClaimController extends Controller
             ->latest()
             ->get();
 
+        // Normalisasi kategori lama ke pedoman 2026 sebelum dikirim ke form.
+        foreach ($publikasiList as $publikasi) {
+            $publikasi->kategori_peringkat = PedomanKriteria::aliasReward($publikasi->kategori_peringkat);
+        }
+
+        // Dispo 2026 hanya mengakui Paten dan Paten Sederhana untuk klaim HKI baru.
+        $hkiList = $hkiList->filter(function ($hki) {
+            return in_array(PedomanKriteria::aliasReward($hki->jenis_hki), ['Paten', 'Paten Sederhana'], true);
+        })->values();
+
+        foreach ($hkiList as $hki) {
+            $hki->jenis_hki = PedomanKriteria::aliasReward($hki->jenis_hki);
+        }
+
         // Tarif SK Matrix
         $tarifMatrix = RefTarifRewardSk::where('is_active', true)->get();
+        $pedomanReward = PedomanKriteria::reward();
+        $sumberReward = PedomanKriteria::SUMBER_REWARD;
+        $urutanIndeks = PedomanKriteria::URUTAN_INDEKS;
 
-        return view('reward.create', compact('publikasiList', 'hkiList', 'tarifMatrix', 'user'));
+        return view('reward.create', compact(
+            'publikasiList',
+            'hkiList',
+            'tarifMatrix',
+            'user',
+            'pedomanReward',
+            'sumberReward',
+            'urutanIndeks'
+        ));
     }
 
     /**
