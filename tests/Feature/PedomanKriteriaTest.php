@@ -103,31 +103,40 @@ class PedomanKriteriaTest extends TestCase
         ]);
     }
 
-    public function test_skor_monev_dihitung_dari_status_dan_bobot_item(): void
+    public function test_indikator_monev_hanya_dipasang_untuk_skema_pkm(): void
     {
-        $penilaianDasar = [
-            'c1' => [
-                'status' => 60,
-                'items' => ['i1' => 100, 'i2' => 75, 'i3' => 100, 'i4' => 75],
-            ],
-            'c2' => [
-                'status' => 20,
-                'items' => ['i1' => 100],
-            ],
+        $pkm = PedomanKriteria::monev('PKM');
+
+        $this->assertSame('Program Kemitraan Masyarakat (PKM)', $pkm['nama_skema']);
+        $this->assertSame(60, $pkm['kelompok']['umum']['maks']);
+        $this->assertSame(40, $pkm['kelompok']['khusus']['maks']);
+        $this->assertSame(5, $pkm['komponen']['u3']['pembagi']);
+        $this->assertCount(7, $pkm['komponen']['k2']['items']);
+
+        foreach (['PDP', 'FUNDAMENTAL', 'HILIRISASI', 'PDB', 'PW'] as $kode) {
+            $this->assertSame([], PedomanKriteria::monev($kode)['komponen']);
+        }
+    }
+
+    public function test_skor_monev_dihitung_dari_nilai_sub_indikator_pkm(): void
+    {
+        $penilaianMaksimal = [];
+        foreach (PedomanKriteria::monev('PKM')['komponen'] as $ck => $komponen) {
+            foreach ($komponen['items'] as $ik => $item) {
+                $penilaianMaksimal[$ck]['items'][$ik] = max(array_values($item['penilaian']));
+            }
+        }
+        $this->assertSame(100.0, PedomanKriteria::hitungSkorMonev('PKM', $penilaianMaksimal));
+
+        $penilaianSebagian = [
+            'u1' => ['items' => ['i1' => 10, 'i2' => 10, 'i3' => 10, 'i4' => 10, 'i5' => 10]],
+            'u2' => ['items' => ['i1' => 70]],
+            'u3' => ['items' => ['i1' => 50]],
+            'u5' => ['items' => ['i1' => 40, 'i2' => 15, 'i3' => 15]],
+            'u6' => ['items' => ['i1' => 40, 'i2' => 30, 'i3' => 30]],
+            'k1' => ['items' => ['i1' => 70]],
+            'k2' => ['items' => ['i1' => 25, 'i2' => 25, 'i3' => 12, 'i4' => 12, 'i5' => 15, 'i6' => 20, 'i7' => 20]],
         ];
-
-        $this->assertSame(72.5, PedomanKriteria::hitungSkorMonev('PDP', $penilaianDasar));
-        $this->assertSame(72.5, PedomanKriteria::hitungSkorMonev('FUNDAMENTAL', $penilaianDasar));
-
-        $penilaianTerapan = [
-            'c1' => [
-                'status' => 80,
-                'items' => ['i1' => 100, 'i2' => 100, 'i3' => 100, 'i4' => 100],
-            ],
-            'c2' => ['status' => 10, 'items' => ['i1' => 100]],
-            'c3' => ['status' => 10, 'items' => ['i1' => 100, 'i2' => 100]],
-        ];
-
-        $this->assertSame(100.0, PedomanKriteria::hitungSkorMonev('HILIRISASI', $penilaianTerapan));
+        $this->assertSame(58.9, PedomanKriteria::hitungSkorMonev('PKM', $penilaianSebagian));
     }
 }

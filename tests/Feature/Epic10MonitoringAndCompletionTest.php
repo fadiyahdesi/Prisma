@@ -270,14 +270,14 @@ class Epic10MonitoringAndCompletionTest extends TestCase
             'status' => 'submitted',
         ]);
 
-        $kodeSkema = $usulan->skema?->kode_skema ?? '';
+        $skemaPkm = PpmSkemaBima::where('kode_skema', 'PKM')->firstOrFail();
+        $usulan->update(['id_skema_bima' => $skemaPkm->id]);
+
+        $kodeSkema = 'PKM';
         $pedoman = PedomanKriteria::monev($kodeSkema);
         $penilaian = [];
 
         foreach ($pedoman['komponen'] as $ck => $komponen) {
-            $nilaiStatus = array_values($komponen['status']);
-            $penilaian[$ck]['status'] = $nilaiStatus[0];
-
             foreach ($komponen['items'] as $ik => $item) {
                 $nilaiItem = array_values($item['penilaian']);
                 $penilaian[$ck]['items'][$ik] = $nilaiItem[1] ?? $nilaiItem[0];
@@ -290,7 +290,7 @@ class Epic10MonitoringAndCompletionTest extends TestCase
             ->withSession(['is_otp_verified' => true])
             ->get(route('reviewer.monev.show', $monev))
             ->assertOk()
-            ->assertSee('Indikator Penilaian Evaluasi Keberlanjutan');
+            ->assertSee('Indikator Penilaian Monev Internal PKM');
 
         $this->actingAs($reviewer)
             ->withSession(['is_otp_verified' => true])
@@ -298,7 +298,7 @@ class Epic10MonitoringAndCompletionTest extends TestCase
                 'skor_monev' => 0,
                 'penilaian' => $penilaian,
                 'rekomendasi' => 'Lanjut',
-                'catatan_evaluasi' => 'Penilaian terstruktur sesuai indikator keberlanjutan penelitian.',
+                'catatan_evaluasi' => 'Penilaian terstruktur sesuai indikator monev internal PKM.',
             ])
             ->assertRedirect(route('reviewer.monev.index'));
 

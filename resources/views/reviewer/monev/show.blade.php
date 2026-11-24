@@ -157,9 +157,9 @@
                             <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-4">
                                 <div class="flex items-start justify-between gap-3 pb-2 border-b border-purple-200">
                                     <div>
-                                        <h4 class="font-extrabold text-slate-900 text-xs">Indikator Penilaian Evaluasi Keberlanjutan</h4>
-                                        <p class="text-[10px] text-slate-500 mt-0.5">{{ $pedoman['nama_skema'] }}</p>
-                                        <p class="text-[9px] text-slate-400">{{ $pedoman['sumber'] }}</p>
+                                        <h4 class="font-extrabold text-slate-900 text-xs">Indikator Penilaian Monev Internal PKM</h4>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">{{ $pedoman['nama_skema'] ?? 'Skema di luar pedoman PKM' }}</p>
+                                        <p class="text-[9px] text-slate-400">{{ $pedoman['sumber'] ?? 'Pedoman terstruktur belum tersedia; gunakan input skor manual di bawah.' }}</p>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <span class="block text-[9px] font-bold text-purple-700 uppercase">Skor terhitung</span>
@@ -167,40 +167,44 @@
                                     </div>
                                 </div>
 
-                                @foreach($pedoman['komponen'] as $ck => $komponen)
-                                    <div class="space-y-2">
-                                        <p class="font-extrabold text-slate-800 text-[11px]">
-                                            {{ $loop->iteration }}. {{ $komponen['nama'] }}
-                                            <span class="font-bold text-purple-700">(maks. {{ $komponen['bobot_maks'] }})</span>
-                                        </p>
-                                        <select name="penilaian[{{ $ck }}][status]"
-                                                data-status
-                                                data-max="{{ $komponen['bobot_maks'] }}"
-                                                class="w-full px-3 py-2 rounded-xl bg-white border border-purple-200 text-[11px] font-bold focus:ring-2 focus:ring-purple-500 focus:outline-none">
-                                            <option value="">-- Pilih Status --</option>
-                                            @foreach($komponen['status'] as $label => $nilai)
-                                                <option value="{{ $nilai }}"
-                                                        {{ (string) old("penilaian.{$ck}.status", $penilaianAwal[$ck]['status'] ?? '') === (string) $nilai ? 'selected' : '' }}>
-                                                    {{ $label }} (Skor {{ $nilai }})
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                @forelse($pedoman['komponen'] as $ck => $komponen)
+                                    @if($loop->first || $komponen['kelompok'] !== array_values($pedoman['komponen'])[$loop->index - 1]['kelompok'])
+                                        <div class="pt-2 border-t border-purple-200 first:border-0 first:pt-0">
+                                            <p class="font-black text-purple-900 text-[11px] uppercase tracking-wide">
+                                                {{ $pedoman['kelompok'][$komponen['kelompok']]['nama'] }}
+                                                <span class="text-purple-600">(maks. {{ $pedoman['kelompok'][$komponen['kelompok']]['maks'] }})</span>
+                                            </p>
+                                        </div>
+                                    @endif
+
+                                    <div class="space-y-2" data-komponen="{{ $ck }}"
+                                         data-pembagi="{{ $komponen['pembagi'] }}" data-maks="{{ $komponen['bobot_maks'] }}">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <p class="font-extrabold text-slate-800 text-[11px]">
+                                                {{ $komponen['nama'] }}
+                                                <span class="font-bold text-purple-700">(maks. {{ $komponen['bobot_maks'] }})</span>
+                                            </p>
+                                            <span class="text-[10px] font-black text-purple-800 shrink-0">
+                                                <span data-subtotal="{{ $ck }}">0.00</span> / {{ $komponen['bobot_maks'] }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[9px] text-slate-500 leading-relaxed">{{ $komponen['deskripsi'] }}</p>
 
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             @foreach($komponen['items'] as $ik => $item)
                                                 <div>
                                                     <label class="block text-[10px] font-bold text-slate-600 mb-1">
-                                                        {{ $item['nama'] }} <span class="text-purple-700">(bobot {{ $item['bobot'] }}%)</span>
+                                                        {{ $loop->parent->iteration }}.{{ $loop->iteration }} {{ $item['nama'] }}
+                                                        <span class="text-purple-700">(maks. {{ max(array_values($item['penilaian'])) }})</span>
                                                     </label>
                                                     <select name="penilaian[{{ $ck }}][items][{{ $ik }}]"
                                                             data-item
-                                                            data-bobot="{{ $item['bobot'] }}"
                                                             class="w-full px-2.5 py-2 rounded-xl bg-white border border-purple-200 text-[11px] font-semibold focus:ring-2 focus:ring-purple-500 focus:outline-none">
                                                         <option value="">-- Pilih Nilai --</option>
                                                         @foreach($item['penilaian'] as $label => $nilai)
                                                             <option value="{{ $nilai }}"
                                                                     {{ (string) old("penilaian.{$ck}.items.{$ik}", $penilaianAwal[$ck]['items'][$ik] ?? '') === (string) $nilai ? 'selected' : '' }}>
-                                                                {{ $label }} ({{ $nilai }}%)
+                                                                {{ $label }} ({{ $nilai }})
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -208,10 +212,26 @@
                                             @endforeach
                                         </div>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                                        Pedoman terstruktur untuk skema ini belum tersedia. Isi skor evaluasi secara manual pada field di bawah.
+                                    </p>
+                                @endforelse
+
+                                @if(!empty($pedoman['fokus_tahun']))
+                                    <details class="rounded-xl bg-white/70 border border-purple-200 p-3">
+                                        <summary class="cursor-pointer font-bold text-purple-900 text-[10px]">Ringkasan fokus per tahun (opsional)</summary>
+                                        <ul class="mt-2 space-y-1 text-[10px] text-slate-600 list-disc pl-4">
+                                            @foreach($pedoman['fokus_tahun'] as $tahun => $keterangan)
+                                                <li><span class="font-bold">{{ $tahun }}:</span> {{ $keterangan }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </details>
+                                @endif
 
                                 <p class="text-[10px] text-slate-500 leading-relaxed">
-                                    Skor akhir = Σ (status komponen × rata-rata bobot item yang terpenuhi). Field skor di bawah akan diisi otomatis setelah status komponen dipilih.
+                                    Skor tiap komponen = jumlah nilai sub-indikator yang dipilih ÷ pembagi borang, dibatasi maksimum komponen.
+                                    Total Penilaian Umum 60 poin + Penilaian Khusus PKM 40 poin = 100 poin. Field skor di bawah terisi otomatis.
                                 </p>
                             </div>
 
@@ -267,38 +287,32 @@
     if (!form || !skorInput || !skorTeks) return;
 
     function hitung() {
-        const komponen = new Map();
-
-        form.querySelectorAll('[data-status]').forEach(function (select) {
-            const status = parseFloat(select.value || '0');
-            const bobot = 0;
-            komponen.set(select, { status: status, bobot: bobot, bobotPenuh: 0 });
-        });
-
-        form.querySelectorAll('[data-item]').forEach(function (select) {
-            const statusSelect = select.closest('.space-y-2').querySelector('[data-status]');
-            if (!statusSelect || !komponen.has(statusSelect)) return;
-            const data = komponen.get(statusSelect);
-            const nilai = parseFloat(select.value || '0');
-            const bobot = parseFloat(select.dataset.bobot || '0');
-            data.bobot += (nilai / 100) * bobot;
-            data.bobotPenuh += bobot;
-        });
-
         let total = 0;
-        komponen.forEach(function (data) {
-            if (data.bobotPenuh <= 0) return;
-            total += data.status * (data.bobot / data.bobotPenuh);
+        let adaNilai = false;
+
+        form.querySelectorAll('[data-komponen]').forEach(function (blok) {
+            const pembagi = parseFloat(blok.dataset.pembagi || '10');
+            const maks = parseFloat(blok.dataset.maks || '0');
+            let jumlah = 0;
+
+            blok.querySelectorAll('[data-item]').forEach(function (select) {
+                if (select.value !== '') adaNilai = true;
+                jumlah += parseFloat(select.value || '0');
+            });
+
+            const skorKomponen = Math.min(maks, jumlah / Math.max(1, pembagi));
+            total += skorKomponen;
+
+            const subtotal = blok.querySelector('[data-subtotal]');
+            if (subtotal) subtotal.textContent = skorKomponen.toFixed(2);
         });
 
         const hasil = Math.round(Math.min(100, Math.max(0, total)) * 100) / 100;
         skorTeks.textContent = hasil.toFixed(2);
-        if ([...form.querySelectorAll('[data-status]')].some(function (s) { return s.value !== ''; })) {
-            skorInput.value = hasil.toFixed(2);
-        }
+        if (adaNilai) skorInput.value = hasil.toFixed(2);
     }
 
-    form.querySelectorAll('select').forEach(function (select) {
+    form.querySelectorAll('select[data-item]').forEach(function (select) {
         select.addEventListener('change', hitung);
     });
     hitung();

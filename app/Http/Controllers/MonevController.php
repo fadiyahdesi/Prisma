@@ -149,11 +149,9 @@ class MonevController extends Controller
         ];
 
         foreach ($pedoman['komponen'] as $ck => $komponen) {
-            $rules["penilaian.{$ck}.status"] = 'nullable|numeric|min:0|max:' . $komponen['bobot_maks'];
-            $messages["penilaian.{$ck}.status.numeric"] = "Status komponen '{$komponen['nama']}' harus berupa angka.";
-
             foreach ($komponen['items'] as $ik => $item) {
-                $rules["penilaian.{$ck}.items.{$ik}"] = 'nullable|numeric|min:0|max:100';
+                $maksItem = max(array_values($item['penilaian']));
+                $rules["penilaian.{$ck}.items.{$ik}"] = 'nullable|numeric|min:0|max:' . $maksItem;
                 $messages["penilaian.{$ck}.items.{$ik}.numeric"] = "Nilai item '{$item['nama']}' harus berupa angka.";
             }
         }
@@ -162,9 +160,11 @@ class MonevController extends Controller
 
         $adaPenilaian = false;
         foreach ($validated['penilaian'] ?? [] as $komponen) {
-            if (array_key_exists('status', $komponen) && $komponen['status'] !== null && $komponen['status'] !== '') {
-                $adaPenilaian = true;
-                break;
+            foreach ($komponen['items'] ?? [] as $nilaiItem) {
+                if ($nilaiItem !== null && $nilaiItem !== '') {
+                    $adaPenilaian = true;
+                    break 2;
+                }
             }
         }
 
